@@ -22,98 +22,36 @@
     </div>
     <div class="page-header"></div>
     <main>
-<?php
-
-$grandTotal = (float)$quotation['grand_total'];
-
-$packingCharge =
-    (float)$quotation['packing_charge'];
-
-$installationCharge =
-    (float)$quotation['installation_charge'];
-
-$subTotal =
-    $grandTotal -
-    $packingCharge -
-    $installationCharge;
-
-// Since packing and installation are already included
-$taxableValue = $grandTotal;
-
-$specialDiscount =
-    (float)$quotation['special_discount'];
-
-$discountAmount =
-    ($taxableValue * $specialDiscount) / 100;
-
-$afterDiscountTotal =
-    $taxableValue - $discountAmount;
-
-
-// ======================================
-// GST / IGST Logic
-// ======================================
-
-$shippingAddress =
-    trim(
-        $quotation['shipping_address'] ?? ''
-    );
-
-$addressParts =
-    array_values(
-        array_filter(
-            array_map(
-                'trim',
-                explode(',', $shippingAddress)
-            )
-        )
-    );
-
-$customerState =
-    strtolower(
-        end($addressParts)
-    );
-
-$cgstPercent = 0;
-$sgstPercent = 0;
-$igstPercent = 0;
-
-if($customerState == 'maharashtra'){
-
-    // Intra-state supply
-
-    $cgstPercent = 9;
-    $sgstPercent = 9;
-    $igstPercent = 0;
-
-}else{
-
-    // Inter-state supply
-
-    $cgstPercent = 0;
-    $sgstPercent = 0;
-    $igstPercent = 18;
-
-}
-
-$cgstAmount =
-    ($afterDiscountTotal * $cgstPercent) / 100;
-
-$sgstAmount =
-    ($afterDiscountTotal * $sgstPercent) / 100;
-
-$igstAmount =
-    ($afterDiscountTotal * $igstPercent) / 100;
-
-$finalGrandTotal =
-    $afterDiscountTotal +
-    $cgstAmount +
-    $sgstAmount +
-    $igstAmount;
-
-$finalGrandTotal = round($finalGrandTotal);
-
-?>
+    <?php
+      $grandTotal = (float)$quotation['grand_total'];
+      $packingCharge = (float)$quotation['packing_charge'];
+      $installationCharge = (float)$quotation['installation_charge'];
+      $subTotal = $grandTotal - $packingCharge - $installationCharge;
+      $taxableValue = $grandTotal;
+      $specialDiscount = (float)$quotation['special_discount'];
+      $discountAmount = ($taxableValue * $specialDiscount) / 100;
+      $afterDiscountTotal = $taxableValue - $discountAmount;
+      $shippingAddress = trim($quotation['shipping_address'] ?? '');
+      $addressParts = array_values(array_filter(array_map('trim',explode(',', $shippingAddress))));
+      $customerState = strtolower(end($addressParts));
+      $cgstPercent = 0;
+      $sgstPercent = 0;
+      $igstPercent = 0;
+      if($customerState == 'maharashtra'){
+          $cgstPercent = 9;
+          $sgstPercent = 9;
+          $igstPercent = 0;
+      }else{
+          $cgstPercent = 0;
+          $sgstPercent = 0;
+          $igstPercent = 18;
+      }
+      $cgstAmount = ($afterDiscountTotal * $cgstPercent) / 100;
+      $sgstAmount = ($afterDiscountTotal * $sgstPercent) / 100;
+      $igstAmount = ($afterDiscountTotal * $igstPercent) / 100;
+      $finalGrandTotal = $afterDiscountTotal + $cgstAmount + $sgstAmount + $igstAmount;
+      $finalGrandTotal = round($finalGrandTotal);
+    ?>
     <div class="page">
       <table class="main invoice-block">
 
@@ -399,6 +337,134 @@ $finalGrandTotal = round($finalGrandTotal);
                 "
             );
             if(mysqli_num_rows($accessoryQuery) > 0){
+                $accessoryRowNo = count($elevations) + 1;
+                $accessoriesTotal = 0;
+                $accessoryTotalQuery = mysqli_query(
+                    $conn,
+                    "
+                    SELECT
+                        SUM(total) AS total
+                    FROM quotation_accessories
+                    WHERE quotation_id = '".$quotation['id']."'
+                    "
+                );
+                if($accessoryTotalQuery){
+                  $accessoryTotalData = mysqli_fetch_assoc($accessoryTotalQuery);
+                  $accessoriesTotal = floatval($accessoryTotalData['total']);
+                }
+          ?>
+          <tr>
+              <td style="text-align:center;"><?= $accessoryRowNo; ?></td>
+              <td><strong>Additional Accessories</strong></td>
+              <td style="text-align:center;">940350</td>
+              <td style="text-align:center;">1</td>
+              <td style="text-align:center;">Nos.</td>
+              <td style="text-align:right;">INR <?= number_format($accessoriesTotal,2); ?></td>
+              <td style="text-align:right;">INR <?= number_format($accessoriesTotal,2); ?></td>
+          </tr>
+          <tr>
+              <td></td>
+              <td colspan="6" style="border-left:none !important;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="border:none;">
+                          <?php
+                            mysqli_data_seek($accessoryQuery,0);
+                            $sr = 1;
+                            while($accessory = mysqli_fetch_assoc($accessoryQuery)){
+                          ?>
+                            <strong><?= $sr++; ?>]</strong>
+                            <?= htmlspecialchars($accessory['accessory_name']); ?> |
+                            Qty : <?= $accessory['qty']; ?> <br>
+                          <?php } ?>
+                      </td>
+                    </tr>
+                </table>
+              </td>
+          </tr>
+          <?php } ?>
+          <?php
+            $standardAccessoriesQuery = mysqli_query(
+                $conn,
+                "
+                SELECT
+                    qsa.*,
+                    sam.material_name,
+                    sam.unit,
+                    sac.category_name
+                FROM quotation_standard_accessories qsa
+                LEFT JOIN standard_accessory_materials sam
+                ON qsa.standard_accessory_id = sam.id
+                LEFT JOIN standard_accessory_categories sac
+                ON sam.category_id = sac.id
+                WHERE qsa.quotation_id = '".$quotation['id']."'
+                "
+            );
+            if(
+                mysqli_num_rows($standardAccessoriesQuery) > 0
+            ){
+                $standardAccessoryRowNo = count($elevations);
+                if(
+                    mysqli_num_rows($accessoryQuery) > 0
+                ){
+                    $standardAccessoryRowNo++;
+                }
+                $standardAccessoryRowNo++;
+                $standardAccessoriesTotal = 0;
+                $standardTotalQuery = mysqli_query(
+                    $conn,
+                    "
+                    SELECT
+                        SUM(total_price) AS total
+                    FROM quotation_standard_accessories
+                    WHERE quotation_id = '".$quotation['id']."'
+                    "
+                );
+                if($standardTotalQuery){
+                    $standardTotalData = mysqli_fetch_assoc($standardTotalQuery);
+                    $standardAccessoriesTotal = floatval($standardTotalData['total']);
+                }
+          ?>
+          <tr>
+            <td style="text-align:center;"><?= $standardAccessoryRowNo; ?></td>
+            <td><strong>Standard Accessories</strong></td>
+            <td style="text-align:center;">940350</td>
+            <td style="text-align:center;">1</td>
+            <td style="text-align:center;">Nos.</td>
+            <td style="text-align:right;"> INR <?= number_format($standardAccessoriesTotal,2); ?></td>
+            <td style="text-align:right;"> INR <?= number_format($standardAccessoriesTotal,2); ?></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td colspan="6" style="border-left:none !important;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                    <tr>
+                        <td style="border:none;">
+                            <?php $sr = 1; while($standardAccessory = mysqli_fetch_assoc($standardAccessoriesQuery)){?>
+                              <strong><?= $sr++; ?>] </strong>
+                              <?= htmlspecialchars($standardAccessory['material_name']); ?> |
+                              Qty [Nos. / Mtr] : <?= $standardAccessory['qty']; ?> <?= $standardAccessory['unit']; ?> <br>
+                            <?php } ?>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+          </tr>
+          <?php } ?>
+          <?php
+            $accessoryQuery = mysqli_query(
+                $conn,
+                "
+                SELECT
+                    qa.*,
+                    a.accessory_name
+                FROM quotation_accessories qa
+                LEFT JOIN accessories a
+                ON qa.accessory_id = a.id
+                WHERE qa.quotation_id = '".$quotation['id']."'
+                "
+            );
+            if(mysqli_num_rows($accessoryQuery) > 0){
               $accessoryRowNo = count($elevations) + 1;
               $accessoriesTotal = 0;
               $accessoryTotalQuery = mysqli_query(
@@ -414,35 +480,33 @@ $finalGrandTotal = round($finalGrandTotal);
                   $accessoriesTotal = floatval($accessoryTotalData['total']);
               }
           ?>
-
           <tr>
             <td style="text-align:center;"><?= $accessoryRowNo; ?></td>
-            <td><strong>Accessories</strong></td>
+            <td><strong>Additional Accessories</strong></td>
             <td style="text-align:center;">940350</td>
             <td style="text-align:center;">1</td>
             <td style="text-align:center;">Nos.</td>
             <td style="text-align:right;">INR <?= number_format($accessoriesTotal,2); ?></td>
             <td style="text-align:right;">INR <?= number_format($accessoriesTotal,2); ?></td>
           </tr>
-
           <tr>
-              <td></td>
-              <td colspan="6" style="border-left: none !important;">
-                  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                    <tr>
-                      <td style="border:none;">
-                        <?php
-                        mysqli_data_seek($accessoryQuery, 0);
-                        $sr = 1;
-                        while($accessory = mysqli_fetch_assoc($accessoryQuery)){
-                        ?>
-                            <strong><?= $sr++; ?>]</strong> <?= $accessory['accessory_name']; ?> | 
-                            Qty : <?= $accessory['qty']; ?> <br>
-                        <?php } ?>
-                      </td>
-                    </tr
-                  </table>
-              </td>
+            <td></td>
+            <td colspan="6" style="border-left: none !important;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                  <td style="border:none;">
+                    <?php
+                    mysqli_data_seek($accessoryQuery, 0);
+                    $sr = 1;
+                    while($accessory = mysqli_fetch_assoc($accessoryQuery)){
+                    ?>
+                        <strong><?= $sr++; ?>]</strong> <?= $accessory['accessory_name']; ?> | 
+                        Qty : <?= $accessory['qty']; ?> <br>
+                    <?php } ?>
+                  </td>
+                </tr>
+              </table>
+            </td>
           </tr>
         <?php } ?>
         <?php endif; ?>
@@ -520,13 +584,8 @@ $finalGrandTotal = round($finalGrandTotal);
           <td style="border:1px solid #000; font-size:10px;">Add : CGST</td>
           <td style="border:1px solid #000;"></td>
           <td colspan="2" style="border:1px solid #000;"></td>
-          <td style="border:1px solid #000; text-align:right;">
-    <?= number_format($cgstPercent,2) ?>%
-</td>
-
-<td style="border:1px solid #000; text-align:right;">
-    INR <?= number_format($cgstAmount,2) ?>
-</td>
+          <td style="border:1px solid #000; text-align:right;"><?= number_format($cgstPercent,2) ?>%</td>
+          <td style="border:1px solid #000; text-align:right;">INR <?= number_format($cgstAmount,2) ?></td>
         </tr>
 
         <tr style="height:16px;">
@@ -534,13 +593,8 @@ $finalGrandTotal = round($finalGrandTotal);
           <td style="border:1px solid #000; font-size:10px;">Add : SGST</td>
           <td style="border:1px solid #000;"></td>
           <td colspan="2" style="border:1px solid #000;"></td>
-          <td style="border:1px solid #000; text-align:right;">
-    <?= number_format($sgstPercent,2) ?>%
-</td>
-
-<td style="border:1px solid #000; text-align:right;">
-    INR <?= number_format($sgstAmount,2) ?>
-</td>
+          <td style="border:1px solid #000; text-align:right;"><?= number_format($sgstPercent,2) ?>%</td>
+          <td style="border:1px solid #000; text-align:right;">INR <?= number_format($sgstAmount,2) ?></td>
         </tr>
 
         <tr style="height:16px;">
@@ -548,13 +602,8 @@ $finalGrandTotal = round($finalGrandTotal);
           <td style="border:1px solid #000; font-size:10px;">Add : IGST</td>
           <td style="border:1px solid #000;"></td>
           <td colspan="2" style="border:1px solid #000;"></td>
-          <td style="border:1px solid #000; text-align:right;">
-    <?= number_format($igstPercent,2) ?>%
-</td>
-
-<td style="border:1px solid #000; text-align:right;">
-    INR <?= number_format($igstAmount,2) ?>
-</td>
+          <td style="border:1px solid #000; text-align:right;"><?= number_format($igstPercent,2) ?>%</td>
+          <td style="border:1px solid #000; text-align:right;">INR <?= number_format($igstAmount,2) ?></td>
         </tr>
 
         <tr style="height:20px; background:#92CDDC;">

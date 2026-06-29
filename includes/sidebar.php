@@ -217,6 +217,13 @@
             }
         ?>
         <!-- LOGOUT -->
+        <li class="">
+            <a href="/QG/standard-accessories/materials/index.php">
+                <i class="fa-solid fa-right-from-bracket" style="margin-right:10px;"></i>
+                <span>Standard Accessories</span>
+            </a>
+        </li>
+        <!-- LOGOUT -->
         <li class="logout-item">
             <a href="/QG/auth/logout.php" onclick="return confirm('Logout from ERP?')">
                 <i class="fa-solid fa-right-from-bracket" style="margin-right:10px;"></i>

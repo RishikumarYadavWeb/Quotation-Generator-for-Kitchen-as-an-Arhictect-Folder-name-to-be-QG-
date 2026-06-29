@@ -25,6 +25,7 @@
         WHERE quotation_id = ?
         ORDER BY id ASC
     ";
+    
     $stmt = $conn->prepare($elevation_sql);
     $stmt->bind_param("i", $quotation_id);
     $stmt->execute();
@@ -188,6 +189,75 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
     while($acc = mysqli_fetch_assoc($getAccessories)){
         $accessoryOptions .= '<option value=\"'.$acc['id'].'\" data-price=\"'.$acc['price'].'\">'.$acc['accessory_name'].'</option>';
     }
+    $standardAccessoriesQuery = mysqli_query(
+    $conn,
+    "
+    SELECT
+        qsa.*,
+        sam.category_id
+
+    FROM quotation_standard_accessories qsa
+
+    LEFT JOIN standard_accessory_materials sam
+    ON sam.id = qsa.standard_accessory_id
+
+    WHERE qsa.quotation_id = '$quotation_id'
+
+    ORDER BY qsa.id ASC
+    "
+);
+
+$EDIT_STANDARD_ACCESSORIES = [];
+
+while(
+    $row =
+    mysqli_fetch_assoc(
+        $standardAccessoriesQuery
+    )
+){
+    $EDIT_STANDARD_ACCESSORIES[] = $row;
+}
+    $standardAccessoryOptions = '';
+    $standardAccessories = mysqli_query(
+        $conn,
+        "
+        SELECT
+            standard_accessory_materials.id,
+            standard_accessory_materials.material_name,
+            standard_accessory_materials.price,
+            standard_accessory_materials.unit,
+            standard_accessory_categories.category_name
+        FROM standard_accessory_materials
+        LEFT JOIN standard_accessory_categories
+        ON standard_accessory_categories.id =
+        standard_accessory_materials.category_id
+        WHERE standard_accessory_materials.status = 1
+        ORDER BY standard_accessory_materials.id ASC
+        "
+    );
+    while($row = mysqli_fetch_assoc($standardAccessories)){
+        $standardAccessoryOptions .=
+        '<option value="'.$row['id'].'" data-price="'.$row['price'].'">'
+            .$row['category_name'].' - '
+            .$row['material_name'].' ('.$row['unit'].')'
+        .'</option>';
+    }
+    $standardAccessoryCategoryOptions = '';
+    $categories = mysqli_query(
+        $conn,
+        "
+        SELECT *
+        FROM standard_accessory_categories
+        WHERE status = 1
+        ORDER BY category_name DESC
+        "
+    );
+    while($row = mysqli_fetch_assoc($categories)){
+        $standardAccessoryCategoryOptions .=
+        '<option value="'.$row['id'].'">'.
+        $row['category_name'].
+        '</option>';
+    }
 ?>
 <form id="quotationForm" novalidate onkeydown="preventEnterSubmit(event)">
     <div class="container-fluid">
@@ -313,6 +383,26 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
             </div>
         </div>
         <div id="elevationContainer"></div>
+                <div class="main-card" style="margin-top:30px;">
+            <div class="page-header mb-0">
+                <div>
+                    <h2 class="page-title">Standard Accessories</h2>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Number Of Standard Accessories</label>
+                <input type="number" id="standardAccessoryCount" class="form-control" min="0" placeholder="Add Number of Standard Accessories">
+            </div>
+            <div style="margin-top:20px;">
+                <button type="button" class="btn btn-primary" onclick="generateStandardAccessories()">Generate Standard Accessories </button>
+            </div>
+            <div id="standardAccessoriesContainer" style="margin-top:25px;"></div>
+            <div class="card" style="background:#f8fafc;">
+                <h5>
+                    Standard Accessories Total : ₹ <span id="standardAccessoriesGrandTotal"> 0.00</span>
+                </h5>
+            </div>
+        </div>
         <div class="main-card" style="margin-top:30px;">
             <div class="page-header">
                 <div>
@@ -378,6 +468,11 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
     const EDIT_ACCESSORIES = <?= json_encode($accessories); ?>;
     const QUOTATION = <?= json_encode($quotation); ?>;
     const EDIT_IMAGES = <?= json_encode($elevationImages); ?>;
+    const EDIT_STANDARD_ACCESSORIES = <?= json_encode($EDIT_STANDARD_ACCESSORIES ?? []) ?>;
+    console.log(
+    'Standard Accessories:',
+    EDIT_STANDARD_ACCESSORIES
+);
     window.oldElevationImages = {};
     window.deletedImages = [];
     document.addEventListener(
@@ -1153,6 +1248,91 @@ if(typeof calculateShelfTotal === 'function'){
 
                     calculateAccessoriesGrandTotal();
                 }
+                if(
+    EDIT_STANDARD_ACCESSORIES &&
+    EDIT_STANDARD_ACCESSORIES.length > 0
+){
+
+    document.getElementById(
+        'standardAccessoryCount'
+    ).value =
+        EDIT_STANDARD_ACCESSORIES.length;
+
+    generateStandardAccessories();
+
+    const rows =
+        document.querySelectorAll(
+            '.standardAccessoryRow'
+        );
+
+    EDIT_STANDARD_ACCESSORIES.forEach(
+        async (
+            accessory,
+            index
+        ) => {
+
+            const row = rows[index];
+
+            if(!row) return;
+
+            const category =
+                row.querySelector(
+                    '.standardAccessoryCategory'
+                );
+
+            if(category){
+
+                category.value =
+                    accessory.category_id;
+
+                await loadStandardAccessoryMaterials(
+                    category
+                );
+
+                await new Promise(
+                    resolve =>
+                    setTimeout(
+                        resolve,
+                        100
+                    )
+                );
+            }
+
+            const material =
+                row.querySelector(
+                    '.standardAccessoryMaterial'
+                );
+
+            if(material){
+
+                material.value =
+                    accessory.standard_accessory_id;
+
+                material.dispatchEvent(
+                    new Event('change')
+                );
+            }
+
+            row.querySelector(
+                '.standardAccessoryQty'
+            ).value =
+                accessory.qty;
+
+            row.querySelector(
+                '.standardAccessoryPrice'
+            ).value =
+                accessory.unit_price;
+
+            row.querySelector(
+                '.standardAccessoryTotal'
+            ).value =
+                accessory.total_price;
+
+        }
+    );
+
+    calculateStandardAccessoriesGrandTotal();
+}
                 for(
                     let index = 0;
                     index < EDIT_ELEVATIONS.length;
@@ -1195,8 +1375,16 @@ function waitForUnits(callback){
         }
 
     },300);
+    
 
 }
+setTimeout(() => {
+
+    calculateStandardAccessoriesGrandTotal();
+
+    updateGrandTotal();
+
+},300);
 </script>
 <script>
     const COST_MULTLIER = <?= ($_SESSION['entity_id'] == 2) ? 0.5 : 1 ?>;
@@ -1469,5 +1657,163 @@ function calculateAccessoryTotal(row){
         }
         updateGrandTotal();
     }
+    const standardAccessoryOptions =`<?= $standardAccessoryOptions ?>`;
+    const standardAccessoryCategoryOptions =`<?= $standardAccessoryCategoryOptions ?>`;
+    function generateStandardAccessories(){
+        const count = parseInt(document.getElementById('standardAccessoryCount').value) || 0;
+        const container = document.getElementById('standardAccessoriesContainer');
+        if(
+            !container.querySelector('.standardAccessoriesTable')
+        ){
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class=" table table-bordered standardAccessoriesTable">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Category</th>
+                                <th>Material</th>
+                                <th>Unit Price</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="standardAccessoriesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        const tbody = container.querySelector('.standardAccessoriesTableBody');
+        const existingRows = tbody.querySelectorAll('tr');
+        if(count > existingRows.length){
+            for(
+                let i = existingRows.length;
+                i < count;
+                i++
+            ){
+                tbody.insertAdjacentHTML(
+                    'beforeend',
+                    `
+                    <tr class="standardAccessoryRow">
+                        <td style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
+                        <td>
+                            <select class="form-control standardAccessoryCategory" onchange="loadStandardAccessoryMaterials(this)">
+                                <option value="">
+                                    Select Category
+                                </option>
+                                ${standardAccessoryCategoryOptions}
+                            </select>
+                        </td>
+                        <td>
+                            <select name="standard_accessory_id[]" class=" form-control standardAccessoryMaterial">
+                                <option value="">
+                                    Select Material
+                                </option>
+                            </select>
+                        </td>
+                        <td><input type="number" step="1" name="standard_accessory_price[]" class=" form-control standardAccessoryPrice" readonly></td>
+                        <td><input type="number" name="standard_accessory_qty[]" class="form-control standardAccessoryQty" value="1" min="1"></td>
+                        <td><input type="number" step="0.01" name="standard_accessory_total[]" class="form-control standardAccessoryTotal" readonly></td>
+                    </tr>
+                    `
+                );
+            }
+        }else if(count < existingRows.length){
+            for(
+                let i = existingRows.length;
+                i > count;
+                i--
+            ){
+                tbody.lastElementChild.remove();
+            }
+        }
+        attachStandardAccessoryEvents();
+        calculateStandardAccessoriesGrandTotal();
+    }
+    function attachStandardAccessoryEvents(){
+        document
+        .querySelectorAll('.standardAccessorySelect')
+        .forEach(select => {
+            select.onchange = function(){
+                const row = this.closest('tr');
+                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                row.querySelector('.standardAccessoryPrice').value = price.toFixed(2);
+                calculateStandardAccessoryTotal(row);
+            };
+        });
+        document
+        .querySelectorAll('.standardAccessoryMaterial')
+        .forEach(select => {
+            select.onchange = function(){
+                const row = this.closest('tr');
+                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                row.querySelector('.standardAccessoryPrice').value = price.toFixed(2);
+                calculateStandardAccessoryTotal(row);
+            };
+        });
+        document
+        .querySelectorAll('.standardAccessoryQty')
+        .forEach(input => {
+            input.oninput = function(){
+                calculateStandardAccessoryTotal(this.closest('tr'));
+            };
+        });
+    }
+    function loadStandardAccessoryMaterials(select){
+        const categoryId = select.value;
+        const row = select.closest('tr');
+        const materialDropdown = row.querySelector('.standardAccessoryMaterial');
+        $.ajax({
+            url: BASE_URL + 'ajax/get-standard-accessory-materials.php',
+            type:'POST',
+            data:{category_id: categoryId},
+            success:function(response){
+                materialDropdown.innerHTML = '<option value="">Select Material</option>' + response;
+            },
+            error:function(error){
+                console.error('Standard Material Error:',error);
+            }
+        });
+    }
+    function calculateStandardAccessoryTotal(row){
+        const qty = parseFloat(row.querySelector('.standardAccessoryQty').value) || 0;
+        const price = parseFloat(row.querySelector('.standardAccessoryPrice').value) || 0;
+        const total = qty * price;
+        row.querySelector('.standardAccessoryTotal').value = total.toFixed(2);
+        calculateStandardAccessoriesGrandTotal();
+    }
+function calculateStandardAccessoriesGrandTotal(){
+
+    let grand = 0;
+
+    document
+    .querySelectorAll(
+        '.standardAccessoryTotal'
+    )
+    .forEach(input => {
+
+        grand +=
+            parseFloat(
+                input.value
+            ) || 0;
+
+    });
+
+    const grandField =
+        document.getElementById(
+            'standardAccessoriesGrandTotal'
+        );
+
+    if(grandField){
+
+        grandField.innerText =
+            grand.toFixed(2);
+
+    }
+
+    updateGrandTotal();
+
+}
 </script>
 <?php include '../includes/footer.php'; ?>

@@ -105,6 +105,51 @@
         $accessories[] = $row;
         $accessoriesTotal += (float) $row['total'];
     }
+    /* STANDARD ACCESSORIES */
+
+$standardAccessoriesQuery = mysqli_query(
+    $conn,
+    "
+    SELECT
+
+        qsa.qty,
+        qsa.unit_price,
+        qsa.total_price,
+
+        sam.material_name,
+        sam.unit,
+
+        sac.category_name
+
+    FROM quotation_standard_accessories qsa
+
+    LEFT JOIN standard_accessory_materials sam
+    ON qsa.standard_accessory_id = sam.id
+
+    LEFT JOIN standard_accessory_categories sac
+    ON sam.category_id = sac.id
+
+    WHERE qsa.quotation_id = '$id'
+
+    ORDER BY qsa.id ASC
+    "
+);
+
+$standardAccessories = [];
+$standardAccessoriesTotal = 0;
+
+while(
+    $row = mysqli_fetch_assoc(
+        $standardAccessoriesQuery
+    )
+){
+
+    $standardAccessories[] = $row;
+
+    $standardAccessoriesTotal +=
+        (float)$row['total_price'];
+
+}
     ob_start();
     include 'invoice-template.php';
     $html = ob_get_clean();
@@ -314,6 +359,11 @@
         }
         $elevationIndex++;
     }
+    if (ob_get_length()) {
+    die(
+        'Unexpected output: ' .
+        ob_get_contents()
+    );
+}
     $pdf->Output('invoice.pdf','I');
     exit;
-?>

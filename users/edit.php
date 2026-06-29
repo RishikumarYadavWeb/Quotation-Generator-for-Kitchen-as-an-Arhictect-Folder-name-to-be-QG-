@@ -88,7 +88,7 @@
                 <div class="col-md-6 mb-4">
                     <label>New Password</label>
                     <input type="password" name="password" class="modern-input" placeholder="Leave blank to keep old password">
-                </div>=
+                </div>
                 <div class="col-md-6 mb-4">
                     <label>Role</label>
                     <select name="role_id" class="modern-input" required>

@@ -13,7 +13,7 @@
         LEFT JOIN carcass_categories
         ON carcass_categories.id =
         carcass_materials.category_id
-        ORDER BY carcass_materials.id DESC"
+        ORDER BY carcass_materials.id ASC"
     );
 ?>
 <div class="page-card">
@@ -25,7 +25,7 @@
         <table class="custom-table">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>SR No.</th>
                     <th>Category</th>
                     <th>Material</th>
                     <th>Price/Sq.Ft</th>
@@ -34,9 +34,9 @@
                 </tr>
             </thead>
             <tbody>
-                <?php while($row = mysqli_fetch_assoc($query)){ ?>
+                <?php $srNo = 1; while($row = mysqli_fetch_assoc($query)){ ?>
                     <tr>
-                        <td><?= $row['id'] ?></td>
+                        <td><?= $srNo++ ?></td>
                         <td><?= $row['category_name'] ?></td>
                         <td><?= $row['material_name'] ?></td>
                         <td>₹<?= number_format($row['price_per_sqft'],2) ?></td>

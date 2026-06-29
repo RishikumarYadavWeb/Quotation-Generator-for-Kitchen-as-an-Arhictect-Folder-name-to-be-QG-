@@ -36,6 +36,23 @@
     $installationCharge = (float)$quotation['installation_charge'];
     $specialDiscount = (float)$quotation['special_discount'];
     $finalCustomerPrice = (float)$quotation['final_customer_price'];
+    $standardAccessoriesQuery = mysqli_query(
+    $conn,
+    "
+    SELECT
+        qsa.*,
+        sam.material_name,
+        sam.unit,
+        sac.category_name
+    FROM quotation_standard_accessories qsa
+    LEFT JOIN standard_accessory_materials sam
+    ON sam.id = qsa.standard_accessory_id
+    LEFT JOIN standard_accessory_categories sac
+    ON sac.id = sam.category_id
+    WHERE qsa.quotation_id = '$id'
+    ORDER BY qsa.id ASC
+    "
+);
 ?>
 <div class="container-fluid">
     <div class="top-header mb-0 d-flex justify-content-between">
@@ -354,6 +371,128 @@
             <?php endif; ?>
         </div>
     <?php } ?>
+    
+    <?php if(mysqli_num_rows($standardAccessoriesQuery) > 0){ ?>
+
+<div class="main-card" style="margin-top:30px;">
+
+    <div class="page-header mb-3">
+
+        <div>
+            <h2 class="page-title">
+                Standard Accessories
+            </h2>
+        </div>
+
+    </div>
+        <table class="table table-bordered">
+
+            <thead>
+
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Category</th>
+                    <th>Material</th>
+                    <th>Unit</th>
+                    <th>Unit Price</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <?php
+
+                $srNo = 1;
+                $grandTotal = 0;
+
+                while(
+                    $row = mysqli_fetch_assoc(
+                        $standardAccessoriesQuery
+                    )
+                ){
+
+                    $grandTotal +=
+                        $row['total_price'];
+
+                ?>
+
+                    <tr>
+
+                        <td><?= $srNo++ ?></td>
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $row['category_name']
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $row['material_name']
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $row['unit']
+                            ) ?>
+                        </td>
+
+                        <td>
+                            ₹ <?= number_format(
+                                $row['unit_price'],
+                                2
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= $row['qty'] ?>
+                        </td>
+
+                        <td>
+                            ₹ <?= number_format(
+                                $row['total_price'],
+                                2
+                            ) ?>
+                        </td>
+
+                    </tr>
+
+                <?php } ?>
+
+            </tbody>
+
+            <tfoot>
+
+                <tr>
+
+                    <th
+                        colspan="6"
+                        style="text-align:center;"
+                    >
+                        Grand Total
+                    </th>
+
+                    <th>
+                        ₹ <?= number_format(
+                            $grandTotal,
+                            2
+                        ) ?>
+                    </th>
+
+                </tr>
+
+            </tfoot>
+
+        </table>
+
+
+</div>
+
+<?php } ?>
     <?php 
         $accessoryQuery = mysqli_query(
             $conn,
@@ -373,6 +512,7 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th>Sr No.</th>
                     <th>Accessory</th>
                     <th>Price</th>
                     <th>Qty</th>
@@ -381,11 +521,13 @@
             </thead>
             <tbody>
                 <?php
+                    $srNo = 1;
                     $accessoryGrandTotal = 0;
-                    while($accessory =mysqli_fetch_assoc($accessoryQuery)
+                    while($accessory = mysqli_fetch_assoc($accessoryQuery)
                     ){$accessoryGrandTotal += $accessory['total'];
                 ?>
                     <tr>
+                        <td><?= $srNo++ ?>></td>
                         <td><?= $accessory['accessory_name']; ?></td>
                         <td> ₹ <?= number_format( $accessory['price'], 2 ); ?></td>
                         <td><?= $accessory['qty']; ?></td>
@@ -393,7 +535,7 @@
                     </tr>
                 <?php } ?>
                 <tr>
-                    <th colspan="3">Accessories Total</th>
+                    <th colspan="4" style="text-align: center;">Accessories Total</th>
                     <th>₹ <?= number_format($accessoryGrandTotal, 2 ); ?></th>
                 </tr>
             </tbody>

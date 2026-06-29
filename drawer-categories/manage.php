@@ -7,7 +7,7 @@
     if(!can('drawers_view')){
         die('Access Denied');
     }
-    $query = mysqli_query($conn,"SELECT * FROM drawer_categories ORDER BY id DESC");
+    $query = mysqli_query($conn,"SELECT * FROM drawer_categories ORDER BY id ASC");
 ?>
 <div class="page-card">
     <div class="page-header">
@@ -26,9 +26,9 @@
             </tr>
         </thead>
         <tbody>
-            <?php while($row = mysqli_fetch_assoc($query)){ ?>
+            <?php $srNo=1; while($row = mysqli_fetch_assoc($query)){ ?>
                 <tr>
-                    <td><?= $row['id'] ?></td>
+                    <td><?= $srNo++ ?></td>
                     <td><?= $row['category_name'] ?></td>
                     <td>
                         <?php if($row['status'] == 1){ ?>

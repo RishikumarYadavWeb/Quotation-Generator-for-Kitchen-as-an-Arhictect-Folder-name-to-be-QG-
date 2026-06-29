@@ -12,6 +12,7 @@ async function saveQuotation(){
     quotationData.elevations = [];
     quotationData.drawers = [];
     quotationData.shelves = [];
+    quotationData.standardAccessories = [];
     try{
         document
         .querySelectorAll('.elevation-card')
@@ -89,6 +90,45 @@ async function saveQuotation(){
                 total: row.querySelector('.accessoryTotal')?.value || 0
             });
         });
+        const standardAccessories = [];
+
+document
+.querySelectorAll('.standardAccessoryRow')
+.forEach(row => {
+
+    const materialId =
+        row.querySelector(
+            '.standardAccessoryMaterial'
+        )?.value;
+
+    if(!materialId) return;
+
+    standardAccessories.push({
+
+        standard_accessory_id: materialId,
+
+        qty:
+            row.querySelector(
+                '.standardAccessoryQty'
+            )?.value || 0,
+
+        unit_price:
+            row.querySelector(
+                '.standardAccessoryPrice'
+            )?.value || 0,
+
+        total_price:
+            row.querySelector(
+                '.standardAccessoryTotal'
+            )?.value || 0
+
+    });
+
+});
+
+/* ADD TO MAIN JSON OBJECT */
+
+quotationData.standard_accessories = standardAccessories;
         document
         .querySelectorAll('.shelfTableBody tr')
         .forEach(shelf => {

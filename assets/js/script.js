@@ -81,7 +81,6 @@ function calculateUnitSqft(input){
     row.querySelector('.sqft').value = sqft.toFixed(2);
     updateTotalSqft();
 }
-// Edited
 function calculateCarcassAmount(select){
     if(!select) return;
     const row = select.closest('.tallRow, .upperRow, .bottomRow, .loftRow');
@@ -130,44 +129,97 @@ function calculateShutterAmount(select){
     updateRowTotal(row);
 }
 function loadCarcassMaterials(select){
-    const category_id = select.value;
-    const row = select.closest( '.tallRow, .upperRow, .bottomRow, .loftRow' );
-    if(!row) return;
-    const materialDropdown = row.querySelector( '.carcassMaterial' );
-    if(!materialDropdown) return;
-    $.ajax({
-        url:
-        '/QG/ajax/get-carcass-materials.php',
-        type:'POST',
-        data:{
-            category_id
-        },
-        success:function(response){
-            materialDropdown.innerHTML = '<option value="">Select Material</option>' + response;
+
+    return new Promise((resolve, reject) => {
+
+        const category_id = select.value;
+
+        const row = select.closest(
+            '.tallRow, .upperRow, .bottomRow, .loftRow'
+        );
+
+        if(!row){
+            resolve();
+            return;
         }
+
+        const materialDropdown =
+            row.querySelector('.carcassMaterial');
+
+        if(!materialDropdown){
+            resolve();
+            return;
+        }
+
+        $.ajax({
+            url: BASE_URL + 'ajax/get-carcass-materials.php',
+            type: 'POST',
+            data: { category_id },
+
+            success: function(response){
+
+                materialDropdown.innerHTML =
+                    '<option value="">Select Material</option>' +
+                    response;
+
+                resolve();
+            },
+
+            error: function(error){
+                reject(error);
+            }
+        });
     });
 }
 function loadShutterMaterials(select){
-    const categoryId = select.value;
-    const row = select.closest( '.tallRow, .upperRow, .bottomRow, .loftRow' );
-    if(!row) return;
-    const dropdown = row.querySelector( '.shutterSubMaterial' );
-    if(!dropdown) return;
-    fetch(
-        BASE_URL +
-        'ajax/get-shutter-materials.php',
-        {
-            method:'POST',
-            headers:{ 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `category_id=${categoryId}`
+
+    return new Promise((resolve, reject) => {
+
+        const categoryId = select.value;
+
+        const row = select.closest(
+            '.tallRow, .upperRow, .bottomRow, .loftRow'
+        );
+
+        if(!row){
+            resolve();
+            return;
         }
-    )
-    .then(res => res.text())
-    .then(data => {
-        dropdown.innerHTML = '<option value="">Select Material</option>' + data;
-    })
-    .catch(error => {
-        console.error( 'Shutter Material Load Error:', error );
+
+        const dropdown =
+            row.querySelector('.shutterSubMaterial');
+
+        if(!dropdown){
+            resolve();
+            return;
+        }
+
+        fetch(
+            BASE_URL + 'ajax/get-shutter-materials.php',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type':
+                        'application/x-www-form-urlencoded'
+                },
+                body: `category_id=${categoryId}`
+            }
+        )
+        .then(res => res.text())
+        .then(data => {
+
+            dropdown.innerHTML =
+                '<option value="">Select Material</option>' +
+                data;
+
+            resolve();
+        })
+        .catch(error => {
+
+            console.error(error);
+            reject(error);
+        });
+
     });
 }
 function refreshUnitDropdowns(master){

@@ -55,9 +55,15 @@ function updateGrandTotal(){
         .forEach(field => {
             baseTotal += getNumber(field.value);
         });
+    const standardAccessoriesTotal =
+    parseFloat(
+        document.getElementById(
+            'standardAccessoriesGrandTotal'
+        )?.innerText
+    ) || 0;
     const packingCharge = getNumber(document.getElementById('packingCharge')?.value);
     const installationCharge = getNumber(document.getElementById('installationCharge')?.value);
-    const grandTotal = baseTotal + packingCharge + installationCharge;
+    const grandTotal = baseTotal + packingCharge + installationCharge + standardAccessoriesTotal;
     const grandTotalField = document.getElementById('grandTotal');
     if(grandTotalField){
         grandTotalField.value = '₹ ' + grandTotal.toFixed(2);

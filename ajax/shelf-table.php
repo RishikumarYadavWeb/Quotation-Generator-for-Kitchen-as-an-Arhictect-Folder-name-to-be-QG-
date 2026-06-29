@@ -14,7 +14,7 @@ require '../db.php';
                 <th>Depth FT</th>
                 <th>Category</th>
                 <th>Material</th>
-                <th>Rate</th>
+                <th>Unit Price</th>
                 <th>Total</th>
             </tr>
         </thead>

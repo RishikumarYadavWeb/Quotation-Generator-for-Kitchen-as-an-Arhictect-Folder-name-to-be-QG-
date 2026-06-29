@@ -9,7 +9,7 @@ $query = mysqli_query(
     $conn,
     "SELECT *
     FROM carcass_categories
-    ORDER BY id DESC"
+    ORDER BY id ASC"
 );
 ?>
 <div class="page-card">
@@ -27,9 +27,9 @@ $query = mysqli_query(
             </tr>
         </thead>
         <tbody>
-            <?php while($row = mysqli_fetch_assoc($query)){ ?>
+            <?php $srNo=1; while($row = mysqli_fetch_assoc($query)){ ?>
                 <tr>
-                    <td><?= $row['id'] ?></td>
+                    <td><?= $srNo++ ?></td>
                     <td><?= $row['category_name'] ?></td>
                     <td>
                         <?php if($row['status'] == 1){ ?>

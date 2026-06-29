@@ -22,12 +22,13 @@
             </thead>
             <tbody>
                 <?php
-                    $query = "SELECT * FROM shutter_categories ORDER BY id DESC";
+                    $query = "SELECT * FROM shutter_categories ORDER BY id ASC";
                     $result = mysqli_query($conn, $query);
+                    $srNo=1;
                     while($row = mysqli_fetch_assoc($result)) {
                 ?>
                     <tr>
-                        <td><?= $row['id']; ?></td>
+                        <td><?= $srNo++ ?></td>
                         <td><?= $row['category_name']; ?></td>
                         <td>
                             <?php if($row['status'] == 1) { ?>

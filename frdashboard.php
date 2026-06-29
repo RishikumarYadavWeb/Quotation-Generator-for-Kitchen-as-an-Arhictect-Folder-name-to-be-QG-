@@ -8,6 +8,7 @@ if(!can('frdashboard_view')){
     die('Access Denied');
 }
 $entityId = 1;
+
 /* =========================================
    TOTAL QUOTATIONS
 ========================================= */
@@ -47,7 +48,33 @@ $totalRevenue =
 mysqli_fetch_assoc(
     $totalRevenueQuery
 );
+// PAGINATION
 
+$limit = 15;
+
+$page = isset($_GET['page'])
+    ? (int)$_GET['page']
+    : 1;
+
+$page = max($page, 1);
+
+$offset = ($page - 1) * $limit;
+
+// TOTAL RECORDS
+
+$totalQuotationPages = mysqli_fetch_assoc(
+    mysqli_query(
+        $conn,
+        "
+        SELECT COUNT(*) as total
+        FROM quotations
+        WHERE entity_id='$entityId'
+        "
+    )
+);
+
+$totalRecords = $totalQuotationPages['total'];
+$totalPages = ceil($totalRecords / $limit);
 /* =========================================
    QUOTATIONS
 ========================================= */
@@ -66,6 +93,8 @@ $quotationQuery = mysqli_query(
     WHERE quotations.entity_id='$entityId'
 
     ORDER BY quotations.id DESC
+
+    LIMIT $limit OFFSET $offset
     "
 );
 
@@ -266,6 +295,67 @@ mysqli_fetch_assoc(
                 <?php endwhile; ?>
             </tbody>
         </table>
+        <?php if($totalPages > 1){ ?>
+
+<div class="pagination">
+
+    <?php if($page > 1){ ?>
+        <a href="?page=<?= $page - 1 ?>">
+            &laquo; Prev
+        </a>
+    <?php } ?>
+
+    <?php if($page > 3){ ?>
+
+        <a href="?page=1">1</a>
+
+        <?php if($page > 4){ ?>
+            <span class="pagination-dots">...</span>
+        <?php } ?>
+
+    <?php } ?>
+
+    <?php
+
+    $start = max(1, $page - 2);
+    $end = min($totalPages, $page + 2);
+
+    for($i = $start; $i <= $end; $i++){
+
+    ?>
+
+        <a
+            href="?page=<?= $i ?>"
+            class="<?= ($i == $page)
+                ? 'active'
+                : '' ?>"
+        >
+            <?= $i ?>
+        </a>
+
+    <?php } ?>
+
+    <?php if($page < $totalPages - 2){ ?>
+
+        <?php if($page < $totalPages - 3){ ?>
+            <span class="pagination-dots">...</span>
+        <?php } ?>
+
+        <a href="?page=<?= $totalPages ?>">
+            <?= $totalPages ?>
+        </a>
+
+    <?php } ?>
+
+    <?php if($page < $totalPages){ ?>
+        <a href="?page=<?= $page + 1 ?>">
+            Next &raquo;
+        </a>
+    <?php } ?>
+
+</div>
+
+<?php } ?>
     </div>
 </div>
 <?php include 'includes/footer.php'; ?>

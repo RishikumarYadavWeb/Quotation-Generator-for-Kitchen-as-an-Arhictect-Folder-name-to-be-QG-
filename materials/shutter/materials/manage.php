@@ -32,12 +32,13 @@
                     LEFT JOIN shutter_categories
                     ON shutter_materials.category_id =
                         shutter_categories.id
-                    ORDER BY shutter_materials.id DESC";
+                    ORDER BY shutter_materials.id ASC";
                     $result = mysqli_query($conn, $query);
+                    $srNo=1;
                     while($row = mysqli_fetch_assoc($result)) {
                 ?>
                     <tr>
-                        <td><?= $row['id']; ?></td>
+                        <td><?= $srNo++ ?></td>
                         <td><?= $row['category_name']; ?></td>
                         <td><?= $row['material_type']; ?></td>
                         <td>₹ <?= number_format($row['price_per_sqft'],2); ?></td>

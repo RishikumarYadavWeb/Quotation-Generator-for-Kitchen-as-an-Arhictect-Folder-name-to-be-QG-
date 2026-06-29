@@ -11,7 +11,7 @@
         $conn,
         "SELECT *
         FROM shelf_categories
-        ORDER BY id DESC"
+        ORDER BY id ASC"
     );
 ?>
 <div class="page-card">
@@ -31,9 +31,9 @@
             </tr>
         </thead>
         <tbody>
-            <?php while($row = mysqli_fetch_assoc($query)){ ?>
+            <?php $srNo=1; while($row = mysqli_fetch_assoc($query)){ ?>
                 <tr>
-                    <td><?= $row['id'] ?></td>
+                    <td><?= $srNo++ ?></td>
                     <td><?= $row['category_name'] ?></td>
                     <td>
                         <?php if($row['status'] == 1){ ?>

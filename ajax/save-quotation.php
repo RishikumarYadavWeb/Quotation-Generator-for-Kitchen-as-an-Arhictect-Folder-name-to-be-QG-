@@ -29,6 +29,7 @@ try{
     $installationCharge = (float)preg_replace( '/[^0-9.]/', '', $data['installation_charge'] ?? 0 );
     $specialDiscount = (float)preg_replace( '/[^0-9.]/', '', $data['special_discount'] ?? 0 );
     $finalCustomerPrice = (float)preg_replace( '/[^0-9.]/', '', $data['final_customer_price'] ?? 0 );
+    $standardAccessories = $data['standard_accessories'] ?? [];
     mysqli_query( $conn,
         "
         INSERT INTO clients(
@@ -194,6 +195,67 @@ try{
             }        
         }
     }
+/* SAVE STANDARD ACCESSORIES */
+
+if(
+    isset($data['standard_accessories']) &&
+    is_array($data['standard_accessories'])
+){
+    foreach(
+        $data['standard_accessories']
+        as $accessory
+    ){
+
+        $standardAccessoryId =
+            (int)(
+                $accessory[
+                    'standard_accessory_id'
+                ] ?? 0
+            );
+
+        $qty =
+            (float)(
+                $accessory['qty'] ?? 0
+            );
+
+        $unitPrice =
+            (float)(
+                $accessory['unit_price'] ?? 0
+            );
+
+        $totalPrice =
+            (float)(
+                $accessory['total_price'] ?? 0
+            );
+
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_standard_accessories(
+
+                quotation_id,
+                standard_accessory_id,
+                qty,
+                unit_price,
+                total_price
+
+            )
+
+            VALUES(
+
+                '$quotationId',
+                '$standardAccessoryId',
+                '$qty',
+                '$unitPrice',
+                '$totalPrice'
+
+            )
+            "
+        );
+
+    }
+
+}
     if(
         isset($data['accessories']) &&
         is_array($data['accessories'])
