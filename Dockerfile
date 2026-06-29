@@ -1,6 +1,5 @@
 FROM php:8.2-apache
 
-# Install required libraries
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -10,24 +9,17 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git
 
-# Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd mysqli pdo pdo_mysql zip
+    && docker-php-ext-install gd mysqli pdo_mysql zip
 
-# Enable Apache rewrite
 RUN a2enmod rewrite
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy project files
 COPY . .
 
-# Install Composer packages
-RUN composer install --optimize-autoloader --no-interaction
+RUN composer install --no-interaction --optimize-autoloader
 
-# Expose Apache port
 EXPOSE 80
