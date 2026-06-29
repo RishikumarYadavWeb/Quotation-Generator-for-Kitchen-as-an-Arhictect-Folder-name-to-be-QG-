@@ -1,0 +1,467 @@
+<?php
+    include '../includes/auth.php';
+    include '../db.php';
+    /** @var mysqli $conn */
+    include '../includes/header.php';
+    include '../includes/sidebar.php';
+    $created_by = $_SESSION['user_id'];
+    /* CARCASS MATERIALS */
+    $carcassMaterials = [];
+    $carcassQuery = "
+            SELECT
+                id,
+                category_id,
+                material_name,
+                price_per_sqft
+            FROM carcass_materials
+            WHERE status='1'
+            ORDER BY material_name ASC
+        ";
+    $carcassResult = mysqli_query($conn, $carcassQuery);
+    while($row = mysqli_fetch_assoc($carcassResult)){
+        $carcassMaterials[] = $row;
+    }
+    /* SHUTTER CATEGORIES */
+    $shutterCategories = [];
+    $categoryQuery = "
+            SELECT
+                id,
+                category_name
+            FROM shutter_categories
+            WHERE status='1'
+            ORDER BY category_name ASC
+        ";
+    $categoryResult = mysqli_query($conn, $categoryQuery);
+    while($row = mysqli_fetch_assoc($categoryResult)){
+        $shutterCategories[] = $row;
+    }
+    /* SHUTTER MATERIALS */
+    $shutterMaterials = [];
+    $materialQuery = "
+            SELECT
+                shutter_materials.id,
+                shutter_materials.category_id,
+                shutter_materials.material_type,
+                shutter_materials.price_per_sqft,
+                shutter_categories.category_name
+            FROM shutter_materials
+            LEFT JOIN shutter_categories
+            ON shutter_materials.category_id = shutter_categories.id
+            WHERE shutter_materials.status='1'
+            ORDER BY shutter_materials.material_type ASC
+        ";
+    $materialResult = mysqli_query($conn, $materialQuery);
+    while($row = mysqli_fetch_assoc($materialResult)){
+        $shutterMaterials[] = $row;
+    }
+    /* DRAWERS */
+    $drawers = [];
+    $drawerQuery = "
+            SELECT
+                id,
+                category_id,
+                material_name,
+                price_per_sqft
+            FROM drawer_materials
+            WHERE status='1'
+            ORDER BY material_name ASC
+        ";
+    $drawerResult = mysqli_query($conn, $drawerQuery);
+    while($row = mysqli_fetch_assoc($drawerResult)){
+        $drawers[] = $row;
+    }
+    /* SHELVES */
+    $shelves = [];
+    $shelfQuery = "
+            SELECT
+                id,
+                category_id,
+                material_name,
+                price_per_sqft
+            FROM shelf_materials
+            WHERE status='1'
+            ORDER BY material_name ASC
+        ";
+    $shelfResult = mysqli_query($conn, $shelfQuery);
+    while($row = mysqli_fetch_assoc($shelfResult)){
+        $shelves[] = $row;
+    }
+    /* ACCESSORIES */
+    $getAccessories = mysqli_query($conn, "
+            SELECT
+                id,
+                accessory_name,
+                price
+            FROM accessories
+            WHERE status='active'
+            ORDER BY accessory_name ASC
+        ");
+    $accessoryOptions = '';
+    while($acc = mysqli_fetch_assoc($getAccessories)){
+        $accessoryOptions .= '
+            <option
+                value=\"'.$acc['id'].'\"
+                data-price=\"'.$acc['price'].'\">
+                '.$acc['accessory_name'].'
+            </option>
+        ';
+    }
+?>
+<form  id="quotationForm" enctype="multipart/form-data" novalidate onkeydown="preventEnterSubmit(event)">
+    <div class="container-fluid">
+        <div class="top-header">
+            <div>
+                <h2 class="page-title">New Project</h2>
+                <p class="page-subtitle">
+                    <?php
+                        $entityResult = mysqli_query($conn,
+                            "SELECT * FROM entities
+                            WHERE status='active'
+                            ORDER BY entity_name"
+                        );
+                    ?>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label"> Entity </label>
+                        <?php if($_SESSION['role_id'] == 1){ ?>
+                            <select name="entity_id" class="form-control" required >
+                                <option value=""> Select Entity </option>
+                                <?php
+                                $result = mysqli_query( $conn,
+                                    "SELECT *
+                                    FROM entities
+                                    ORDER BY entity_name"
+                                );
+                                while(
+                                    $row = mysqli_fetch_assoc($result)
+                                ){
+                                ?>
+                                    <option value="<?= $row['id']; ?>">
+                                        <?= $row['entity_name']; ?>
+                                    </option>
+                                <?php } ?>
+                            </select>
+                        <?php } else { ?>
+                            <?php
+                                $entityId = $_SESSION['entity_id'];
+                                $entityQuery = mysqli_query($conn,
+                                        "
+                                        SELECT *
+                                        FROM entities
+                                        WHERE id='$entityId'
+                                        LIMIT 1
+                                        "
+                                    );
+                                $entity = mysqli_fetch_assoc($entityQuery);
+                            ?>
+                            <input type="hidden" name="entity_id"  value="<?= $entity['id']; ?>">
+                            <input type="text" class="form-control" value="<?= $entity['entity_name']; ?>" readonly>
+                        <?php } ?>
+                    </div>
+                </p>  
+            </div>
+        </div>
+        <div class="main-card mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Client Name</label>
+                    <input type="text" name="client_name" id="client_name" class="form-control" placeholder="Enter Client Name" >
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Project Type</label>
+                    <select class="modern-input" id="projectType" name="project_type" onchange="toggleOtherInput()">
+                        <option value="Kitchen">Kitchen</option>
+                        <option value="Wardrobe">Wardrobe</option>
+                        <option value="Bar">Bar</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="otherProjectInput" name="other_project_type" class="modern-input mt-3" placeholder="Specify other project type" style="display:none;">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Mobile Number</label>
+                    <input type="text" name="phone" id="phone" class="form-control" placeholder="Enter Mobile Number">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>E-mail Address</label>
+                    <input type="email" name="email" id="email" class="form-control" placeholder="Enter E-Mail Address">
+                </div>
+            </div>
+        </div>
+        <div class="main-card mb-4">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>GST Number</label>
+                    <input type="text" name="gst_number" id="gst_number" class="form-control" placeholder="Enter GST Number">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>PAN Number</label>
+                    <input type="text" name="pan_number" id="pan_number" class="form-control" placeholder="Enter Pan Number">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Billing Address</label>
+                    <textarea name="address" id="address" class="form-control" placeholder="Enter Billing Address"></textarea>
+                    <div class="mt-2 d-flex">
+                        <input type="checkbox" id="sameAddress" onchange="toggleShippingAddress()">
+                        <label for="sameAddress" class="mt-2 mx-2">Same As Billing Address</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Shipping Address</label>
+                    <textarea name="shipping_address" id="shippingAddress" class="form-control" placeholder="Enter Shipping Address"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="main-card mb-4">
+            <div class="row align-items-end">
+                <div class="col-md-4 mb-3">
+                    <label>Total Carpentry Sq.Ft</label>
+                    <input type="text" id="totalSqft" name="total_sqft" class="modern-input" readonly>
+                </div>
+                <div class="row mb-4 align-items-end">
+                    <div class="col-md-4">
+                        <label>Number Of Elevations</label>
+                        <input type="number" id="elevationCount" class="modern-input" value="1" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="generate-btn" onclick="generateElevations()">
+                            Add Elevations
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="elevationContainer"></div>
+        <div class="main-card" style="margin-top:30px;">
+            <div class="page-header mb-0">
+                <div>
+                    <h2 class="page-title">Additional Accessories </h2>
+                    <!-- <p class="page-subtitle"> Add accessories details </p> -->
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Number Of Accessories</label>
+                <input type="number" id="accessoryCount" class="form-control" min="0" placeholder="Add Number of Accessories">
+            </div>
+            <div style="margin-top:20px;">
+                <button type="button" class="btn btn-primary" onclick="generateAccessories()">
+                    Generate Accessories
+                </button>
+            </div>
+            <div id="accessoriesContainer" style="margin-top:25px;">
+            </div>
+            <div class="card" style="background:#f8fafc;">
+                <h5>
+                    Accessories Total : ₹ 
+                    <span id="accessoriesGrandTotal">
+                        0.00
+                    </span>
+                </h5>
+            </div>
+        </div>
+    </div>
+</form>
+<div class="main-card mt-4">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <label class="form-label">Add : Pkg. & Forwarding & Transport</label>
+            <input type="number" step="1000" min="0" id="packingCharge" class="form-control modern-input" value="0" oninput="calculateFinalPricing()">
+        </div>
+        <div class="col-md-6 mb-4">
+            <label class="form-label">Add : Installation</label>
+            <input type="number" id="installationCharge" min="0" class="form-control modern-input" value="0" readonly>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <label style=" font-size:18px; font-weight:700;margin-bottom:12px; display:block;">Grand Total</label>
+            <input type="text" min="0" id="grandTotal" class="modern-input" readonly style=" font-size:22px; font-weight:700; color:#111827; background:#f8fafc;" >
+        </div>
+        <div class="col-md-6 mb-4">
+            <label class="form-label" min="0" style="font-size:18px; font-weight:700; margin-bottom:12px; display:block;">Special Discount (%)</label>
+            <input type="number" step="1" id="specialDiscount" class="form-control modern-input" value="0" oninput="calculateFinalPricing()">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <label class="form-label" style=" font-size:22px; font-weight:700; color:#1e293b;">Final Customer Price</label>
+            <input type="text" min="0" id="finalCustomerPrice" class="form-control modern-input" readonly style=" height:70px; font-size:28px; font-weight:700; background:#ecfdf5; color:#15803d; border:2px solid #bbf7d0;">
+        </div>
+    </div>
+</div>
+<button type="button" class="generate-btn" style=" max-width:220px; " onclick="saveQuotation()" > Save Quotation </button>
+<script>
+    const IS_EDIT_PAGE = false;
+    const COST_MULTLIER = <?= ($_SESSION['entity_id'] == 2) ? 0.5 : 1 ?>;
+    function getCostMultiplier(){
+        const entityField = document.getElementById('entity_id');
+        if(entityField){
+            const selectedEntity =
+                entityField.value;
+            if(selectedEntity == '2'){
+                return 0.5;
+            }
+            return 1;
+        }
+        return COST_MULTLIER;
+    }
+    const carcassMaterials = <?= json_encode($carcassMaterials); ?>;
+    const shutterCategories = <?= json_encode($shutterCategories); ?>;
+    const shutterMaterials = <?= json_encode($shutterMaterials); ?>;
+    const drawers = <?= json_encode($drawers); ?>;
+    const shelves = <?= json_encode($shelves); ?>;
+    function toggleOtherInput(){
+        const projectType = document.getElementById('projectType');
+        const otherInput = document.getElementById('otherProjectInput');
+        const isOther = projectType.value === 'Other';
+        otherInput.style.display = isOther ? 'block' : 'none';
+        otherInput.disabled = !isOther;
+        otherInput.required = isOther;
+        if(!isOther){
+            otherInput.value = '';
+        }
+    }
+    function syncShippingAddress(){
+        const billing = document.getElementById('address');
+        const shipping = document.getElementById('shippingAddress');
+        shipping.value = billing.value;
+    }
+    function toggleShippingAddress(){
+        const checkbox = document.getElementById('sameAddress');
+        const shipping = document.getElementById('shippingAddress');
+        if(checkbox.checked){
+            syncShippingAddress();
+            shipping.readOnly = true;
+            shipping.style.backgroundColor = '#f5f5f5';
+        }else{
+            shipping.readOnly = false;
+            shipping.style.backgroundColor = '#ffffff';
+        }
+    }
+    function preventEnterSubmit(event){
+        if(event.key === 'Enter'){
+            const target = event.target;
+            if(
+                target &&
+                target.tagName !== 'TEXTAREA' &&
+                target.type !== 'submit' &&
+                target.type !== 'button'
+            ){
+                event.preventDefault();
+                return false;
+            }
+        }
+    }
+    const accessoryOptions = ` <?= $accessoryOptions ?> `;
+    function generateAccessories(){
+        const count = parseInt(document.getElementById('accessoryCount').value) || 0;
+        const container = document.getElementById('accessoriesContainer');
+        if(
+            !container.querySelector(
+                '.accessoriesTable'
+            )
+        ){
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-bordered accessoriesTable">
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Accessory</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="accessoriesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        const tbody = container.querySelector('.accessoriesTableBody');
+        const existingRows = tbody.querySelectorAll('tr');
+        if(count > existingRows.length){
+            for(
+                let i = existingRows.length;
+                i < count;
+                i++
+            ){
+                tbody.insertAdjacentHTML(
+                    'beforeend',
+                    `
+                    <tr class="accessoryRow">
+                        <td class="accessorySrNo" style="display:flex;justify-content:center;align-items:center;">
+                            ${i + 1}
+                        </td>
+                        <td>
+                            <select name="accessory_id[]" class="form-control accessorySelect">
+                                <option value="">
+                                    Select Accessory
+                                </option>
+                                ${accessoryOptions}
+                            </select>
+                        </td>
+                        <td> <input type="number" step="0.01" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
+                        <td> <input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
+                        <td> <input type="number" step="0.01" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
+                    </tr>
+                    `
+                );
+            }
+        }
+        else if(count < existingRows.length){
+            for(
+                let i = existingRows.length;
+                i > count;
+                i--
+            ){
+                tbody.lastElementChild.remove();
+            }
+        }
+        attachAccessoryEvents();
+        calculateAccessoriesGrandTotal();
+    }
+    function attachAccessoryEvents(){
+        document
+        .querySelectorAll('.accessorySelect')
+        .forEach(select => {
+            select.onchange = function(){
+                const row = this.closest('tr');
+                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                row.querySelector('.accessoryPrice').value =price.toFixed(2);
+                calculateAccessoryTotal(row);
+            };
+        });
+        document
+        .querySelectorAll('.accessoryQty')
+        .forEach(input => {
+            input.oninput = function(){
+                const row = this.closest('tr');
+                calculateAccessoryTotal(row);
+            };
+        });
+    }
+    function calculateAccessoryTotal(row){
+        const qty = parseFloat(row.querySelector('.accessoryQty').value) || 0;
+        const price = parseFloat(row.querySelector('.accessoryPrice').value) || 0;
+        const total = qty * price;
+        row.querySelector('.accessoryTotal').value =total.toFixed(2);
+        calculateAccessoriesGrandTotal();
+    }
+    function calculateAccessoriesGrandTotal(){
+        let grand = 0;
+        const totals = document.querySelectorAll( '.accessoryTotal');
+        totals.forEach(input => {
+            grand += parseFloat(input.value) || 0;
+        });
+        const grandField = document.getElementById('accessoriesGrandTotal');
+        if(grandField){
+            grandField.innerText = grand.toFixed(2);
+        }
+        updateGrandTotal();
+    }
+</script>
+<?php include '../includes/footer.php'; ?>

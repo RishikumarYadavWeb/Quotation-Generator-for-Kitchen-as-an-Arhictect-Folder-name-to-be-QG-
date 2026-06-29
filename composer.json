@@ -1,0 +1,16 @@
+{
+    "name": "rishi/custom-quotation-management-system",
+    "description": "Enterprise quotation management system with PDF generation, RBAC and pricing automation.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "dompdf/dompdf": "^2.0",
+        "setasign/fpdi": "^2.6",
+        "setasign/fpdf": "^1.9",
+        "tecnickcom/tcpdf": "^6.7",
+        "setasign/fpdi-tcpdf": "^2.3"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.2"
+    }
+}
