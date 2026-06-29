@@ -373,22 +373,14 @@
     <?php } ?>
     
     <?php if(mysqli_num_rows($standardAccessoriesQuery) > 0){ ?>
-
-<div class="main-card" style="margin-top:30px;">
-
-    <div class="page-header mb-3">
-
-        <div>
-            <h2 class="page-title">
-                Standard Accessories
-            </h2>
+    <div class="main-card" style="margin-top:30px;">
+        <div class="page-header mb-3">
+            <div>
+                <h2 class="page-title">Standard Accessories</h2>
+            </div>
         </div>
-
-    </div>
         <table class="table table-bordered">
-
             <thead>
-
                 <tr>
                     <th>Sr No.</th>
                     <th>Category</th>
@@ -398,101 +390,38 @@
                     <th>Qty</th>
                     <th>Total</th>
                 </tr>
-
             </thead>
-
             <tbody>
-
                 <?php
-
-                $srNo = 1;
-                $grandTotal = 0;
-
-                while(
-                    $row = mysqli_fetch_assoc(
-                        $standardAccessoriesQuery
-                    )
-                ){
-
-                    $grandTotal +=
-                        $row['total_price'];
-
+                    $srNo = 1;
+                    $grandTotal = 0;
+                    while(
+                        $row = mysqli_fetch_assoc(
+                            $standardAccessoriesQuery
+                        )
+                    ){
+                        $grandTotal += $row['total_price'];
                 ?>
-
                     <tr>
-
                         <td><?= $srNo++ ?></td>
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $row['category_name']
-                            ) ?>
-                        </td>
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $row['material_name']
-                            ) ?>
-                        </td>
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $row['unit']
-                            ) ?>
-                        </td>
-
-                        <td>
-                            ₹ <?= number_format(
-                                $row['unit_price'],
-                                2
-                            ) ?>
-                        </td>
-
-                        <td>
-                            <?= $row['qty'] ?>
-                        </td>
-
-                        <td>
-                            ₹ <?= number_format(
-                                $row['total_price'],
-                                2
-                            ) ?>
-                        </td>
-
+                        <td><?= htmlspecialchars($row['category_name']) ?></td>
+                        <td><?= htmlspecialchars($row['material_name']) ?></td>
+                        <td><?= htmlspecialchars($row['unit']) ?></td>
+                        <td>₹ <?= number_format($row['unit_price'],2) ?></td>
+                        <td><?= $row['qty'] ?></td>
+                        <td>₹ <?= number_format($row['total_price'],2) ?></td>
                     </tr>
-
                 <?php } ?>
-
             </tbody>
-
             <tfoot>
-
                 <tr>
-
-                    <th
-                        colspan="6"
-                        style="text-align:center;"
-                    >
-                        Grand Total
-                    </th>
-
-                    <th>
-                        ₹ <?= number_format(
-                            $grandTotal,
-                            2
-                        ) ?>
-                    </th>
-
+                    <th colspan="6" style="text-align:center;">Grand Total</th>
+                    <th>₹ <?= number_format($grandTotal,2) ?></th>
                 </tr>
-
             </tfoot>
-
         </table>
-
-
-</div>
-
-<?php } ?>
+    </div>
+    <?php } ?>
     <?php 
         $accessoryQuery = mysqli_query(
             $conn,
@@ -558,7 +487,6 @@
                         <th width="70%">Grand Total </th>
                         <td> ₹ <?= number_format($quotation['grand_total'],2); ?> </td>
                     </tr>
-                    
                     <tr>
                         <th>Special Discount</th>
                         <td><?= number_format($quotation['special_discount']); ?> %</td>

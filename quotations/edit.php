@@ -191,32 +191,23 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
     }
     $standardAccessoriesQuery = mysqli_query(
     $conn,
-    "
-    SELECT
-        qsa.*,
-        sam.category_id
-
-    FROM quotation_standard_accessories qsa
-
-    LEFT JOIN standard_accessory_materials sam
-    ON sam.id = qsa.standard_accessory_id
-
-    WHERE qsa.quotation_id = '$quotation_id'
-
-    ORDER BY qsa.id ASC
-    "
-);
-
-$EDIT_STANDARD_ACCESSORIES = [];
-
-while(
-    $row =
-    mysqli_fetch_assoc(
-        $standardAccessoriesQuery
-    )
-){
-    $EDIT_STANDARD_ACCESSORIES[] = $row;
-}
+        "
+        SELECT
+            qsa.*,
+            sam.category_id
+        FROM quotation_standard_accessories qsa
+        LEFT JOIN standard_accessory_materials sam
+        ON sam.id = qsa.standard_accessory_id
+        WHERE qsa.quotation_id = '$quotation_id'
+        ORDER BY qsa.id ASC
+        "
+    );
+    $EDIT_STANDARD_ACCESSORIES = [];
+    while(
+        $row = mysqli_fetch_assoc($standardAccessoriesQuery)
+    ){
+        $EDIT_STANDARD_ACCESSORIES[] = $row;
+    }
     $standardAccessoryOptions = '';
     $standardAccessories = mysqli_query(
         $conn,
@@ -456,7 +447,6 @@ while(
     </div>
 </div>
 <button type="button" class="generate-btn" style=" max-width:220px; " onclick="updateQuotation()" > Update Quotation </button>
-
 <script>
     const IS_EDIT_PAGE = true;
     const QUOTATION_ID = <?= $quotation_id ?>;
@@ -469,10 +459,6 @@ while(
     const QUOTATION = <?= json_encode($quotation); ?>;
     const EDIT_IMAGES = <?= json_encode($elevationImages); ?>;
     const EDIT_STANDARD_ACCESSORIES = <?= json_encode($EDIT_STANDARD_ACCESSORIES ?? []) ?>;
-    console.log(
-    'Standard Accessories:',
-    EDIT_STANDARD_ACCESSORIES
-);
     window.oldElevationImages = {};
     window.deletedImages = [];
     document.addEventListener(
@@ -489,72 +475,30 @@ while(
                 const elevation = EDIT_ELEVATIONS[index];
                 const card = cards[index];
                 if(!card) continue;
-const previewContainer =
-    card.querySelector(
-        '.line-image-preview'
-    );
-
-if(
-    previewContainer &&
-    EDIT_IMAGES[elevation.id]
-){
-
-    // Store old images globally
-    if(
-        typeof window.oldElevationImages === 'undefined'
-    ){
-        window.oldElevationImages = {};
-    }
-window.oldElevationImages[
-    index + 1
-] = [...EDIT_IMAGES[elevation.id]];
-
-    EDIT_IMAGES[elevation.id]
-    .forEach(image => {
-
-        const wrapper =
-            document.createElement('div');
-
-        wrapper.className =
-            'position-relative d-inline-block me-2 mb-2';
-
-        wrapper.innerHTML = `
-            <img
-                src="/QG/uploads/line-images/${image}"
-                class="preview-image preview-card"
-                style="
-                    width:140px;
-                    height:140px;
-                    border-radius:10px;
-                    overflow:hidden;
-                    border:1px solid #ddd;
-                    box-shadow:0 2px 8px rgba(0,0,0,.08);
-                "
-            >
-
-            <button
-                type="button"
-                class="btn btn-danger btn-sm remove-preview remove-old-image"
-                data-image="${image}"
-                data-elevation="${elevation.id}"
-            >
-                x
-            </button>
-        `;
-
-        previewContainer.appendChild(
-            wrapper
-        );
-
-    });
-
-}
-
-console.log(
-    'OLD IMAGES:',
-    window.oldElevationImages
-);
-
+                const previewContainer = card.querySelector('.line-image-preview');
+                if(
+                    previewContainer &&
+                    EDIT_IMAGES[elevation.id]
+                ){
+                    if(
+                        typeof window.oldElevationImages === 'undefined'
+                    ){
+                        window.oldElevationImages = {};
+                    }
+                    window.oldElevationImages[index + 1] = [...EDIT_IMAGES[elevation.id]];
+                    EDIT_IMAGES[elevation.id]
+                    .forEach(image => {
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'position-relative d-inline-block me-2 mb-2';
+                        wrapper.innerHTML = `
+                            <img src="/QG/uploads/line-images/${image}" class="preview-image preview-card" style="width:140px;height:140px;border-radius:10px;overflow:hidden;border:1px solid #ddd;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+                            <button type="button" class="btn btn-danger btn-sm remove-preview remove-old-image" data-image="${image}" data-elevation="${elevation.id}">x</button>
+                        `;
+                        previewContainer.appendChild(
+                            wrapper
+                        );
+                    });
+                }
                 // Ceiling Height
                 card.querySelector('.ceilingHeightMM').value = elevation.ceiling_height_mm;
                 card.querySelector('.ceilingHeightFT').value = elevation.ceiling_height_ft;
@@ -852,487 +796,185 @@ console.log(
                     if(typeof updateGrandTotal === 'function'){updateGrandTotal();}
                 }
                 // Drawers
-                // DRAWER EDIT DATA
-if (
-    typeof EDIT_DRAWERS !== 'undefined' &&
-    EDIT_DRAWERS.length > 0
-) {
-
-    // Group drawers by elevation + unit type
-    const groupedDrawers = {};
-
-    EDIT_DRAWERS.forEach(drawer => {
-
-        const parts =
-            drawer.assigned_unit_id.split('_');
-
-        const elevationNo =
-            parseInt(
-                parts[0].replace('E', '')
-            );
-
-        const unitType =
-            parts[1].toLowerCase();
-
-        const key =
-            `${elevationNo}_${unitType}`;
-
-        if (!groupedDrawers[key]) {
-            groupedDrawers[key] = [];
-        }
-
-        groupedDrawers[key].push(drawer);
-
-    });
-
-    // Process each group
-    for (const key in groupedDrawers) {
-
-        const [elevationNo, unitType] =
-            key.split('_');
-
-        const elevationCard =
-            document.querySelectorAll(
-                '.elevation-card'
-            )[elevationNo - 1];
-
-        if (!elevationCard) continue;
-
-        const master =
-            elevationCard.querySelector(
-                `.${unitType}-master`
-            );
-
-        if (!master) continue;
-
-        // Enable drawer section
-        const yesRadio =
-            master.querySelector(
-                'input[name="drawerOption"][value="yes"]'
-            );
-
-        if (yesRadio) {
-            yesRadio.checked = true;
-            toggleDrawerSection(yesRadio);
-        }
-
-        const drawerCount =
-            master.querySelector('.drawerCount');
-
-        if (drawerCount) {
-            drawerCount.value =
-                groupedDrawers[key].length;
-        }
-
-        const button =
-            master.querySelector(
-                '.drawer-section .generate-btn'
-            );
-
-        if (!button) continue;
-
-        await generateDrawers(button);
-
-        await new Promise(
-            resolve => setTimeout(resolve, 50)
-        );
-
-        const rows =
-            master.querySelectorAll(
-                '.drawerTableBody tr'
-            );
-
-        for (
-            let i = 0;
-            i < groupedDrawers[key].length;
-            i++
-        ) {
-
-            const drawer =
-                groupedDrawers[key][i];
-
-            const row = rows[i];
-
-            if (!row) continue;
-
-            row.querySelector(
-                '.drawerAssignedUnit'
-            ).value =
-                drawer.assigned_unit_id;
-
-            row.querySelector(
-                '.drawerQty'
-            ).value =
-                drawer.quantity;
-
-            row.querySelector(
-                '.drawerWidthMM'
-            ).value =
-                drawer.width_mm;
-
-            row.querySelector(
-                '.drawerWidthFT'
-            ).value =
-                drawer.width_ft;
-
-            row.querySelector(
-                '.drawerHeightMM'
-            ).value =
-                drawer.height_mm;
-
-            row.querySelector(
-                '.drawerHeightFT'
-            ).value =
-                drawer.height_ft;
-
-            const category =
-                row.querySelector(
-                    '.drawerCategory'
-                );
-
-            category.value =
-                drawer.drawer_categories_id;
-
-            await loadDrawerMaterials(
-                category
-            );
-
-            await new Promise(
-                resolve => setTimeout(resolve, 50)
-            );
-
-            row.querySelector(
-                '.drawerMaterial'
-            ).value =
-                drawer.drawer_materials_id;
-
-            row.querySelector(
-                '.drawerPrice'
-            ).value =
-                drawer.price;
-
-            row.querySelector(
-                '.drawerTotal'
-            ).value =
-                '₹ ' + drawer.total;
-        }
-    }
-}
+                if (
+                    typeof EDIT_DRAWERS !== 'undefined' &&
+                    EDIT_DRAWERS.length > 0
+                ) {
+                    const groupedDrawers = {};
+                    EDIT_DRAWERS.forEach(drawer => {
+                        const parts = drawer.assigned_unit_id.split('_');
+                        const elevationNo = parseInt(parts[0].replace('E', ''));
+                        const unitType = parts[1].toLowerCase();
+                        const key = `${elevationNo}_${unitType}`;
+                        if (!groupedDrawers[key]) {
+                            groupedDrawers[key] = [];
+                        }
+                        groupedDrawers[key].push(drawer);
+                    });
+                    for (const key in groupedDrawers) {
+                        const [elevationNo, unitType] = key.split('_');
+                        const elevationCard = document.querySelectorAll('.elevation-card')[elevationNo - 1];
+                        if (!elevationCard) continue;
+                        const master = elevationCard.querySelector(`.${unitType}-master`);
+                        if (!master) continue;
+                        const yesRadio = master.querySelector('input[name="drawerOption"][value="yes"]');
+                        if (yesRadio) {
+                            yesRadio.checked = true;
+                            toggleDrawerSection(yesRadio);
+                        }
+                        const drawerCount = master.querySelector('.drawerCount');
+                        if (drawerCount) {
+                            drawerCount.value = groupedDrawers[key].length;
+                        }
+                        const button = master.querySelector('.drawer-section .generate-btn' );
+                        if (!button) continue;
+                        await generateDrawers(button);
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        const rows = master.querySelectorAll('.drawerTableBody tr');
+                        for (
+                            let i = 0;
+                            i < groupedDrawers[key].length;
+                            i++
+                        ) {
+                            const drawer = groupedDrawers[key][i];
+                            const row = rows[i];
+                            if (!row) continue;
+                            row.querySelector('.drawerAssignedUnit').value = drawer.assigned_unit_id;
+                            row.querySelector('.drawerQty').value = drawer.quantity;
+                            row.querySelector('.drawerWidthMM').value = drawer.width_mm;
+                            row.querySelector('.drawerWidthFT').value = drawer.width_ft;
+                            row.querySelector('.drawerHeightMM').value = drawer.height_mm;
+                            row.querySelector('.drawerHeightFT').value = drawer.height_ft;
+                            const category = row.querySelector('.drawerCategory');
+                            category.value = drawer.drawer_categories_id;
+                            await loadDrawerMaterials(
+                                category
+                            );
+                            await new Promise(
+                                resolve => setTimeout(resolve, 50)
+                            );
+                            row.querySelector('.drawerMaterial').value = drawer.drawer_materials_id;
+                            row.querySelector('.drawerPrice').value = drawer.price;
+                            row.querySelector('.drawerTotal').value = '₹ ' + drawer.total;
+                        }
+                    }
+                }
                 // Shelves
-// SHELF EDIT DATA
-if (
-    typeof EDIT_SHELVES !== 'undefined' &&
-    EDIT_SHELVES.length > 0
-) {
-
-    // Group shelves by elevation + unit type
-    const groupedShelves = {};
-
-    EDIT_SHELVES.forEach(shelf => {
-
-        const parts =
-            shelf.assigned_unit_id.split('_');
-
-        const elevationNo =
-            parseInt(
-                parts[0].replace('E', '')
-            );
-
-        const unitType =
-            parts[1].toLowerCase();
-
-        const key =
-            `${elevationNo}_${unitType}`;
-
-        if (!groupedShelves[key]) {
-            groupedShelves[key] = [];
-        }
-
-        groupedShelves[key].push(shelf);
-
-    });
-
-    // Process each group
-    for (const key in groupedShelves) {
-
-        const [elevationNo, unitType] =
-            key.split('_');
-
-        const elevationCard =
-            document.querySelectorAll(
-                '.elevation-card'
-            )[elevationNo - 1];
-
-        if (!elevationCard) continue;
-
-        const master =
-            elevationCard.querySelector(
-                `.${unitType}-master`
-            );
-
-        if (!master) continue;
-
-        // Enable shelf section
-        const yesRadio =
-            master.querySelector(
-                'input[name="shelfOption"][value="yes"]'
-            );
-
-        if (yesRadio) {
-            yesRadio.checked = true;
-            toggleShelfSection(yesRadio);
-        }
-
-        const shelfCount =
-            master.querySelector('.shelfCount');
-
-        if (shelfCount) {
-            shelfCount.value =
-                groupedShelves[key].length;
-        }
-
-        const button =
-            master.querySelector(
-                '.shelf-section .generate-btn'
-            );
-
-        if (!button) continue;
-
-        await generateShelves(button);
-
-        await new Promise(
-            resolve => setTimeout(resolve, 50)
-        );
-
-        const rows =
-            master.querySelectorAll(
-                '.shelfTableBody tr'
-            );
-
-        for (
-    let i = 0;
-    i < groupedShelves[key].length;
-    i++
-        ) {
-
-            const shelf =
-                groupedShelves[key][i];
-
-            const row = rows[i];
-
-            if (!row) continue;
-
-            row.querySelector(
-                '.shelfAssignedUnit'
-            ).value =
-                shelf.assigned_unit_id;
-
-            row.querySelector(
-                '.shelfQty'
-            ).value =
-                shelf.quantity;
-
-            row.querySelector(
-                '.shelfWidthMM'
-            ).value =
-                shelf.width_mm;
-
-            row.querySelector(
-                '.shelfWidthFT'
-            ).value =
-                shelf.width_ft;
-
-            row.querySelector(
-                '.shelfHeightMM'
-            ).value =
-                shelf.height_mm;
-
-            row.querySelector(
-                '.shelfHeightFT'
-            ).value =
-                shelf.height_ft;
-
-            const category =
-                row.querySelector(
-                    '.shelfCategory'
-                );
-
-            category.value =
-                shelf.shelf_categories_id;
-
-            await loadShelfMaterials(
-                category
-            );
-
-            await new Promise(
-                resolve => setTimeout(resolve, 50)
-            );
-
-row.querySelector(
-    '.shelfMaterial'
-).value =
-    shelf.shelf_materials_id;
-
-row.querySelector(
-    '.shelfPrice'
-).value =
-    shelf.price;
-
-row.querySelector(
-    '.shelfTotal'
-).value =
-    '₹ ' + shelf.total;
-
-// Recalculate shelf total
-if(typeof calculateShelfTotal === 'function'){
-    calculateShelfTotal(row);
-}
-        }
-    }
-}
+                if (
+                    typeof EDIT_SHELVES !== 'undefined' &&
+                    EDIT_SHELVES.length > 0
+                ) {
+                    const groupedShelves = {};
+                    EDIT_SHELVES.forEach(shelf => {
+                        const parts = shelf.assigned_unit_id.split('_');
+                        const elevationNo = parseInt(parts[0].replace('E', ''));
+                        const unitType = parts[1].toLowerCase();
+                        const key = `${elevationNo}_${unitType}`;
+                        if (!groupedShelves[key]) {
+                            groupedShelves[key] = [];
+                        }
+                        groupedShelves[key].push(shelf);
+                    });
+                    for (const key in groupedShelves) {
+                        const [elevationNo, unitType] = key.split('_');
+                        const elevationCard = document.querySelectorAll('.elevation-card')[elevationNo - 1];
+                        if (!elevationCard) continue;
+                        const master = elevationCard.querySelector(`.${unitType}-master`);
+                        if (!master) continue;
+                        const yesRadio = master.querySelector('input[name="shelfOption"][value="yes"]');
+                        if (yesRadio) {
+                            yesRadio.checked = true;
+                            toggleShelfSection(yesRadio);
+                        }
+                        const shelfCount = master.querySelector('.shelfCount');
+                        if (shelfCount) {
+                            shelfCount.value = groupedShelves[key].length;
+                        }
+                        const button = master.querySelector('.shelf-section .generate-btn');
+                        if (!button) continue;
+                        await generateShelves(button);
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        const rows = master.querySelectorAll('.shelfTableBody tr');
+                        for (
+                            let i = 0;
+                            i < groupedShelves[key].length;
+                            i++
+                        ) {
+                            const shelf = groupedShelves[key][i];
+                            const row = rows[i];
+                            if (!row) continue;
+                            row.querySelector('.shelfAssignedUnit').value = shelf.assigned_unit_id;
+                            row.querySelector('.shelfQty').value = shelf.quantity;
+                            row.querySelector('.shelfWidthMM').value = shelf.width_mm;
+                            row.querySelector('.shelfWidthFT').value = shelf.width_ft;
+                            row.querySelector('.shelfHeightMM').value = shelf.height_mm;
+                            row.querySelector('.shelfHeightFT').value = shelf.height_ft;
+                            const category = row.querySelector('.shelfCategory');
+                            category.value = shelf.shelf_categories_id;
+                            await loadShelfMaterials(category);
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                            row.querySelector('.shelfMaterial').value =shelf.shelf_materials_id;
+                            row.querySelector('.shelfPrice').value =shelf.price;
+                            row.querySelector('.shelfTotal').value ='₹ ' + shelf.total;
+                            if(typeof calculateShelfTotal === 'function'){
+                                calculateShelfTotal(row);
+                            }
+                        }
+                    }
+                }
                 // Accessories
                 if(
                     EDIT_ACCESSORIES &&
                     EDIT_ACCESSORIES.length > 0
                 ){
-
-                    document.getElementById(
-                        'accessoryCount'
-                    ).value = EDIT_ACCESSORIES.length;
-
+                    document.getElementById('accessoryCount' ).value = EDIT_ACCESSORIES.length;
                     generateAccessories();
-
-                    const rows = document.querySelectorAll(
-                        '.accessoryRow'
-                    );
-
+                    const rows = document.querySelectorAll('.accessoryRow');
                     EDIT_ACCESSORIES.forEach(
                         (accessory,index) => {
-
                             const row = rows[index];
-
                             if(!row) return;
-
-                            row.querySelector(
-                                '.accessorySelect'
-                            ).value =
-                                accessory.accessory_id;
-
-                            row.querySelector(
-                                '.accessorySelect'
-                            ).dispatchEvent(
-                                new Event('change')
-                            );
-
-                            row.querySelector(
-                                '.accessoryQty'
-                            ).value =
-                                accessory.qty;
-
-                            row.querySelector(
-                                '.accessoryPrice'
-                            ).value =
-                                parseFloat(
-                                    accessory.price
-                                ).toFixed(2);
-
-                            row.querySelector(
-                                '.accessoryTotal'
-                            ).value =
-                                parseFloat(
-                                    accessory.total
-                                ).toFixed(2);
-
+                            row.querySelector('.accessorySelect').value = accessory.accessory_id;
+                            row.querySelector('.accessorySelect').dispatchEvent(new Event('change'));
+                            row.querySelector('.accessoryQty').value = accessory.qty;
+                            row.querySelector('.accessoryPrice').value = parseFloat(accessory.price).toFixed(2);
+                            row.querySelector('.accessoryTotal').value =parseFloat(accessory.total).toFixed(2);
                         }
                     );
-
                     calculateAccessoriesGrandTotal();
                 }
                 if(
-    EDIT_STANDARD_ACCESSORIES &&
-    EDIT_STANDARD_ACCESSORIES.length > 0
-){
-
-    document.getElementById(
-        'standardAccessoryCount'
-    ).value =
-        EDIT_STANDARD_ACCESSORIES.length;
-
-    generateStandardAccessories();
-
-    const rows =
-        document.querySelectorAll(
-            '.standardAccessoryRow'
-        );
-
-    EDIT_STANDARD_ACCESSORIES.forEach(
-        async (
-            accessory,
-            index
-        ) => {
-
-            const row = rows[index];
-
-            if(!row) return;
-
-            const category =
-                row.querySelector(
-                    '.standardAccessoryCategory'
-                );
-
-            if(category){
-
-                category.value =
-                    accessory.category_id;
-
-                await loadStandardAccessoryMaterials(
-                    category
-                );
-
-                await new Promise(
-                    resolve =>
-                    setTimeout(
-                        resolve,
-                        100
-                    )
-                );
-            }
-
-            const material =
-                row.querySelector(
-                    '.standardAccessoryMaterial'
-                );
-
-            if(material){
-
-                material.value =
-                    accessory.standard_accessory_id;
-
-                material.dispatchEvent(
-                    new Event('change')
-                );
-            }
-
-            row.querySelector(
-                '.standardAccessoryQty'
-            ).value =
-                accessory.qty;
-
-            row.querySelector(
-                '.standardAccessoryPrice'
-            ).value =
-                accessory.unit_price;
-
-            row.querySelector(
-                '.standardAccessoryTotal'
-            ).value =
-                accessory.total_price;
-
-        }
-    );
-
-    calculateStandardAccessoriesGrandTotal();
-}
+                    EDIT_STANDARD_ACCESSORIES &&
+                    EDIT_STANDARD_ACCESSORIES.length > 0
+                ){
+                    document.getElementById('standardAccessoryCount').value = EDIT_STANDARD_ACCESSORIES.length;
+                    generateStandardAccessories();
+                    const rows = document.querySelectorAll('.standardAccessoryRow');
+                    EDIT_STANDARD_ACCESSORIES.forEach(
+                        async (accessory,index) => {
+                            const row = rows[index];
+                            if(!row) return;
+                            const category = row.querySelector('.standardAccessoryCategory');
+                            if(category){
+                                category.value = accessory.category_id;
+                                await loadStandardAccessoryMaterials(category);
+                                await new Promise(
+                                    resolve =>
+                                    setTimeout(resolve,100)
+                                );
+                            }
+                            const material = row.querySelector('.standardAccessoryMaterial');
+                            if(material){
+                                material.value = accessory.standard_accessory_id;
+                                material.dispatchEvent(new Event('change'));
+                            }
+                            row.querySelector('.standardAccessoryQty').value = accessory.qty;
+                            row.querySelector('.standardAccessoryPrice').value = accessory.unit_price;
+                            row.querySelector('.standardAccessoryTotal').value = accessory.total_price;
+                        }
+                    );
+                    calculateStandardAccessoriesGrandTotal();
+                }
                 for(
                     let index = 0;
                     index < EDIT_ELEVATIONS.length;
@@ -1345,46 +987,19 @@ if(typeof calculateShelfTotal === 'function'){
                 if(typeof updateGrandTotal === 'function'){
                     updateGrandTotal();
                 }
-
             }
         }
     );
-// Existing code
-
-
-
-function waitForUnits(callback){
-
-    const interval = setInterval(() => {
-
-        const totalUnits =
-            document.querySelectorAll(
-                '.tallRow, .upperRow, .bottomRow, .loftRow'
-            ).length;
-
-        console.log(
-            'Units Found:',
-            totalUnits
-        );
-
-        if(totalUnits > 0){
-
-            clearInterval(interval);
-
-            callback();
-        }
-
-    },300);
-    
-
-}
-setTimeout(() => {
-
-    calculateStandardAccessoriesGrandTotal();
-
-    updateGrandTotal();
-
-},300);
+    function waitForUnits(callback){
+        const interval = setInterval(() => {
+            const totalUnits = document.querySelectorAll('.tallRow, .upperRow, .bottomRow, .loftRow').length;
+            if(totalUnits > 0){
+                clearInterval(interval);
+                callback();
+            }
+        },300);
+    }
+    setTimeout(() => {calculateStandardAccessoriesGrandTotal(); updateGrandTotal();},300);
 </script>
 <script>
     const COST_MULTLIER = <?= ($_SESSION['entity_id'] == 2) ? 0.5 : 1 ?>;
@@ -1447,204 +1062,98 @@ setTimeout(() => {
         }
     }
     const accessoryOptions = ` <?= $accessoryOptions ?> `;
-function generateAccessories(){
-
-    const count = parseInt(
-        document.getElementById('accessoryCount').value
-    ) || 0;
-
-    const container =
-        document.getElementById(
-            'accessoriesContainer'
-        );
-
-    // Create table only once
-    if(
-        !container.querySelector(
-            '.accessoriesTable'
-        )
-    ){
-
-        container.innerHTML = `
-            <div class="table-responsive">
-                <table class="table table-bordered accessoriesTable">
-                    <thead>
-                        <tr>
-                            <th>Sr. No.</th>
-
-                            <th>Accessory</th>
-                            <th>Price</th>
-                            <th>Qty</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="accessoriesTableBody">
-                    </tbody>
-
-                </table>
-            </div>
-        `;
-    }
-
-    const tbody =
-        container.querySelector(
-            '.accessoriesTableBody'
-        );
-
-    const existingRows =
-        tbody.querySelectorAll('tr');
-
-    // Add rows
-    if(count > existingRows.length){
-
-        for(
-            let i = existingRows.length;
-            i < count;
-            i++
+    function generateAccessories(){
+        const count = parseInt(document.getElementById('accessoryCount').value) || 0;
+        const container = document.getElementById('accessoriesContainer');
+        if(
+            !container.querySelector('.accessoriesTable')
         ){
-
-            tbody.insertAdjacentHTML(
-                'beforeend',
-                `
-                <tr class="accessoryRow">
-<td class="accessorySrNo" style="    display: flex;
-    justify-content: center;
-    align-items: center;height: 90px;
-">
-            ${i + 1}
-        </td>
-                    <td>
-                        <select
-                            name="accessory_id[]"
-                            class="form-control accessorySelect">
-
-                            <option value="">
-                                Select Accessory
-                            </option>
-
-                            ${accessoryOptions}
-
-                        </select>
-                    </td>
-
-                    <td>
-                        <input
-                            type="number"
-                            step="0.01"
-                            name="accessory_price[]"
-                            class="form-control accessoryPrice"
-                            readonly>
-                    </td>
-
-                    <td>
-                        <input
-                            type="number"
-                            name="accessory_qty[]"
-                            class="form-control accessoryQty"
-                            value="1"
-                            min="1">
-                    </td>
-
-                    <td>
-                        <input
-                            type="number"
-                            step="0.01"
-                            name="accessory_total[]"
-                            class="form-control accessoryTotal"
-                            readonly>
-                    </td>
-
-                </tr>
-                `
-            );
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-bordered accessoriesTable">
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Accessory</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="accessoriesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
-    }
-
-    // Remove rows
-    else if(count < existingRows.length){
-
-        for(
-            let i = existingRows.length;
-            i > count;
-            i--
-        ){
-            tbody.lastElementChild.remove();
+        const tbody = container.querySelector('.accessoriesTableBody');
+        const existingRows = tbody.querySelectorAll('tr');
+        if(count > existingRows.length){
+            for(
+                let i = existingRows.length;
+                i < count;
+                i++
+            ){
+                tbody.insertAdjacentHTML(
+                    'beforeend',
+                    `
+                    <tr class="accessoryRow">
+                        <td class="accessorySrNo" style="display: flex;justify-content: center;align-items: center;height: 90px;">${i + 1}</td>
+                        <td>
+                            <select name="accessory_id[]" class="form-control accessorySelect">
+                                <option value="">
+                                    Select Accessory
+                                </option>
+                                ${accessoryOptions}
+                            </select>
+                        </td>
+                        <td><input type="number" step="0.01" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
+                        <td><input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
+                        <td><input type="number" step="0.01" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
+                    </tr>
+                    `
+                );
+            }
         }
+        else if(count < existingRows.length){
+            for(
+                let i = existingRows.length;
+                i > count;
+                i--
+            ){
+                tbody.lastElementChild.remove();
+            }
+        }
+        attachAccessoryEvents();
+        calculateAccessoriesGrandTotal();
     }
-
-    attachAccessoryEvents();
-
-    calculateAccessoriesGrandTotal();
-}
-function attachAccessoryEvents(){
-
-    document
-    .querySelectorAll('.accessorySelect')
-    .forEach(select => {
-
-        select.onchange = function(){
-
-            const row =
-                this.closest('tr');
-
-            const price =
-                parseFloat(
-                    this.options[
-                        this.selectedIndex
-                    ]?.dataset.price
-                ) || 0;
-
-            row.querySelector(
-                '.accessoryPrice'
-            ).value =
-                price.toFixed(2);
-
-            calculateAccessoryTotal(row);
-        };
-
-    });
-
-    document
-    .querySelectorAll('.accessoryQty')
-    .forEach(input => {
-
-        input.oninput = function(){
-
-            const row =
-                this.closest('tr');
-
-            calculateAccessoryTotal(row);
-        };
-
-    });
-
-}
-function calculateAccessoryTotal(row){
-
-    const qty =
-        parseFloat(
-            row.querySelector(
-                '.accessoryQty'
-            ).value
-        ) || 0;
-
-    const price =
-        parseFloat(
-            row.querySelector(
-                '.accessoryPrice'
-            ).value
-        ) || 0;
-
-    const total = qty * price;
-
-    row.querySelector(
-        '.accessoryTotal'
-    ).value =
-        total.toFixed(2);
-
-    calculateAccessoriesGrandTotal();
-}
+    function attachAccessoryEvents(){
+        document
+        .querySelectorAll('.accessorySelect')
+        .forEach(select => {
+            select.onchange = function(){
+                const row = this.closest('tr');
+                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                row.querySelector('.accessoryPrice').value = price.toFixed(2);
+                calculateAccessoryTotal(row);
+            };
+        });
+        document
+        .querySelectorAll('.accessoryQty')
+        .forEach(input => {
+            input.oninput = function(){
+                const row = this.closest('tr');
+                calculateAccessoryTotal(row);
+            };
+        });
+    }
+    function calculateAccessoryTotal(row){
+        const qty = parseFloat(row.querySelector('.accessoryQty').value) || 0;
+        const price = parseFloat(row.querySelector('.accessoryPrice').value) || 0;
+        const total = qty * price;
+        row.querySelector('.accessoryTotal').value = total.toFixed(2);
+        calculateAccessoriesGrandTotal();
+    }
     function calculateAccessoriesGrandTotal(){
         let grand = 0;
         const totals = document.querySelectorAll( '.accessoryTotal');
@@ -1783,37 +1292,18 @@ function calculateAccessoryTotal(row){
         row.querySelector('.standardAccessoryTotal').value = total.toFixed(2);
         calculateStandardAccessoriesGrandTotal();
     }
-function calculateStandardAccessoriesGrandTotal(){
-
-    let grand = 0;
-
-    document
-    .querySelectorAll(
-        '.standardAccessoryTotal'
-    )
-    .forEach(input => {
-
-        grand +=
-            parseFloat(
-                input.value
-            ) || 0;
-
-    });
-
-    const grandField =
-        document.getElementById(
-            'standardAccessoriesGrandTotal'
-        );
-
-    if(grandField){
-
-        grandField.innerText =
-            grand.toFixed(2);
-
+    function calculateStandardAccessoriesGrandTotal(){
+        let grand = 0;
+        document
+        .querySelectorAll('.standardAccessoryTotal')
+        .forEach(input => {
+            grand += parseFloat(input.value) || 0;
+        });
+        const grandField = document.getElementById('standardAccessoriesGrandTotal');
+        if(grandField){
+            grandField.innerText = grand.toFixed(2);
+        }
+        updateGrandTotal();
     }
-
-    updateGrandTotal();
-
-}
 </script>
 <?php include '../includes/footer.php'; ?>

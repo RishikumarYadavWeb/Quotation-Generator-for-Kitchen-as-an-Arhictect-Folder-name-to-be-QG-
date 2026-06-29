@@ -81,11 +81,7 @@ async function generateShelves(button){
             existingRows[i].remove();
         }
     }
-    const master =
-    button.closest(
-        '.tall-master, .upper-master, .bottom-master, .loft-master'
-    );
-
+    const master = button.closest('.tall-master, .upper-master, .bottom-master, .loft-master');
 refreshUnitDropdowns(master);
 }
 function convertShelfMMFT(input){
@@ -165,26 +161,14 @@ function loadShelfMaterials(select){
     });
 }
 function loadShelfCategories(row){
-
-    const dropdown =
-        row.querySelector('.shelfCategory');
-
+    const dropdown = row.querySelector('.shelfCategory');
     $.ajax({
-
         url:'/QG/ajax/get-shelf-categories.php',
-
         type:'GET',
-
         success:function(response){
-
-            dropdown.innerHTML =
-                '<option value="">Select Category</option>' +
-                response;
-
+            dropdown.innerHTML = '<option value="">Select Category</option>' + response;
         }
-
     });
-
 }
 function getShelfRow(){
     return `
