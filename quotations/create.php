@@ -116,8 +116,7 @@
             standard_accessory_categories.category_name
         FROM standard_accessory_materials
         LEFT JOIN standard_accessory_categories
-        ON standard_accessory_categories.id =
-        standard_accessory_materials.category_id
+        ON standard_accessory_categories.id = standard_accessory_materials.category_id
         WHERE standard_accessory_materials.status = 1
         ORDER BY standard_accessory_materials.id ASC
         "
