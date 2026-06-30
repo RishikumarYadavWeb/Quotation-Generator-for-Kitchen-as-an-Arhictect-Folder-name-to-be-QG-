@@ -99,9 +99,7 @@
     $accessoryOptions = '';
     while($acc = mysqli_fetch_assoc($getAccessories)){
         $accessoryOptions .= '
-            <option
-                value=\"'.$acc['id'].'\"
-                data-price=\"'.$acc['price'].'\">
+            <option value=\"'.$acc['id'].'\" data-price=\"'.$acc['price'].'\">
                 '.$acc['accessory_name'].'
             </option>
         ';
@@ -172,9 +170,7 @@
                                     FROM entities
                                     ORDER BY entity_name"
                                 );
-                                while(
-                                    $row = mysqli_fetch_assoc($result)
-                                ){
+                                while($row = mysqli_fetch_assoc($result)){
                                 ?>
                                     <option value="<?= $row['id']; ?>">
                                         <?= $row['entity_name']; ?>
@@ -291,9 +287,7 @@
             </div>
             <div id="standardAccessoriesContainer" style="margin-top:25px;"></div>
             <div class="card" style="background:#f8fafc;">
-                <h5>
-                    Standard Accessories Total : ₹ <span id="standardAccessoriesGrandTotal"> 0.00</span>
-                </h5>
+                <h5>Standard Accessories Total : ₹ <span id="standardAccessoriesGrandTotal"> 0.00</span></h5>
             </div>
         </div>
         <div class="main-card" style="margin-top:30px;">
@@ -307,16 +301,12 @@
                 <input type="number" id="accessoryCount" class="form-control" min="0" placeholder="Add Number of Additional Accessories">
             </div>
             <div style="margin-top:20px;">
-                <button type="button" class="btn btn-primary" onclick="generateAccessories()">
-                    Generate Accessories
-                </button>
+                <button type="button" class="btn btn-primary" onclick="generateAccessories()">Generate Accessories</button>
             </div>
             <div id="accessoriesContainer" style="margin-top:25px;">
             </div>
             <div class="card" style="background:#f8fafc;">
-                <h5>
-                    Additional Accessories Total : ₹ <span id="accessoriesGrandTotal">0.00</span>
-                </h5>
+                <h5>Additional Accessories Total : ₹ <span id="accessoriesGrandTotal">0.00</span></h5>
             </div>
         </div>
     </div>

@@ -19,10 +19,7 @@ async function generateDrawers(button){
     if(count > existingRows.length){
         const rowsToAdd = count - existingRows.length;
         for(let i=0;i<rowsToAdd;i++){
-            tbody.insertAdjacentHTML(
-                'beforeend',
-                getDrawerRow()
-            );
+            tbody.insertAdjacentHTML('beforeend',getDrawerRow());
             const lastRow = tbody.querySelector('tr:last-child');
             loadDrawerCategories(lastRow);
         }
@@ -36,12 +33,8 @@ async function generateDrawers(button){
             existingRows[i].remove();
         }
     }
-    const master =
-    button.closest(
-        '.tall-master, .upper-master, .bottom-master, .loft-master'
-    );
-
-refreshUnitDropdowns(master);
+    const master = button.closest('.tall-master, .upper-master, .bottom-master, .loft-master');
+    refreshUnitDropdowns(master);
 }
 function loadDrawerMaterials(select){
     return $.ajax({
@@ -106,9 +99,7 @@ function calculateDrawerTotal(drawer){
     const qtyField = drawer.querySelector('.drawerQty');
     const totalField = drawer.querySelector('.drawerTotal');
     if(
-        !priceField ||
-        !qtyField ||
-        !totalField
+        !priceField || !qtyField || !totalField
     ){
         return;
     }
@@ -134,9 +125,7 @@ function getDrawerRow(){
         <tr>
             <td>
                 <select class="modern-input drawerAssignedUnit">
-                    <option value="">
-                        Select Unit
-                    </option>
+                    <option value="">Select Unit</option>
                 </select>
             </td>
             <td><input type="number" class="modern-input drawerQty" value="1" min="1" oninput="calculateDrawerTotal(this.closest('tr'))" ></td>
@@ -146,16 +135,12 @@ function getDrawerRow(){
             <td><input type="number" class="modern-input drawerHeightFT" oninput="convertDrawerFTMM(this)" min="0"></td>
             <td>
                 <select class="modern-input drawerCategory" onchange="loadDrawerMaterials(this)" >
-                    <option value="">
-                        Loading...
-                    </option>
+                    <option value="">Loading...</option>
                 </select>
             </td>
             <td>
                 <select class="modern-input drawerMaterial" onchange="calculateDrawerPrice(this)">
-                    <option value="">
-                        Select Material
-                    </option>
+                    <option value="">Select Material</option>
                 </select>
             </td>
             <td>

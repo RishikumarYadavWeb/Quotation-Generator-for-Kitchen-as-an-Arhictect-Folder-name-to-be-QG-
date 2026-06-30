@@ -48,10 +48,7 @@ async function generateShelves(button){
     if(count > existingRows.length){
         const rowsToAdd = count - existingRows.length;
         for(let i=0;i<rowsToAdd;i++){
-            tbody.insertAdjacentHTML(
-                'beforeend',
-                getShelfRow()
-            );
+            tbody.insertAdjacentHTML('beforeend',getShelfRow());
             const row = tbody.querySelector('tr:last-child');
             loadShelfCategories(row);
             let depth = 350;
@@ -82,7 +79,7 @@ async function generateShelves(button){
         }
     }
     const master = button.closest('.tall-master, .upper-master, .bottom-master, .loft-master');
-refreshUnitDropdowns(master);
+    refreshUnitDropdowns(master);
 }
 function convertShelfMMFT(input){
     const shelf = input.closest('tr');
@@ -138,9 +135,7 @@ function updateShelfGrandTotal(){
     let total = 0;
     document
     .querySelectorAll('.shelfTotal')
-    .forEach(field => {
-        total += getNumber(field.value);
-    });
+    .forEach(field => {total += getNumber(field.value);});
 }
 function loadShelfMaterials(select){
     const category_id = select.value;
@@ -175,9 +170,7 @@ function getShelfRow(){
         <tr>
             <td>
                 <select class="modern-input shelfAssignedUnit">
-                    <option value="">
-                        Select Unit
-                    </option>
+                    <option value="">Select Unit</option>
                 </select>
             </td>
             <td><input type="number" class="modern-input shelfQty" value="1" min="1" oninput="calculateShelfTotal(this.closest('tr'))"></td>
@@ -187,16 +180,12 @@ function getShelfRow(){
             <td><input type="number" class="modern-input shelfHeightFT" oninput="convertShelfFTMM(this)" min="0"></td>
             <td>
                 <select class="modern-input shelfCategory" onchange="loadShelfMaterials(this)">
-                    <option value="">
-                        Select Category
-                    </option>
+                    <option value="">Select Category</option>
                 </select>
             </td>
             <td>
                 <select class="modern-input shelfMaterial" onchange="calculateShelfPrice(this)">
-                    <option value="">
-                        Select Material
-                    </option>
+                    <option value="">Select Material</option>
                 </select>
             </td>
             <td><input type="text" class="modern-input shelfPrice" readonly></td>

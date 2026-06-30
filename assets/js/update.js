@@ -171,7 +171,7 @@ async function updateQuotation(){
                     window.elevationImages
                         .get(imageInput)
                         .forEach(file => {imageFormData.append(`elevation_images[${index}][]`,file);
-                        });
+                    });
                 }
             });
         const imageUploadResponse =
@@ -186,8 +186,7 @@ async function updateQuotation(){
         const imageResult = await imageUploadResponse.json();
         quotationData.uploaded_line_images = {};
         if (
-            typeof window.oldElevationImages !==
-            'undefined'
+            typeof window.oldElevationImages !== 'undefined'
         ) {
             Object.keys(
                 window.oldElevationImages
@@ -260,10 +259,7 @@ async function updateQuotation(){
             alert('Quotation Updated Successfully');
             window.location.href = 'view.php?id=' + QUOTATION_ID;
         }else{
-            alert(
-                result.message ||
-                'Failed To Save Quotation'
-            );
+            alert(result.message || 'Failed To Save Quotation');
         }
     }catch(error){
         console.error(error);

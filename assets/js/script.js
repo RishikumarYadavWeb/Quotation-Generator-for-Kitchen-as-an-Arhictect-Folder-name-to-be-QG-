@@ -1,20 +1,13 @@
 const BASE_URL = '/QG/';
-document.addEventListener(
-    'DOMContentLoaded',
+document.addEventListener('DOMContentLoaded',
     function(){
-
-        const elevationField =
-            document.getElementById('elevationCount');
-
+        const elevationField = document.getElementById('elevationCount');
         if(
-            elevationField &&
-            (typeof IS_EDIT_PAGE === 'undefined' || !IS_EDIT_PAGE)
+            elevationField && (typeof IS_EDIT_PAGE === 'undefined' || !IS_EDIT_PAGE)
         ){
             generateElevations();
         }
-        
     }
-    
 );
 function openSidebar(){
     document
@@ -129,42 +122,26 @@ function calculateShutterAmount(select){
     updateRowTotal(row);
 }
 function loadCarcassMaterials(select){
-
     return new Promise((resolve, reject) => {
-
         const category_id = select.value;
-
-        const row = select.closest(
-            '.tallRow, .upperRow, .bottomRow, .loftRow'
-        );
-
+        const row = select.closest('.tallRow, .upperRow, .bottomRow, .loftRow');
         if(!row){
             resolve();
             return;
         }
-
-        const materialDropdown =
-            row.querySelector('.carcassMaterial');
-
+        const materialDropdown = row.querySelector('.carcassMaterial');
         if(!materialDropdown){
             resolve();
             return;
         }
-
         $.ajax({
             url: BASE_URL + 'ajax/get-carcass-materials.php',
             type: 'POST',
             data: { category_id },
-
             success: function(response){
-
-                materialDropdown.innerHTML =
-                    '<option value="">Select Material</option>' +
-                    response;
-
+                materialDropdown.innerHTML = '<option value="">Select Material</option>' +response;
                 resolve();
             },
-
             error: function(error){
                 reject(error);
             }
@@ -172,140 +149,77 @@ function loadCarcassMaterials(select){
     });
 }
 function loadShutterMaterials(select){
-
     return new Promise((resolve, reject) => {
-
         const categoryId = select.value;
-
-        const row = select.closest(
-            '.tallRow, .upperRow, .bottomRow, .loftRow'
-        );
-
+        const row = select.closest('.tallRow, .upperRow, .bottomRow, .loftRow');
         if(!row){
             resolve();
             return;
         }
-
-        const dropdown =
-            row.querySelector('.shutterSubMaterial');
-
+        const dropdown = row.querySelector('.shutterSubMaterial');
         if(!dropdown){
             resolve();
             return;
         }
-
         fetch(
             BASE_URL + 'ajax/get-shutter-materials.php',
             {
                 method: 'POST',
-                headers: {
-                    'Content-Type':
-                        'application/x-www-form-urlencoded'
-                },
+                headers: {'Content-Type':'application/x-www-form-urlencoded'},
                 body: `category_id=${categoryId}`
             }
         )
         .then(res => res.text())
         .then(data => {
-
-            dropdown.innerHTML =
-                '<option value="">Select Material</option>' +
-                data;
-
+            dropdown.innerHTML = '<option value="">Select Material</option>' + data;
             resolve();
         })
         .catch(error => {
-
             console.error(error);
             reject(error);
         });
-
     });
 }
 function refreshUnitDropdowns(master){
-
     if(!master) return;
-
-    let options =
-        '<option value="">Select Unit</option>';
-
+    let options = '<option value="">Select Unit</option>';
     let unitType = '';
-
     if(master.classList.contains('tall-master')){
         unitType = 'Tall';
     }
-
     if(master.classList.contains('upper-master')){
         unitType = 'Upper';
     }
-
     if(master.classList.contains('bottom-master')){
         unitType = 'Bottom';
     }
-
     if(master.classList.contains('loft-master')){
         unitType = 'Loft';
     }
+    const elevation = master.closest('.elevation-card');
 
-    const elevation =
-        master.closest('.elevation-card');
-
-    const elevationNo =
-        [...document.querySelectorAll('.elevation-card')]
-        .indexOf(elevation) + 1;
-
-    const rows =
-        master.querySelectorAll(
-            `.${unitType.toLowerCase()}Row`
-        );
-
+    const elevationNo =[...document.querySelectorAll('.elevation-card')] .indexOf(elevation) + 1;
+    const rows = master.querySelectorAll(`.${unitType.toLowerCase()}Row`);
     rows.forEach((row,index)=>{
-
-        const key =
-            `E${elevationNo}_${unitType}_${index + 1}`;
-
+        const key = `E${elevationNo}_${unitType}_${index + 1}`;
         options += `
             <option value="${key}">
                 ${unitType} Unit ${index + 1}
             </option>
         `;
-
     });
-
     master
-        .querySelectorAll(
-            '.drawerAssignedUnit'
-        )
+        .querySelectorAll('.drawerAssignedUnit')
         .forEach(select=>{
-
-            const selected =
-                select.value;
-
-            select.innerHTML =
-                options;
-
-            select.value =
-                selected;
-
-        });
-
+            const selected = select.value;
+            select.innerHTML = options;
+            select.value = selected;});
     master
-        .querySelectorAll(
-            '.shelfAssignedUnit'
-        )
+        .querySelectorAll('.shelfAssignedUnit')
         .forEach(select=>{
-
-            const selected =
-                select.value;
-
-            select.innerHTML =
-                options;
-
-            select.value =
-                selected;
-
-        });
-
+            const selected = select.value;
+            select.innerHTML = options;
+            select.value = selected;});
 }
 window.elevationImages = new WeakMap();
 document.addEventListener('change', function (e) {
@@ -330,8 +244,7 @@ document.addEventListener('change', function (e) {
             previewContainer.appendChild(card);
             card.querySelector('.remove-preview')
                 .addEventListener('click', function () {
-                    const index = Array.from(previewContainer.children)
-                        .indexOf(card);
+                    const index = Array.from(previewContainer.children) .indexOf(card);
                     storedFiles.splice(index, 1);
                     card.remove();
                 });
@@ -343,8 +256,6 @@ document.addEventListener('change', function (e) {
 document.addEventListener('click', function (e) {
     if (!e.target.classList.contains('preview-image')) return;
     document.getElementById('largePreviewImage').src = e.target.src;
-    const modal = new bootstrap.Modal(
-        document.getElementById('imagePreviewModal')
-    );
+    const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
     modal.show();
 });

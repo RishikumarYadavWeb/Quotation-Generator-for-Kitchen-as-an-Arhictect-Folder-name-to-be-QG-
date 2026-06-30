@@ -28,11 +28,7 @@ function generateProformaNumber(mysqli $conn): string{
             $quotationQuery && mysqli_num_rows($quotationQuery) > 0
         ){
             $quotationRow = mysqli_fetch_assoc($quotationQuery);
-            preg_match(
-                '/(\d+)$/',
-                $quotationRow['proforma_no'],
-                $matches
-            );
+            preg_match('/(\d+)$/',$quotationRow['proforma_no'],$matches);
             $lastQuotationNumber = (int)($matches[1] ?? 0);
         }
         mysqli_query(

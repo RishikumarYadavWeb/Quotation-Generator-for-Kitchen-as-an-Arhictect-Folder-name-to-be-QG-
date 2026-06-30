@@ -11,9 +11,7 @@ async function generateElevations(){
         for(let i = 0; i < newElevations; i++){
             const div = document.createElement('div');
             div.innerHTML = html;
-            fragment.appendChild(
-                div.firstElementChild
-            );
+            fragment.appendChild(div.firstElementChild);
         }
         container.appendChild(fragment);
         updateElevationNumbers();
@@ -47,20 +45,11 @@ function updateGrandTotal(){
     let baseTotal = 0;
     document
         .querySelectorAll('.unitGrandTotal')
-        .forEach(field => {
-            baseTotal += getNumber(field.value);
-        });
+        .forEach(field => {baseTotal += getNumber(field.value);});
     document
         .querySelectorAll('.accessoryTotal')
-        .forEach(field => {
-            baseTotal += getNumber(field.value);
-        });
-    const standardAccessoriesTotal =
-    parseFloat(
-        document.getElementById(
-            'standardAccessoriesGrandTotal'
-        )?.innerText
-    ) || 0;
+        .forEach(field => {baseTotal += getNumber(field.value);});
+    const standardAccessoriesTotal = parseFloat(document.getElementById('standardAccessoriesGrandTotal')?.innerText) || 0;
     const packingCharge = getNumber(document.getElementById('packingCharge')?.value);
     const installationCharge = getNumber(document.getElementById('installationCharge')?.value);
     const grandTotal = baseTotal + packingCharge + installationCharge + standardAccessoriesTotal;
@@ -76,9 +65,8 @@ function calculateFinalPricing(){
     const discountAmount = (grandTotal * specialDiscount) / 100;
     let finalPrice = grandTotal - discountAmount;
     finalPrice = Math.round(finalPrice);
-    document.getElementById(
-        'finalCustomerPrice'
-    ).value = '₹ ' + finalPrice.toLocaleString('en-IN');
+    document
+        .getElementById('finalCustomerPrice').value = '₹ ' + finalPrice.toLocaleString('en-IN');
 }
 document
     .getElementById('packingCharge')
@@ -92,10 +80,8 @@ document
 function updateTotalSqft(){
     let total = 0;
     document
-    .querySelectorAll('.sqft')
-    .forEach(field => {
-        total += getNumber(field.value);
-    });
+        .querySelectorAll('.sqft')
+        .forEach(field => {total += getNumber(field.value);});
     const totalSqftField = document.getElementById('totalSqft');
     if(totalSqftField){
         totalSqftField.value = total.toFixed(2);

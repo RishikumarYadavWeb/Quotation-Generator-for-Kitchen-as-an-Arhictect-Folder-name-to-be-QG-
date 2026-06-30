@@ -32,12 +32,7 @@ async function saveQuotation(){
                         .map(file => file.name);
             }
             const rows = elevation.querySelectorAll('.tallRow, .upperRow, .bottomRow, .loftRow');
-            let unitCounters = {
-                Tall: 0,
-                Upper: 0,
-                Bottom: 0,
-                Loft: 0
-            };
+            let unitCounters = {Tall: 0,Upper: 0,Bottom: 0,Loft: 0};
             rows.forEach(row => {
                 let unitType = '';
                 if(row.classList.contains('tallRow')){
@@ -159,9 +154,7 @@ async function saveQuotation(){
                 unit.unit_total = unitTotal.toFixed(2);
             });
         });
-        // Prepare line images for upload
         const imageFormData = new FormData();
-
         document
             .querySelectorAll('.elevation-card')
             .forEach((elevation, index) => {
@@ -172,12 +165,9 @@ async function saveQuotation(){
                 ) {
                     window.elevationImages
                         .get(imageInput)
-                        .forEach(file => {
-                            imageFormData.append(`elevation_images[${index}][]`,file);
-                        });
+                        .forEach(file => {imageFormData.append(`elevation_images[${index}][]`,file);});
                 }
             });
-        // Upload elevation line images first
         const imageUploadResponse =
             await fetch(
                 BASE_URL + 'ajax/upload-elevation-images.php',
@@ -206,10 +196,7 @@ async function saveQuotation(){
             alert('Quotation Saved Successfully');
             window.location.href = 'view.php?id=' + result.quotation_id;
         }else{
-            alert(
-                result.message ||
-                'Failed To Save Quotation'
-            );
+            alert(result.message || 'Failed To Save Quotation');
         }
     }catch(error){
         console.error(error);

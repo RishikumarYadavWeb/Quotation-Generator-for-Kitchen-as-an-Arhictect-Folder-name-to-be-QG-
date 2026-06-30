@@ -136,8 +136,7 @@ async function generateTallUnits(button,type){
         existingRows.length
     ){
         for(
-            let i =
-                existingRows.length - 1;
+            let i = existingRows.length - 1;
             i >= count;
             i--
         ){
@@ -222,12 +221,10 @@ async function generateUpperUnits(button,type){
         }
     }
     else if(
-        count <
-        existingRows.length
+        count < existingRows.length
     ){
         for(
-            let i =
-                existingRows.length - 1;
+            let i = existingRows.length - 1;
             i >= count;
             i--
         ){
@@ -307,8 +304,7 @@ async function generateBottomUnits(button,type){
         }
     }
     else if(
-        count <
-        existingRows.length
+        count < existingRows.length
     ){
         for(
             let i = existingRows.length - 1;
