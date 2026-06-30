@@ -39,13 +39,14 @@ $getAccessories = mysqli_query(
     $conn,
     "
     SELECT
-        id,
-        accessory_name,
-        category,
-        unit,
-        price
-    FROM accessories
-    ORDER BY id DESC
+        a.*,
+        ac.category_name
+    FROM accessories a
+
+    LEFT JOIN accessory_categories ac
+    ON a.category_id = ac.id
+
+    ORDER BY a.id DESC
     LIMIT $limit OFFSET $offset
     "
 );
@@ -88,6 +89,7 @@ include '../includes/sidebar.php';
                     <th>Sr No</th>
                     <th>Name</th>
                     <th>Category</th>
+                    <th>Status</th>
                     <th>Unit</th>
                     <th>Price</th>
                     <th>Action</th>
@@ -116,10 +118,18 @@ include '../includes/sidebar.php';
 
                         <td>
                             <?= htmlspecialchars(
-                                $row['category']
+                                $row['category_name']
                             ) ?>
                         </td>
 
+                        <td>
+                            <?php if($row['status'] == 'active'){ ?>
+                                <span class="status-active">Active</span>
+                            <?php }else{ ?>
+                                <span class="status-inactive">Inactive</span>
+                            <?php } ?>
+                        </td>
+                        
                         <td>
                             <?= htmlspecialchars(
                                 $row['unit']

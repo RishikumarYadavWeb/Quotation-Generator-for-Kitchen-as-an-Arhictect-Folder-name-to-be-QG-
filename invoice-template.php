@@ -206,7 +206,13 @@
             ?>
             <tr>
               <td class="center"><?= $index + 1 ?></td>
-              <td style="padding:8px;"><strong>Elevation <?= chr(65 + $index) ?></strong></td>
+              <td style="padding:8px;">
+                <strong>Elevation <?= chr(65 + $index) ?>
+                  <span style="font-size:10px;color:#555;margin-left:8px;">
+                    <?= htmlspecialchars($elevation['elevation_note']) ?>
+                  </span>
+                </strong>
+              </td>
               <td class="center">940350</td>
               <td class="center">1</td>
               <td class="center">Nos</td>

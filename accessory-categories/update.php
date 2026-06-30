@@ -3,11 +3,11 @@ include '../db.php';
 /** @var mysqli $conn */
 $id = (int)$_POST['id'];
 $categoryName = mysqli_real_escape_string($conn,$_POST['category_name']);
-$status = (int)($_POST['status'] ?? 1);
+$status = (int)$_POST['status'];
 mysqli_query(
     $conn,
     "
-    UPDATE drawer_categories
+    UPDATE accessory_categories
     SET
         category_name = '$categoryName',
         status = '$status'

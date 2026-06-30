@@ -1,3 +1,27 @@
+function toggleElevationNote(select){
+
+    const wrapper =
+        select
+        .closest('.main-card')
+        .querySelector(
+            '.elevationNoteWrapper'
+        );
+
+    if(select.value == '1'){
+
+        wrapper.style.display = 'block';
+
+    }else{
+
+        wrapper.style.display = 'none';
+
+        wrapper.querySelector(
+            '.elevationNote'
+        ).value = '';
+
+    }
+
+}
 async function generateElevations(){
     const count = parseInt(document.getElementById('elevationCount').value) || 0;
     const container = document.getElementById('elevationContainer');

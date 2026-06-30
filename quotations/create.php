@@ -145,6 +145,32 @@
         $row['category_name'].
         '</option>';
     }
+
+?>
+<?php
+
+$categoryQuery = mysqli_query(
+    $conn,
+    "
+    SELECT *
+    FROM accessory_categories
+    WHERE status = 1
+    ORDER BY category_name
+    "
+);
+
+$accessoryCategoryOptions = '';
+
+while($row = mysqli_fetch_assoc($categoryQuery)){
+
+    $accessoryCategoryOptions .=
+        '<option value="'.$row['id'].'">'.
+        htmlspecialchars($row['category_name']).
+        '</option>';
+}
+
+$accessoryCategoryOptions .=
+    '<option value="other">Other</option>';
 ?>
 <form  id="quotationForm" enctype="multipart/form-data" novalidate onkeydown="preventEnterSubmit(event)">
     <div class="container-fluid">
@@ -402,7 +428,8 @@
             }
         }
     }
-    const accessoryOptions = ` <?= $accessoryOptions ?> `;
+    const accessoryCategoryOptions =
+`<?= $accessoryCategoryOptions ?>`;
     function generateAccessories(){
         const count = parseInt(document.getElementById('accessoryCount').value) || 0;
         const container = document.getElementById('accessoriesContainer');
@@ -417,7 +444,8 @@
                         <thead>
                             <tr>
                                 <th>Sr. No.</th>
-                                <th>Accessory</th>
+                                <th>Category</th>
+                                <th>Material</th>
                                 <th>Unit Price</th>
                                 <th>Qty</th>
                                 <th>Total</th>
@@ -445,12 +473,41 @@
                             ${i + 1}
                         </td>
                         <td>
-                            <select name="accessory_id[]" class="form-control accessorySelect">
+
+                            <select
+                                class="form-control accessoryCategory"
+                                onchange="loadAccessoryMaterials(this)"
+                            >
+
                                 <option value="">
-                                    Select Accessory
+                                    Select Category
                                 </option>
-                                ${accessoryOptions}
+
+                                ${accessoryCategoryOptions}
+
                             </select>
+
+                        </td>
+
+                        <td>
+
+                            <select
+                                class="form-control accessorySelect"
+                            >
+
+                                <option value="">
+                                    Select Material
+                                </option>
+
+                            </select>
+
+                            <input
+                                type="text"
+                                class="form-control accessoryOtherMaterial"
+                                placeholder="Enter Material"
+                                style="display:none;"
+                            >
+
                         </td>
                         <td> <input type="number" step="0.01" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
                         <td> <input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
@@ -472,16 +529,95 @@
         attachAccessoryEvents();
         calculateAccessoriesGrandTotal();
     }
+    function loadAccessoryMaterials(category){
+
+        const row = category.closest('tr');
+
+        const materialSelect =
+            row.querySelector(
+                '.accessorySelect'
+            );
+
+        const otherInput =
+            row.querySelector(
+                '.accessoryOtherMaterial'
+            );
+
+        const priceField =
+            row.querySelector(
+                '.accessoryPrice'
+            );
+
+        if(category.value === 'other'){
+
+            materialSelect.style.display = 'none';
+
+            otherInput.style.display = 'block';
+
+            priceField.removeAttribute(
+                'readonly'
+            );
+
+            return;
+        }
+
+        materialSelect.style.display = 'block';
+
+        otherInput.style.display = 'none';
+
+        priceField.setAttribute(
+            'readonly',
+            true
+        );
+
+        $.ajax({
+
+            url:
+            '/QG/ajax/get-accessory-materials.php',
+
+            type:'POST',
+
+            data:{
+                category_id: category.value
+            },
+
+            success:function(response){
+
+                materialSelect.innerHTML =
+                    '<option value="">Select Material</option>'
+                    + response;
+
+            }
+
+        });
+
+    }
     function attachAccessoryEvents(){
         document
         .querySelectorAll('.accessorySelect')
         .forEach(select => {
+
             select.onchange = function(){
-                const row = this.closest('tr');
-                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
-                row.querySelector('.accessoryPrice').value =price.toFixed(2);
+
+                const row =
+                    this.closest('tr');
+
+                const price =
+                    parseFloat(
+                        this.options[
+                            this.selectedIndex
+                        ]?.dataset.price
+                    ) || 0;
+
+                row.querySelector(
+                    '.accessoryPrice'
+                ).value =
+                    price.toFixed(2);
+
                 calculateAccessoryTotal(row);
+
             };
+
         });
         document
         .querySelectorAll('.accessoryQty')

@@ -1,7 +1,4 @@
 <?php
-if(!can('drawers_delete')){
-    die('Access Denied');
-}
 include '../db.php';
 /** @var mysqli $conn */
 $id = (int) ($_GET['id'] ?? 0);

@@ -31,10 +31,10 @@
                         <td><?= $srNo++ ?></td>
                         <td><?= $row['category_name']; ?></td>
                         <td>
-                            <?php if($row['status'] == 1) { ?>
-                                <a href="status.php?id=<?= $row['id']; ?>&status=0" class="badge badge-active">Active</a>
-                            <?php } else { ?>
-                                <a href="status.php?id=<?= $row['id']; ?>&status=1" class="badge badge-inactive">Inactive</a>
+                            <?php if($row['status'] == 1){ ?>
+                                <span class="status-active">Active</span>
+                            <?php }else{ ?>
+                                <span class="status-inactive">Inactive</span>
                             <?php } ?>
                         </td>
                         <td class="d-flex">

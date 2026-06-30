@@ -259,3 +259,24 @@ document.addEventListener('click', function (e) {
     const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
     modal.show();
 });
+
+
+document.querySelectorAll('.sidebar-dropdown > a')
+.forEach(item => {
+
+    item.addEventListener('click', function(e){
+
+        e.preventDefault();
+
+        const parent =
+            this.parentElement;
+
+        parent.classList.toggle('open');
+
+        parent
+            .querySelector('.submenu')
+            .classList.toggle('show');
+
+    });
+
+});

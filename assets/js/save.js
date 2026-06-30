@@ -18,10 +18,14 @@ async function saveQuotation(){
         .querySelectorAll('.elevation-card')
         .forEach((elevation,index)=>{
             const imageInput = elevation.querySelector('.line-image-input');
+            const show_note = elevation.querySelector('.elevationNoteToggle')?.value || 0;
+            const elevation_note = elevation.querySelector('.elevationNote')?.value || '';
             const elevationData = {
                 elevation_no: index + 1,
                 ceiling_height_mm: elevation.querySelector('.ceilingHeightMM')?.value || 0,
                 ceiling_height_ft: elevation.querySelector('.ceilingHeightFT')?.value || 0,
+                show_note,
+                elevation_note,
                 units: [],
                 line_images: []
             };
@@ -75,15 +79,51 @@ async function saveQuotation(){
             quotationData.elevations.push(elevationData);
         });
         quotationData.accessories = [];
+
         document
         .querySelectorAll('.accessoryRow')
         .forEach(row => {
+
+            const category =
+                row.querySelector(
+                    '.accessoryCategory'
+                )?.value || '';
+
+            const accessoryId =
+                row.querySelector(
+                    '.accessorySelect'
+                )?.value || 0;
+
+            const otherMaterial =
+                row.querySelector(
+                    '.accessoryOtherMaterial'
+                )?.value || '';
+
             quotationData.accessories.push({
-                accessory_id: row.querySelector('.accessorySelect')?.value || 0,
-                qty: row.querySelector('.accessoryQty')?.value || 0,
-                price: row.querySelector('.accessoryPrice')?.value || 0,
-                total: row.querySelector('.accessoryTotal')?.value || 0
+
+                category_id: category,
+
+                accessory_id: accessoryId,
+
+                other_material: otherMaterial,
+
+                qty:
+                    row.querySelector(
+                        '.accessoryQty'
+                    )?.value || 0,
+
+                price:
+                    row.querySelector(
+                        '.accessoryPrice'
+                    )?.value || 0,
+
+                total:
+                    row.querySelector(
+                        '.accessoryTotal'
+                    )?.value || 0
+
             });
+
         });
         const standardAccessories = [];
         document

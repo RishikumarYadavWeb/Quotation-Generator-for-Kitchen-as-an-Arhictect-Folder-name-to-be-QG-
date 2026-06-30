@@ -70,17 +70,14 @@ $query = mysqli_query(
                     <?= $row['category_name'] ?>
                 </td>
 
-                <td>
-
-                    <?=
-                    $row['status']
-                    ?
-                    'Active'
-                    :
-                    'Inactive'
-                    ?>
-
-                </td>
+                
+                        <td>
+                            <?php if($row['status'] == 1){ ?>
+                                <span class="status-active">Active</span>
+                            <?php }else{ ?>
+                                <span class="status-inactive">Inactive</span>
+                            <?php } ?>
+                        </td>
 
                 <td>
 

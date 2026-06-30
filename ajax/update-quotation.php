@@ -114,6 +114,8 @@ try{
             $elevationNo = (int)$elevation['elevation_no'];
             $ceilingHeightMM = (float)$elevation['ceiling_height_mm'];
             $ceilingHeightFT = (float)$elevation['ceiling_height_ft'];
+            $showNote = (int)($elevation['show_note']?? 0);
+            $elevationNote = mysqli_real_escape_string($conn,$elevation['elevation_note'] ?? '');
             mysqli_query(
                 $conn,
                 "
@@ -121,13 +123,17 @@ try{
                     quotation_id,
                     elevation_no,
                     ceiling_height_mm,
-                    ceiling_height_ft
+                    ceiling_height_ft,
+                    show_note,
+                    elevation_note
                 )
                 VALUES(
                     '$quotationId',
                     '$elevationNo',
                     '$ceilingHeightMM',
-                    '$ceilingHeightFT'
+                    '$ceilingHeightFT',
+                    '$showNote',
+                    '$elevationNote'
                 )
                 "
             );

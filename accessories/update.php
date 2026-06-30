@@ -9,7 +9,8 @@
         die('Invalid Accessory ID');
     }
     $name = mysqli_real_escape_string($conn,trim($_POST['accessory_name'] ?? ''));
-    $category = mysqli_real_escape_string($conn,trim($_POST['category'] ?? ''));
+    $categoryId = mysqli_real_escape_string($conn,trim($_POST['category_id'] ?? ''));
+    $status = (int)$_POST['status'];
     $unit = mysqli_real_escape_string($conn,trim($_POST['unit'] ?? ''));
     $price = (float) ($_POST['price'] ?? 0);
     if(empty($name)){
@@ -21,9 +22,10 @@
         UPDATE accessories
         SET
             accessory_name = '$name',
-            category = '$category',
+            category = '$categoryId',
+            status = '$status',
             unit = '$unit',
-            price = '$price'
+            price = '$price'  
         WHERE id = '$id'
         LIMIT 1
         "

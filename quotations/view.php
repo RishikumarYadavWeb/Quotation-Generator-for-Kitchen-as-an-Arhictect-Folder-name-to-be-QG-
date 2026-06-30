@@ -151,15 +151,20 @@
         );
     ?>
         <div class="main-card mt-4">
-            <div class="generated-title">
+           <div class="generated-title">
                 <?php
                 $alphabet = range('A','Z');
-                $elevationLabel =
-                    $alphabet[
-                        $elevation['elevation_no'] - 1
-                    ] ?? $elevation['elevation_no'];
+                $elevationLabel = $alphabet[$elevation['elevation_no'] - 1] ?? $elevation['elevation_no'];
                 ?>
                 Elevation <?= $elevationLabel; ?>
+                <?php if(
+                    !empty($elevation['show_note']) &&
+                    !empty($elevation['elevation_note'])
+                ){ ?>
+                    <span style="margin-left:10px;font-size:18px;font-weight:500;color:#64748b;">
+                        | <?= htmlspecialchars($elevation['elevation_note']) ?>
+                    </span>
+                <?php } ?>
             </div>
             <div class="row mb-4">
                 <div class="col-md-6 mb-3">
@@ -428,13 +433,16 @@
             "
             SELECT
                 qa.*,
-                a.accessory_name
+                a.accessory_name,
+                ac.category_name
             FROM quotation_accessories qa
             LEFT JOIN accessories a
             ON qa.accessory_id = a.id
-            WHERE qa.quotation_id='$id'
+            LEFT JOIN accessory_categories ac
+            ON qa.category_id = ac.id
+            WHERE qa.quotation_id = '$id'
             "
-        ); 
+        );
     ?>
     <div class="main-card mt-4">
         <div class="generated-title">Additional Accessories</div>
@@ -456,8 +464,19 @@
                     ){$accessoryGrandTotal += $accessory['total'];
                 ?>
                     <tr>
-                        <td><?= $srNo++ ?>></td>
-                        <td><?= $accessory['accessory_name']; ?></td>
+                        <td><?= $srNo++ ?></td>
+                        <td>
+                            <?php
+                                if(
+                                    !empty($accessory['other_material'])
+                                ){
+                                    echo '<strong>Other</strong> - ' . htmlspecialchars($accessory['other_material']);
+                                }else{
+                                    echo htmlspecialchars($accessory['category_name']);
+                                    echo ' - ';
+                                    echo htmlspecialchars($accessory['accessory_name']);}
+                            ?>
+                        </td>
                         <td> ₹ <?= number_format( $accessory['price'], 2 ); ?></td>
                         <td><?= $accessory['qty']; ?></td>
                         <td> ₹ <?= number_format( $accessory['total'], ); ?></td>

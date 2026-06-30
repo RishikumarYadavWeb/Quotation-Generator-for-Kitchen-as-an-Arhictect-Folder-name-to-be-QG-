@@ -97,19 +97,25 @@ try{
             $elevationNo = (int)$elevation['elevation_no'];
             $ceilingHeightMM = (float)$elevation['ceiling_height_mm'];
             $ceilingHeightFT = (float)$elevation['ceiling_height_ft'];
+            $showNote = (int)($elevation['show_note']?? 0);
+            $elevationNote = mysqli_real_escape_string($conn,$elevation['elevation_note'] ?? '');
             mysqli_query( $conn,
                 "
                 INSERT INTO elevations(
                     quotation_id,
                     elevation_no,
                     ceiling_height_mm,
-                    ceiling_height_ft
+                    ceiling_height_ft,
+                    show_note,
+                    elevation_note
                 )
                 VALUES(
                     '$quotationId',
                     '$elevationNo',
                     '$ceilingHeightMM',
-                    '$ceilingHeightFT'
+                    '$ceilingHeightFT',
+                    '$showNote',
+                    '$elevationNote'
                 )
                 "
             );
@@ -195,67 +201,39 @@ try{
             }        
         }
     }
-/* SAVE STANDARD ACCESSORIES */
-
-if(
-    isset($data['standard_accessories']) &&
-    is_array($data['standard_accessories'])
-){
-    foreach(
-        $data['standard_accessories']
-        as $accessory
+    if(
+        isset($data['standard_accessories']) &&
+        is_array($data['standard_accessories'])
     ){
-
-        $standardAccessoryId =
-            (int)(
-                $accessory[
-                    'standard_accessory_id'
-                ] ?? 0
+        foreach(
+            $data['standard_accessories']
+            as $accessory
+        ){
+            $standardAccessoryId = (int)($accessory['standard_accessory_id'] ?? 0);
+            $qty = (float)($accessory['qty'] ?? 0);
+            $unitPrice = (float)($accessory['unit_price'] ?? 0);
+            $totalPrice = (float)($accessory['total_price'] ?? 0);
+            mysqli_query(
+                $conn,
+                "
+                INSERT INTO quotation_standard_accessories(
+                    quotation_id,
+                    standard_accessory_id,
+                    qty,
+                    unit_price,
+                    total_price
+                )
+                VALUES(
+                    '$quotationId',
+                    '$standardAccessoryId',
+                    '$qty',
+                    '$unitPrice',
+                    '$totalPrice'
+                )
+                "
             );
-
-        $qty =
-            (float)(
-                $accessory['qty'] ?? 0
-            );
-
-        $unitPrice =
-            (float)(
-                $accessory['unit_price'] ?? 0
-            );
-
-        $totalPrice =
-            (float)(
-                $accessory['total_price'] ?? 0
-            );
-
-        mysqli_query(
-            $conn,
-            "
-            INSERT INTO quotation_standard_accessories(
-
-                quotation_id,
-                standard_accessory_id,
-                qty,
-                unit_price,
-                total_price
-
-            )
-
-            VALUES(
-
-                '$quotationId',
-                '$standardAccessoryId',
-                '$qty',
-                '$unitPrice',
-                '$totalPrice'
-
-            )
-            "
-        );
-
+        }
     }
-
-}
     if(
         isset($data['accessories']) &&
         is_array($data['accessories'])
@@ -265,14 +243,20 @@ if(
             as $accessory
         ){
             $accessoryId = (int)($accessory['accessory_id'] ?? 0);
-            $qty = (float)($accessory['qty'] ?? 0);
-            $price = (float)preg_replace( '/[^0-9.]/', '', $accessory['price'] ?? 0 );
-            $total = (float)preg_replace( '/[^0-9.]/', '', $accessory['total'] ?? 0 );
-            mysqli_query($conn,
+            $categoryId = ($accessory['category_id'] === 'other') ? 0 : (int)($accessory['category_id'] ?? 0);
+            $otherMaterial = mysqli_real_escape_string($conn,$accessory['other_material'] ?? '');
+            $qty = (float)($accessory['qty']?? 0);
+            $price = (float)preg_replace('/[^0-9.]/','',$accessory['price']?? 0);
+            $total = (float)preg_replace('/[^0-9.]/','',$accessory['total']?? 0);
+            mysqli_query(
+                $conn,
                 "
-                INSERT INTO quotation_accessories(
+                INSERT INTO
+                quotation_accessories(
                     quotation_id,
                     accessory_id,
+                    category_id,
+                    other_material,
                     qty,
                     price,
                     total
@@ -280,6 +264,8 @@ if(
                 VALUES(
                     '$quotationId',
                     '$accessoryId',
+                    '$categoryId',
+                    '$otherMaterial',
                     '$qty',
                     '$price',
                     '$total'

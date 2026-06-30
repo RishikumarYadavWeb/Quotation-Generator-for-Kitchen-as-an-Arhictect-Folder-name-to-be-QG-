@@ -475,6 +475,20 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
                 const elevation = EDIT_ELEVATIONS[index];
                 const card = cards[index];
                 if(!card) continue;
+                const noteToggle = card.querySelector('.elevationNoteToggle');
+                const noteField = card.querySelector('.elevationNote');
+                const noteWrapper = card.querySelector('.elevationNoteWrapper');
+                if(noteToggle){
+                    noteToggle.value = elevation.show_note || 0;
+                    if(
+                        elevation.show_note == 1
+                    ){
+                        noteWrapper.style.display = 'block';
+                        if(noteField){
+                            noteField.value = elevation.elevation_note || '';
+                        }
+                    }
+                }
                 const previewContainer = card.querySelector('.line-image-preview');
                 if(
                     previewContainer &&

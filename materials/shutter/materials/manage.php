@@ -1,62 +1,273 @@
-
 <?php
     include '../../../includes/auth.php';
     include '../../../db.php';
     /** @var mysqli $conn */
-    include '../../../includes/header.php'; 
+
+    include '../../../includes/header.php';
     include '../../../includes/sidebar.php';
+
+    /* PAGINATION */
+
+    $limit = 10;
+
+    $page = isset($_GET['page'])
+        ? max(1, (int)$_GET['page'])
+        : 1;
+
+    $offset = ($page - 1) * $limit;
+
+    /* TOTAL RECORDS */
+
+    $totalQuery = mysqli_query(
+        $conn,
+        "
+        SELECT COUNT(*) AS total
+        FROM shutter_materials
+        "
+    );
+
+    $totalRecords = mysqli_fetch_assoc(
+        $totalQuery
+    )['total'];
+
+    $totalPages = ceil(
+        $totalRecords / $limit
+    );
+
+    /* FETCH DATA */
+
+    $query = mysqli_query(
+        $conn,
+        "
+        SELECT
+            shutter_materials.*,
+            shutter_categories.category_name
+
+        FROM shutter_materials
+
+        LEFT JOIN shutter_categories
+        ON shutter_materials.category_id =
+            shutter_categories.id
+
+        ORDER BY shutter_materials.id ASC
+
+        LIMIT $limit OFFSET $offset
+        "
+    );
 ?>
+
 <div class="container">
+
     <div class="top-bar">
+
         <h2>Manage Shutter Materials</h2>
-        <a href="material.php" class="theme-btn">+ Add Material</a>
+
+        <a
+            href="material.php"
+            class="theme-btn"
+        >
+            + Add Material
+        </a>
+
     </div>
-    <div>
+
+    <div class="table-responsive">
+
         <table class="custom-table">
+
             <thead>
+
                 <tr>
-                    <th>ID</th>
+                    <th>SR No.</th>
                     <th>Category</th>
                     <th>Material Type</th>
                     <th>Price/Sqft</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
+
             </thead>
+
             <tbody>
+
                 <?php
-                    $query =
-                    "SELECT shutter_materials.*,
-                            shutter_categories.category_name
-                    FROM shutter_materials
-                    LEFT JOIN shutter_categories
-                    ON shutter_materials.category_id =
-                        shutter_categories.id
-                    ORDER BY shutter_materials.id ASC";
-                    $result = mysqli_query($conn, $query);
-                    $srNo=1;
-                    while($row = mysqli_fetch_assoc($result)) {
+
+                $srNo = $offset + 1;
+                if(mysqli_num_rows($query) > 0){
+
+                    while(
+                        $row =
+                        mysqli_fetch_assoc($query)
+                    ){
+
                 ?>
+
                     <tr>
-                        <td><?= $srNo++ ?></td>
-                        <td><?= $row['category_name']; ?></td>
-                        <td><?= $row['material_type']; ?></td>
-                        <td>₹ <?= number_format($row['price_per_sqft'],2); ?></td>
+
                         <td>
-                            <?php if($row['status'] == 1) { ?>
-                                <a href="status.php?id=<?= $row['id']; ?>&status=0" class="badge badge-active">Active</a>
-                            <?php } else { ?>
-                                <a href="status.php?id=<?= $row['id']; ?>&status=1" class="badge badge-inactive">Inactive</a>
+                            <?= $srNo++ ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $row['category_name']
+                            ) ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars(
+                                $row['material_type']
+                            ) ?>
+                        </td>
+
+                        <td>
+                            ₹ <?= number_format(
+                                $row['price_per_sqft'],
+                                2
+                            ) ?>
+                        </td>
+
+                        <td>
+
+                            <?php if(
+                                $row['status'] == 1
+                            ){ ?>
+
+                                <span class="status-active">
+                                    Active
+                                </span>
+
+                            <?php }else{ ?>
+
+                                <span class="status-inactive">
+                                    Inactive
+                                </span>
+
                             <?php } ?>
+
                         </td>
+
                         <td class="d-flex">
-                            <a href="edit.php?id=<?= $row['id']; ?>" class="edit-btn">Edit</a>
-                            <a href="delete.php?id=<?= $row['id']; ?>" class="delete-btn">Delete</a>
+
+                            <a
+                                href="edit.php?id=<?= $row['id']; ?>"
+                                class="edit-btn"
+                            >
+                                Edit
+                            </a>
+
+                            <a
+                                href="delete.php?id=<?= $row['id']; ?>"
+                                class="delete-btn"
+                                onclick="
+                                    return confirm(
+                                        'Delete Material?'
+                                    )
+                                "
+                            >
+                                Delete
+                            </a>
+
                         </td>
+
                     </tr>
+
+                <?php
+                    }
+                }else{
+                ?>
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            style="text-align:center;"
+                        >
+                            No Materials Found
+                        </td>
+
+                    </tr>
+
                 <?php } ?>
+
             </tbody>
+
         </table>
+
     </div>
+
+    <!-- PAGINATION -->
+
+    <?php if($totalPages > 1){ ?>
+
+        <div class="pagination">
+
+            <?php if($page > 1){ ?>
+
+                <a href="?page=<?= $page - 1 ?>">
+                    &laquo; Prev
+                </a>
+
+            <?php } ?>
+
+            <?php if($page > 3){ ?>
+
+                <a href="?page=1">1</a>
+
+                <?php if($page > 4){ ?>
+                    <span class="pagination-dots">
+                        ...
+                    </span>
+                <?php } ?>
+
+            <?php } ?>
+
+            <?php
+
+            $start = max(1, $page - 2);
+            $end   = min($totalPages, $page + 2);
+
+            for($i = $start; $i <= $end; $i++){
+
+            ?>
+
+                <a
+                    href="?page=<?= $i ?>"
+                    class="<?= ($i == $page)
+                        ? 'active'
+                        : '' ?>"
+                >
+                    <?= $i ?>
+                </a>
+
+            <?php } ?>
+
+            <?php if($page < $totalPages - 2){ ?>
+
+                <?php if($page < $totalPages - 3){ ?>
+                    <span class="pagination-dots">
+                        ...
+                    </span>
+                <?php } ?>
+
+                <a href="?page=<?= $totalPages ?>">
+                    <?= $totalPages ?>
+                </a>
+
+            <?php } ?>
+
+            <?php if($page < $totalPages){ ?>
+
+                <a href="?page=<?= $page + 1 ?>">
+                    Next &raquo;
+                </a>
+
+            <?php } ?>
+
+        </div>
+
+    <?php } ?>
+
 </div>
+
 <?php include '../../../includes/footer.php'; ?>

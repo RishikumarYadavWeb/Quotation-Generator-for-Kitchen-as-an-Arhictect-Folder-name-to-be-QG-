@@ -4506,3 +4506,32 @@ body{
     min-width:auto;
     padding:0 5px;
 }
+
+
+.sidebar-dropdown>a{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.submenu{
+    display:none;
+    padding-left:20px;
+}
+
+.submenu.show{
+    display:block;
+}
+
+.submenu li a{
+    font-size:14px;
+    padding:10px 15px;
+}
+
+.dropdown-arrow{
+    transition:0.3s;
+}
+
+.sidebar-dropdown.open .dropdown-arrow{
+    transform:rotate(180deg);
+}

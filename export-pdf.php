@@ -74,7 +74,8 @@
             id,
             elevation_no,
             ceiling_height_mm,
-            ceiling_height_ft
+            ceiling_height_ft,
+            elevation_note
         FROM elevations
         WHERE quotation_id = '$id'
         ORDER BY id ASC

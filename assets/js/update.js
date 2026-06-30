@@ -18,10 +18,14 @@ async function updateQuotation(){
         .querySelectorAll('.elevation-card')
         .forEach((elevation,index)=>{
             const imageInput = elevation.querySelector('.line-image-input');
+            const show_note = elevation.querySelector('.elevationNoteToggle')?.value || 0;
+            const elevation_note = elevation.querySelector('.elevationNote')?.value || '';
             const elevationData = {
                 elevation_no: index + 1,
                 ceiling_height_mm: elevation.querySelector('.ceilingHeightMM')?.value || 0,
                 ceiling_height_ft: elevation.querySelector('.ceilingHeightFT')?.value || 0,
+                show_note,
+                elevation_note,
                 units: [],
                 line_images: []
             };

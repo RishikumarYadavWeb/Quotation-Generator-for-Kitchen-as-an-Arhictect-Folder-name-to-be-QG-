@@ -53,6 +53,7 @@ Add Material
 <th>Sr No</th>
 <th>Category</th>
 <th>Material</th>
+<th>status</th>
 <th>Unit</th>
 <th>Price</th>
 <th>Action</th>
@@ -86,6 +87,13 @@ mysqli_fetch_assoc($query)
 <?= $row['material_name'] ?>
 </td>
 
+                        <td>
+                            <?php if($row['status'] == 1){ ?>
+                                <span class="status-active">Active</span>
+                            <?php }else{ ?>
+                                <span class="status-inactive">Inactive</span>
+                            <?php } ?>
+                        </td>
 <td>
 <?= $row['unit'] ?>
 </td>
