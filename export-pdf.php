@@ -45,7 +45,7 @@
             quotations.installation_charge,
             quotations.special_discount,
             quotations.final_customer_price,
-            quotations.created_at,
+            quotations.updated_at,
             clients.client_name,
             clients.phone,
             clients.email,
@@ -106,51 +106,54 @@
         $accessories[] = $row;
         $accessoriesTotal += (float) $row['total'];
     }
-    /* STANDARD ACCESSORIES */
-
-$standardAccessoriesQuery = mysqli_query(
-    $conn,
-    "
-    SELECT
-
-        qsa.qty,
-        qsa.unit_price,
-        qsa.total_price,
-
-        sam.material_name,
-        sam.unit,
-
-        sac.category_name
-
-    FROM quotation_standard_accessories qsa
-
-    LEFT JOIN standard_accessory_materials sam
-    ON qsa.standard_accessory_id = sam.id
-
-    LEFT JOIN standard_accessory_categories sac
-    ON sam.category_id = sac.id
-
-    WHERE qsa.quotation_id = '$id'
-
-    ORDER BY qsa.id ASC
-    "
-);
-
-$standardAccessories = [];
-$standardAccessoriesTotal = 0;
-
-while(
-    $row = mysqli_fetch_assoc(
-        $standardAccessoriesQuery
-    )
-){
-
-    $standardAccessories[] = $row;
-
-    $standardAccessoriesTotal +=
-        (float)$row['total_price'];
-
-}
+    $panelQuery = mysqli_query(
+        $conn,
+        "
+        SELECT
+            qp.*,
+            sc.category_name,
+            sm.material_type
+        FROM quotation_panels qp
+        LEFT JOIN shutter_categories sc
+        ON qp.shutter_category_id = sc.id
+        LEFT JOIN shutter_materials sm
+        ON qp.shutter_material_id = sm.id
+        WHERE qp.quotation_id = '$id'
+        "
+    );
+    $panels = [];
+    $panelsTotal = 0;
+    while($row = mysqli_fetch_assoc($panelQuery)){
+        $panels[] = $row;
+        $panelsTotal += (float)$row['panel_price'];
+    }
+    $standardAccessoriesQuery = mysqli_query(
+        $conn,
+        "
+        SELECT
+            qsa.qty,
+            qsa.unit_price,
+            qsa.total_price,
+            sam.material_name,
+            sam.unit,
+            sac.category_name
+        FROM quotation_standard_accessories qsa
+        LEFT JOIN standard_accessory_materials sam
+        ON qsa.standard_accessory_id = sam.id
+        LEFT JOIN standard_accessory_categories sac
+        ON sam.category_id = sac.id
+        WHERE qsa.quotation_id = '$id'
+        ORDER BY qsa.id ASC
+        "
+    );
+    $standardAccessories = [];
+    $standardAccessoriesTotal = 0;
+    while(
+        $row = mysqli_fetch_assoc($standardAccessoriesQuery)
+    ){
+        $standardAccessories[] = $row;
+        $standardAccessoriesTotal += (float)$row['total_price'];
+    }
     ob_start();
     include 'invoice-template.php';
     $html = ob_get_clean();
@@ -180,11 +183,10 @@ while(
     // $canvas = $dompdf->getCanvas();
     // $canvas->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) use ($quotation) {
     //     $canvas->line(20,820,575,820,array(0,0,0),1);
-    //     $canvas->text(25,825,"Date: ".date('d-m-Y', strtotime($quotation['created_at'])),null,8);
+    //     $canvas->text(25,825,"Date: ".date('d-m-Y', strtotime($quotation['updated_at'])),null,8);
     //     $canvas->text(220,825,"Proforma No: ".$quotation['proforma_no'],null,8);
     //     $canvas->text(500,825,"Page ".$pageNumber." of ".$pageCount,null,8);
     // });
-
 
     // A3 
     $a4Pdf = $dompdf->output();
@@ -236,7 +238,7 @@ while(
             $pageHeight - 7,
             'Date: ' . date(
                 'd-m-Y',
-                strtotime($quotation['created_at'])
+                strtotime($quotation['updated_at'])
             )
         );
 
@@ -337,7 +339,7 @@ while(
                 'Date: '.date(
                     'd-m-Y',
                     strtotime(
-                        $quotation['created_at']
+                        $quotation['updated_at']
                     )
                 )
             );

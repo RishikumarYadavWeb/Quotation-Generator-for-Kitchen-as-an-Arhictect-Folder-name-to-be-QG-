@@ -57,7 +57,8 @@ try{
             packing_charge = '$packingCharge',
             installation_charge = '$installationCharge',
             special_discount = '$specialDiscount',
-            final_customer_price = '$finalCustomerPrice'
+            final_customer_price = '$finalCustomerPrice',
+            updated_at = NOW()
         WHERE id = '$quotationId'
     ");
     mysqli_query(
@@ -101,6 +102,11 @@ try{
     mysqli_query(
         $conn,
         "DELETE FROM elevations
+        WHERE quotation_id = '$quotationId'"
+    );
+    mysqli_query(
+        $conn,
+        " DELETE FROM quotation_panels
         WHERE quotation_id = '$quotationId'"
     );
     if(
@@ -228,64 +234,77 @@ try{
         }
     }
     if(
+    isset($data['panels']) &&
+    is_array($data['panels'])
+    ){
+        foreach(
+            $data['panels']
+            as $panel
+        ){
+            $width = (float)$panel['width_mm'];
+            $height = (float)$panel['height_mm'];
+            $sqft = (float)$panel['sqft'];
+            $categoryId = (int)$panel['shutter_category_id'];
+            $materialId = (int)$panel['shutter_material_id'];
+            $price = (float)$panel['panel_price'];
+            mysqli_query(
+                $conn,
+                "
+                INSERT INTO quotation_panels(
+                    quotation_id,
+                    width_mm,
+                    height_mm,
+                    sqft,
+                    shutter_category_id,
+                    shutter_material_id,
+                    panel_price
+                )
+                VALUES(
+                    '$quotationId',
+                    '$width',
+                    '$height',
+                    '$sqft',
+                    '$categoryId',
+                    '$materialId',
+                    '$price'
+                )
+                "
+            );
+        }
+    }
+    if(
     isset($data['standard_accessories']) &&
     is_array($data['standard_accessories'])
-){
-    foreach(
-        $data['standard_accessories']
-        as $accessory
     ){
-
-        $standardAccessoryId =
-            (int)(
-                $accessory[
-                    'standard_accessory_id'
-                ] ?? 0
+        foreach(
+            $data['standard_accessories']
+            as $accessory
+        ){
+            $standardAccessoryId = (int)($accessory['standard_accessory_id'] ?? 0);
+            $qty = (float)($accessory['qty'] ?? 0);
+            $unitPrice = (float)($accessory['unit_price'] ?? 0);
+            $totalPrice = (float)($accessory['total_price'] ?? 0);
+            mysqli_query(
+                $conn,
+                "
+                INSERT INTO quotation_standard_accessories(
+                    quotation_id,
+                    standard_accessory_id,
+                    qty,
+                    unit_price,
+                    total_price
+                )
+                VALUES(
+                    '$quotationId',
+                    '$standardAccessoryId',
+                    '$qty',
+                    '$unitPrice',
+                    '$totalPrice'
+                )
+                "
             );
-
-        $qty =
-            (float)(
-                $accessory['qty'] ?? 0
-            );
-
-        $unitPrice =
-            (float)(
-                $accessory['unit_price'] ?? 0
-            );
-
-        $totalPrice =
-            (float)(
-                $accessory['total_price'] ?? 0
-            );
-
-        mysqli_query(
-            $conn,
-            "
-            INSERT INTO quotation_standard_accessories(
-
-                quotation_id,
-                standard_accessory_id,
-                qty,
-                unit_price,
-                total_price
-
-            )
-
-            VALUES(
-
-                '$quotationId',
-                '$standardAccessoryId',
-                '$qty',
-                '$unitPrice',
-                '$totalPrice'
-
-            )
-            "
-        );
-
+        }
     }
-
-}
     if(
         isset($data['accessories']) &&
         is_array($data['accessories'])

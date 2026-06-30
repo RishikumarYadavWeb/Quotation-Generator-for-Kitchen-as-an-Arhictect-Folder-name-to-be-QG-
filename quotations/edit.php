@@ -25,7 +25,6 @@
         WHERE quotation_id = ?
         ORDER BY id ASC
     ";
-    
     $stmt = $conn->prepare($elevation_sql);
     $stmt->bind_param("i", $quotation_id);
     $stmt->execute();
@@ -46,30 +45,25 @@
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {$units[$row['elevation_id']][] = $row;}
     $quotationDrawers = [];
-$drawerQuery = mysqli_query(
-    $conn,
-    "SELECT * FROM drawers_data
-    WHERE quotation_id = '$quotation_id'"
-);
-
-$EDIT_DRAWERS = [];
-
-while($row = mysqli_fetch_assoc($drawerQuery)){
-    $EDIT_DRAWERS[] = $row;
-}
+    $drawerQuery = mysqli_query(
+        $conn,
+        "SELECT * FROM drawers_data
+        WHERE quotation_id = '$quotation_id'"
+    );
+    $EDIT_DRAWERS = [];
+    while($row = mysqli_fetch_assoc($drawerQuery)){
+        $EDIT_DRAWERS[] = $row;
+    }
     $shelves_data = [];
-
-$shelfQuery = mysqli_query(
-    $conn,
-    "SELECT * FROM shelves_data
-    WHERE quotation_id = '$quotation_id'"
-);
-
-$EDIT_SHELVES = [];
-
-while($row = mysqli_fetch_assoc($shelfQuery)){
-    $EDIT_SHELVES[] = $row;
-}
+    $shelfQuery = mysqli_query(
+        $conn,
+        "SELECT * FROM shelves_data
+        WHERE quotation_id = '$quotation_id'"
+    );
+    $EDIT_SHELVES = [];
+    while($row = mysqli_fetch_assoc($shelfQuery)){
+        $EDIT_SHELVES[] = $row;
+    }
     $accessories = [];
     $sql = "
         SELECT *
@@ -93,7 +87,6 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
     while($row = mysqli_fetch_assoc($result)){$elevationImages[$row['elevation_id']][] = $row['image_path'];}
     include '../includes/header.php';
     include '../includes/sidebar.php';
-    
     /* CARCASS MATERIALS */
     $carcassMaterials = [];
     $carcassQuery = "
@@ -249,6 +242,17 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
         $row['category_name'].
         '</option>';
     }
+    $panelQuery = mysqli_query(
+        $conn,
+        "
+        SELECT *
+        FROM quotation_panels
+        WHERE quotation_id = '$quotation_id'
+        ORDER BY id ASC
+        "
+    );
+    $panels = [];
+    while($row = mysqli_fetch_assoc($panelQuery)){$panels[] = $row;}
 ?>
 <form id="quotationForm" novalidate onkeydown="preventEnterSubmit(event)">
     <div class="container-fluid">
@@ -374,7 +378,29 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
             </div>
         </div>
         <div id="elevationContainer"></div>
-                <div class="main-card" style="margin-top:30px;">
+        <div class="main-card" style="margin-top:30px;">
+            <div class="page-header mb-0">
+                <div>
+                    <h2 class="page-title">Visible Panels / Side Panels</h2>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Number Of Panels</label>
+                    <input type="number" id="panelCount" class="form-control" min="0">
+                </div>
+            </div>
+            <div style="margin-top:20px;">
+                <button type="button" class="btn btn-primary" onclick="generatePanels()">
+                    Generate Panels
+                </button>
+            </div>
+            <div id="panelContainer" style="margin-top:25px;"></div>
+            <div class="card" style="background:#f8fafc;">
+                <h5>Panels Total : ₹ <span id="panelGrandTotal">0.00</span></h5>
+            </div>
+        </div>
+        <div class="main-card" style="margin-top:30px;">
             <div class="page-header mb-0">
                 <div>
                     <h2 class="page-title">Standard Accessories</h2>
@@ -459,6 +485,7 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
     const QUOTATION = <?= json_encode($quotation); ?>;
     const EDIT_IMAGES = <?= json_encode($elevationImages); ?>;
     const EDIT_STANDARD_ACCESSORIES = <?= json_encode($EDIT_STANDARD_ACCESSORIES ?? []) ?>;
+    const EDIT_PANELS = <?= json_encode($panels); ?>;
     window.oldElevationImages = {};
     window.deletedImages = [];
     document.addEventListener(
@@ -936,6 +963,28 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
                         }
                     }
                 }
+                if(
+                    EDIT_PANELS &&
+                    EDIT_PANELS.length > 0
+                ){
+                    document.getElementById('panelCount').value = EDIT_PANELS.length;
+                    generatePanels();
+                    const rows = document.querySelectorAll('.panelRow');
+                    EDIT_PANELS.forEach(
+                        (panel,index) => {
+                            const row = rows[index];
+                            if(!row) return;
+                            row.querySelector('.panelWidth').value = panel.width_mm;
+                            row.querySelector('.panelHeight').value = panel.height_mm;
+                            row.querySelector('.panelCategory').value = panel.shutter_category_id;
+                            loadPanelMaterials(panel.shutter_category_id,row);
+                            setTimeout(() => {
+                                row.querySelector('.panelMaterial').value = panel.shutter_material_id;
+                                calculatePanelRow(row);
+                            },100);
+                        }
+                    );
+                }
                 // Accessories
                 if(
                     EDIT_ACCESSORIES &&
@@ -1318,6 +1367,128 @@ while($row = mysqli_fetch_assoc($shelfQuery)){
             grandField.innerText = grand.toFixed(2);
         }
         updateGrandTotal();
+    }
+    function generatePanels(){
+        const count = parseInt(document.getElementById('panelCount').value) || 0;
+        const container = document.getElementById('panelContainer');
+        const panelShutterCategoryOptions =
+            shutterCategories
+            .filter(cat => ![4, 9].includes(parseInt(cat.id)))
+            .map(cat => `
+                <option value="${cat.id}">
+                    ${cat.category_name}
+                </option>
+            `)
+            .join('');
+        let html = `
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Sr No.</th>
+                        <th>Width (MM)</th>
+                        <th>Height (MM)</th>
+                        <th>Sq Ft</th>
+                        <th>Shutter Category</th>
+                        <th>Shutter Material</th>
+                        <th>Panel Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        for(let i = 1; i <= count; i++){
+            html += `
+                    <tr class="panelRow">
+                        <td>${i}</td>
+                        <td><input type="number" step="0.01" class="form-control panelWidth"></td>
+                        <td><input type="number" step="0.01" class="form-control panelHeight"></td>
+                        <td><input type="number" class="form-control panelSqft" readonly></td>
+                        <td>
+                            <select class="form-control panelCategory">
+                                <option value="">Select Category</option>
+                                ${panelShutterCategoryOptions}
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-control panelMaterial">
+                                <option value="">Select Material</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="form-control panelPrice" readonly></td>
+                    </tr>
+            `;
+        }
+        html += `
+                </tbody>
+            </table>
+        </div>
+        `;
+        container.innerHTML = html;
+        attachPanelEvents();
+    }
+    function attachPanelEvents(){
+        document
+        .querySelectorAll('.panelRow')
+        .forEach(row => {
+            row
+            .querySelectorAll('.panelWidth,.panelHeight')
+            .forEach(input => {
+                input.addEventListener('input',() => calculatePanelRow(row));
+            });
+            row
+            .querySelector('.panelCategory')
+            .addEventListener(
+                'change',
+                function(){
+                    loadPanelMaterials(this.value,row);
+                }
+            );
+            row
+            .querySelector('.panelMaterial')
+            .addEventListener(
+                'change', () => calculatePanelRow(row)
+            );
+        });
+    }
+    function loadPanelMaterials(
+        categoryId,
+        row
+    ){
+        const materialSelect = row.querySelector('.panelMaterial');
+        materialSelect.innerHTML = '<option value="">Select Material</option>';
+        shutterMaterials
+        .filter(
+            mat =>
+            mat.category_id == categoryId
+        )
+        .forEach(mat => {
+            materialSelect.innerHTML += `
+                <option value="${mat.id}" data-price="${mat.price_per_sqft}">
+                    ${mat.material_type}
+                </option>
+            `;
+        });
+    }
+    function calculatePanelRow(row){
+        const width = parseFloat(row.querySelector('.panelWidth').value) || 0;
+        const height = parseFloat(row.querySelector('.panelHeight').value) || 0;
+        const sqft = (width / 304.8) * (height / 304.8);
+        row.querySelector('.panelSqft').value = sqft.toFixed(2);
+        const material = row.querySelector('.panelMaterial');
+        const pricePerSqft = parseFloat(material.selectedOptions[0] ?.dataset.price) || 0;
+        const total = sqft * pricePerSqft;
+        row.querySelector('.panelPrice').value = total.toFixed(2);
+        calculatePanelsGrandTotal();
+        updateGrandTotal();
+    }
+    function calculatePanelsGrandTotal(){
+        let total = 0;
+        document
+        .querySelectorAll('.panelPrice')
+        .forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('panelGrandTotal').innerText = total.toFixed(2);
     }
 </script>
 <?php include '../includes/footer.php'; ?>

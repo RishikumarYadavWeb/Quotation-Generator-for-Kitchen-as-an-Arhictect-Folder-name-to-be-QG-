@@ -145,32 +145,23 @@
         $row['category_name'].
         '</option>';
     }
-
-?>
-<?php
-
-$categoryQuery = mysqli_query(
-    $conn,
-    "
-    SELECT *
-    FROM accessory_categories
-    WHERE status = 1
-    ORDER BY category_name
-    "
-);
-
-$accessoryCategoryOptions = '';
-
-while($row = mysqli_fetch_assoc($categoryQuery)){
-
-    $accessoryCategoryOptions .=
-        '<option value="'.$row['id'].'">'.
-        htmlspecialchars($row['category_name']).
-        '</option>';
-}
-
-$accessoryCategoryOptions .=
-    '<option value="other">Other</option>';
+    $categoryQuery = mysqli_query(
+        $conn,
+        "
+        SELECT *
+        FROM accessory_categories
+        WHERE status = 1
+        ORDER BY category_name
+        "
+    );
+    $accessoryCategoryOptions = '';
+    while($row = mysqli_fetch_assoc($categoryQuery)){
+        $accessoryCategoryOptions .=
+            '<option value="'.$row['id'].'">'.
+            htmlspecialchars($row['category_name']).
+            '</option>';
+    }
+    $accessoryCategoryOptions .= '<option value="other">Other</option>';
 ?>
 <form  id="quotationForm" enctype="multipart/form-data" novalidate onkeydown="preventEnterSubmit(event)">
     <div class="container-fluid">
@@ -297,6 +288,29 @@ $accessoryCategoryOptions .=
             </div>
         </div>
         <div id="elevationContainer"></div>
+
+        <div class="main-card" style="margin-top:30px;">
+            <div class="page-header mb-0">
+                <div>
+                    <h2 class="page-title">Visible Panels / Side Panels</h2>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Number Of Panels</label>
+                    <input type="number" id="panelCount" class="form-control" min="0" placeholder="Add Number of Panels">
+                </div>
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary" onclick="generatePanels()">
+                    Generate Panels
+                </button>
+            </div>
+            <div id="panelContainer"></div>
+            <div class="card mt-4" style="background:#f8fafc;">
+                <h5>Panels Total :₹ <span id="panelGrandTotal">0.00</span></h5>
+            </div>
+        </div>
 
         <div class="main-card" style="margin-top:30px;">
             <div class="page-header mb-0">
@@ -428,15 +442,12 @@ $accessoryCategoryOptions .=
             }
         }
     }
-    const accessoryCategoryOptions =
-`<?= $accessoryCategoryOptions ?>`;
+    const accessoryCategoryOptions = `<?= $accessoryCategoryOptions ?>`;
     function generateAccessories(){
         const count = parseInt(document.getElementById('accessoryCount').value) || 0;
         const container = document.getElementById('accessoriesContainer');
         if(
-            !container.querySelector(
-                '.accessoriesTable'
-            )
+            !container.querySelector('.accessoriesTable')
         ){
             container.innerHTML = `
                 <div class="table-responsive">
@@ -469,49 +480,22 @@ $accessoryCategoryOptions .=
                     'beforeend',
                     `
                     <tr class="accessoryRow">
-                        <td class="accessorySrNo" style="display:flex;justify-content:center;align-items:center;">
-                            ${i + 1}
-                        </td>
+                        <td class="accessorySrNo" style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
                         <td>
-
-                            <select
-                                class="form-control accessoryCategory"
-                                onchange="loadAccessoryMaterials(this)"
-                            >
-
-                                <option value="">
-                                    Select Category
-                                </option>
-
+                            <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
+                                <option value="">Select Category</option>
                                 ${accessoryCategoryOptions}
-
                             </select>
-
                         </td>
-
                         <td>
-
-                            <select
-                                class="form-control accessorySelect"
-                            >
-
-                                <option value="">
-                                    Select Material
-                                </option>
-
+                            <select class="form-control accessorySelect">
+                                <option value="">Select Material</option>
                             </select>
-
-                            <input
-                                type="text"
-                                class="form-control accessoryOtherMaterial"
-                                placeholder="Enter Material"
-                                style="display:none;"
-                            >
-
+                            <input type="text" class="form-control accessoryOtherMaterial" placeholder="Enter Material" style="display:none;">
                         </td>
-                        <td> <input type="number" step="0.01" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
+                        <td> <input type="number" step="1" min="0" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
                         <td> <input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
-                        <td> <input type="number" step="0.01" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
+                        <td> <input type="number" step="1" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
                     </tr>
                     `
                 );
@@ -530,94 +514,38 @@ $accessoryCategoryOptions .=
         calculateAccessoriesGrandTotal();
     }
     function loadAccessoryMaterials(category){
-
         const row = category.closest('tr');
-
-        const materialSelect =
-            row.querySelector(
-                '.accessorySelect'
-            );
-
-        const otherInput =
-            row.querySelector(
-                '.accessoryOtherMaterial'
-            );
-
-        const priceField =
-            row.querySelector(
-                '.accessoryPrice'
-            );
-
+        const materialSelect = row.querySelector('.accessorySelect');
+        const otherInput = row.querySelector('.accessoryOtherMaterial');
+        const priceField = row.querySelector('.accessoryPrice');
         if(category.value === 'other'){
-
             materialSelect.style.display = 'none';
-
             otherInput.style.display = 'block';
-
-            priceField.removeAttribute(
-                'readonly'
-            );
-
+            priceField.removeAttribute('readonly');
             return;
         }
-
         materialSelect.style.display = 'block';
-
         otherInput.style.display = 'none';
-
-        priceField.setAttribute(
-            'readonly',
-            true
-        );
-
+        priceField.setAttribute('readonly',true);
         $.ajax({
-
-            url:
-            '/QG/ajax/get-accessory-materials.php',
-
+            url: '/QG/ajax/get-accessory-materials.php',
             type:'POST',
-
-            data:{
-                category_id: category.value
-            },
-
+            data:{category_id: category.value},
             success:function(response){
-
-                materialSelect.innerHTML =
-                    '<option value="">Select Material</option>'
-                    + response;
-
+                materialSelect.innerHTML = '<option value="">Select Material</option>' + response;
             }
-
         });
-
     }
     function attachAccessoryEvents(){
         document
         .querySelectorAll('.accessorySelect')
         .forEach(select => {
-
             select.onchange = function(){
-
-                const row =
-                    this.closest('tr');
-
-                const price =
-                    parseFloat(
-                        this.options[
-                            this.selectedIndex
-                        ]?.dataset.price
-                    ) || 0;
-
-                row.querySelector(
-                    '.accessoryPrice'
-                ).value =
-                    price.toFixed(2);
-
+                const row = this.closest('tr');
+                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                row.querySelector('.accessoryPrice').value = price.toFixed(2);
                 calculateAccessoryTotal(row);
-
             };
-
         });
         document
         .querySelectorAll('.accessoryQty')
@@ -785,6 +713,128 @@ $accessoryCategoryOptions .=
             grandField.innerText = grand.toFixed(2);
         }
         updateGrandTotal();
+    }
+    function generatePanels(){
+        const count = parseInt(document.getElementById('panelCount').value) || 0;
+        const container = document.getElementById('panelContainer');
+        const panelShutterCategoryOptions =
+            shutterCategories
+            .filter(cat => ![4, 9].includes(parseInt(cat.id)))
+            .map(cat => `
+                <option value="${cat.id}">
+                    ${cat.category_name}
+                </option>
+            `)
+            .join('');
+        let html = `
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Sr No.</th>
+                        <th>Width (MM)</th>
+                        <th>Height (MM)</th>
+                        <th>Sq Ft</th>
+                        <th>Shutter Category</th>
+                        <th>Shutter Material</th>
+                        <th>Panel Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        for(let i = 1; i <= count; i++){
+            html += `
+                    <tr class="panelRow">
+                        <td>${i}</td>
+                        <td><input type="number" min="0" step="1" class="form-control panelWidth"></td>
+                        <td><input type="number" min="0" step="1" class="form-control panelHeight"></td>
+                        <td><input type="number" class="form-control panelSqft" readonly></td>
+                        <td>
+                            <select class="form-control panelCategory">
+                                <option value="">Select Category</option>
+                                ${panelShutterCategoryOptions}
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-control panelMaterial">
+                                <option value="">Select Material</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="form-control panelPrice" readonly></td>
+                    </tr>
+            `;
+        }
+        html += `
+                </tbody>
+            </table>
+        </div>
+        `;
+        container.innerHTML = html;
+        attachPanelEvents();
+    }
+    function attachPanelEvents(){
+        document
+        .querySelectorAll('.panelRow')
+        .forEach(row => {
+            row
+            .querySelectorAll('.panelWidth,.panelHeight')
+            .forEach(input => {
+                input.addEventListener('input',() => calculatePanelRow(row));
+            });
+            row
+            .querySelector('.panelCategory')
+            .addEventListener(
+                'change',
+                function(){
+                    loadPanelMaterials(this.value,row);
+                }
+            );
+            row
+            .querySelector('.panelMaterial')
+            .addEventListener(
+                'change', () => calculatePanelRow(row)
+            );
+        });
+    }
+    function loadPanelMaterials(
+        categoryId,
+        row
+    ){
+        const materialSelect = row.querySelector('.panelMaterial');
+        materialSelect.innerHTML = '<option value="">Select Material</option>';
+        shutterMaterials
+        .filter(
+            mat =>
+            mat.category_id == categoryId
+        )
+        .forEach(mat => {
+            materialSelect.innerHTML += `
+                <option value="${mat.id}" data-price="${mat.price_per_sqft}">
+                    ${mat.material_type}
+                </option>
+            `;
+        });
+    }
+    function calculatePanelRow(row){
+        const width = parseFloat(row.querySelector('.panelWidth').value) || 0;
+        const height = parseFloat(row.querySelector('.panelHeight').value) || 0;
+        const sqft = (width / 304.8) * (height / 304.8);
+        row.querySelector('.panelSqft').value = sqft.toFixed(2);
+        const material = row.querySelector('.panelMaterial');
+        const pricePerSqft = parseFloat(material.selectedOptions[0] ?.dataset.price) || 0;
+        const total = sqft * pricePerSqft;
+        row.querySelector('.panelPrice').value = total.toFixed(2);
+        calculatePanelsGrandTotal();
+        updateGrandTotal();
+    }
+    function calculatePanelsGrandTotal(){
+        let total = 0;
+        document
+        .querySelectorAll('.panelPrice')
+        .forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('panelGrandTotal').innerText = total.toFixed(2);
     }
 </script>
 <?php include '../includes/footer.php'; ?>

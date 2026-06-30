@@ -427,6 +427,66 @@
         </table>
     </div>
     <?php } ?>
+    <?php
+    $panelQuery = mysqli_query(
+        $conn,
+        "
+        SELECT
+            qp.*,
+            sc.category_name,
+            sm.material_type
+        FROM quotation_panels qp
+        LEFT JOIN shutter_categories sc
+        ON qp.shutter_category_id = sc.id
+        LEFT JOIN shutter_materials sm
+        ON qp.shutter_material_id = sm.id
+        WHERE qp.quotation_id = '$id'
+        "
+    );
+    ?>
+    <?php if(mysqli_num_rows($panelQuery) > 0){ ?>
+    <div class="main-card mt-4">
+        <div class="generated-title">Visible Panels / Side Panels</div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Width (MM)</th>
+                    <th>Height (MM)</th>
+                    <th>Sq Ft</th>
+                    <th>Shutter Category</th>
+                    <th>Shutter Material</th>
+                    <th>Panel Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                    $srNo = 1;
+                    $panelGrandTotal = 0;
+                    while(
+                        $panel =
+                        mysqli_fetch_assoc($panelQuery)
+                    ){
+                        $panelGrandTotal += $panel['panel_price'];
+                ?>
+                <tr>
+                    <td><?= $srNo++ ?></td>
+                    <td><?= number_format($panel['width_mm'],2) ?></td>
+                    <td><?= number_format($panel['height_mm'],2) ?></td>
+                    <td><?= number_format($panel['sqft'],2) ?></td>
+                    <td><?= htmlspecialchars($panel['category_name']) ?></td>
+                    <td><?= htmlspecialchars($panel['material_type']) ?></td>
+                    <td>₹ <?= number_format($panel['panel_price'],2) ?></td>
+                </tr>
+                <?php } ?>
+                <tr>
+                    <th colspan="6" style="text-align:center;">Panels Total</th>
+                    <th>₹ <?= number_format($panelGrandTotal,2) ?></th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <?php } ?>
     <?php 
         $accessoryQuery = mysqli_query(
             $conn,

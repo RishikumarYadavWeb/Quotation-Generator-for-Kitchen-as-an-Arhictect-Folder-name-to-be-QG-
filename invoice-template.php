@@ -85,7 +85,7 @@
         
         <tr style="height:10px;">
           <td colspan="2" style="border:1px solid #000;text-align:center;"><?= $quotation['proforma_no'] ?></td>
-          <td style="border:1px solid #000; font-size:10px; text-align: center;"><?= date('d/m/Y', strtotime($quotation['created_at'])); ?></td>
+          <td style="border:1px solid #000; font-size:10px; text-align: center;"><?= date('d/m/Y', strtotime($quotation['updated_at'])); ?></td>
         </tr>
         
         <tr style="height:10px;">
@@ -329,6 +329,74 @@
               </tr>
             <?php endwhile; ?>
           <?php endforeach; ?>
+          <?php
+            $panelQuery = mysqli_query(
+              $conn,
+              "
+              SELECT
+                  qp.*,
+                  sm.material_type,
+                  sc.category_name
+              FROM quotation_panels qp
+              LEFT JOIN shutter_materials sm
+              ON qp.shutter_material_id = sm.id
+              LEFT JOIN shutter_categories sc
+              ON qp.shutter_category_id = sc.id
+              WHERE qp.quotation_id = '".$quotation['id']."'
+              "
+            );
+            if(mysqli_num_rows($panelQuery) > 0){
+              $panelRowNo = count($elevations);
+              $panelsTotal = 0;
+              $panelTotalQuery = mysqli_query(
+                $conn,
+                "
+                SELECT
+                    SUM(panel_price) AS total
+                FROM quotation_panels
+                WHERE quotation_id = '".$quotation['id']."'
+                "
+              );
+              if($panelTotalQuery){
+                $panelTotalData = mysqli_fetch_assoc($panelTotalQuery);
+                $panelsTotal = floatval($panelTotalData['total']);
+              }
+          ?>
+            <tr>
+              <td style="text-align:center;"><?= $panelRowNo + 1; ?></td>
+              <td><strong>Visible Panels / Side Panels</strong></td>
+              <td style="text-align:center;">940350</td>
+              <td style="text-align:center;">1</td>
+              <td style="text-align:center;">Nos.</td>
+              <td style="text-align:right;">INR <?= number_format($panelsTotal,2); ?></td>
+              <td style="text-align:right;">INR <?= number_format($panelsTotal,2); ?></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td colspan="6" style="border-left:none !important;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td style="border:none;">
+                        <?php
+                          $sr = 1;
+                          mysqli_data_seek($panelQuery,0);
+                          while(
+                            $panel = mysqli_fetch_assoc($panelQuery)
+                          ){
+                        ?>
+                          <strong><?= $sr++; ?>]</strong>
+                          <?= number_format($panel['width_mm'],0); ?>MM ×
+                          <?= number_format($panel['height_mm'],0); ?>MM
+                          | Finish : <?= htmlspecialchars($panel['category_name']); ?>
+                          | Material : <?= htmlspecialchars($panel['material_type']); ?>
+                          <br>
+                        <?php } ?>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+            </tr>
+          <?php } ?>
           <?php
             $accessoryQuery = mysqli_query(
                 $conn,

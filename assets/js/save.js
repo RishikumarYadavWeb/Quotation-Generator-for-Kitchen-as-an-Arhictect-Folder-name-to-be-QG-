@@ -78,6 +78,55 @@ async function saveQuotation(){
             });
             quotationData.elevations.push(elevationData);
         });
+        /* ==========================================
+        VISIBLE PANELS / SIDE PANELS
+        ========================================== */
+
+        const panels = [];
+
+        document
+        .querySelectorAll('.panelRow')
+        .forEach(row => {
+
+            panels.push({
+
+                width_mm:
+                    row.querySelector(
+                        '.panelWidth'
+                    )?.value || 0,
+
+                height_mm:
+                    row.querySelector(
+                        '.panelHeight'
+                    )?.value || 0,
+
+                sqft:
+                    row.querySelector(
+                        '.panelSqft'
+                    )?.value || 0,
+
+                shutter_category_id:
+                    row.querySelector(
+                        '.panelCategory'
+                    )?.value || 0,
+
+                shutter_material_id:
+                    row.querySelector(
+                        '.panelMaterial'
+                    )?.value || 0,
+
+                panel_price:
+                    row.querySelector(
+                        '.panelPrice'
+                    )?.value || 0
+
+            });
+
+        });
+
+        /* ADD TO MAIN JSON OBJECT */
+
+        quotationData.panels = panels;
         quotationData.accessories = [];
 
         document

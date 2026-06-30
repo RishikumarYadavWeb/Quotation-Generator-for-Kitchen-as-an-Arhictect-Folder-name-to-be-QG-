@@ -202,6 +202,45 @@ try{
         }
     }
     if(
+        isset($data['panels']) &&
+        is_array($data['panels'])
+    ){
+        foreach(
+            $data['panels']
+            as $panel
+        ){
+            $width = (float)$panel['width_mm'];
+            $height = (float)$panel['height_mm'];
+            $sqft = (float)$panel['sqft'];
+            $categoryId = (int)$panel['shutter_category_id'];
+            $materialId = (int)$panel['shutter_material_id'];
+            $price = (float)$panel['panel_price'];
+            mysqli_query(
+                $conn,
+                "
+                INSERT INTO quotation_panels(
+                    quotation_id,
+                    width_mm,
+                    height_mm,
+                    sqft,
+                    shutter_category_id,
+                    shutter_material_id,
+                    panel_price
+                )
+                VALUES(
+                    '$quotationId',
+                    '$width',
+                    '$height',
+                    '$sqft',
+                    '$categoryId',
+                    '$materialId',
+                    '$price'
+                )
+                "
+            );
+        }
+    }
+    if(
         isset($data['standard_accessories']) &&
         is_array($data['standard_accessories'])
     ){

@@ -1,26 +1,14 @@
 function toggleElevationNote(select){
-
     const wrapper =
         select
         .closest('.main-card')
-        .querySelector(
-            '.elevationNoteWrapper'
-        );
-
+        .querySelector('.elevationNoteWrapper');
     if(select.value == '1'){
-
         wrapper.style.display = 'block';
-
     }else{
-
         wrapper.style.display = 'none';
-
-        wrapper.querySelector(
-            '.elevationNote'
-        ).value = '';
-
+        wrapper.querySelector('.elevationNote').value = '';
     }
-
 }
 async function generateElevations(){
     const count = parseInt(document.getElementById('elevationCount').value) || 0;
@@ -75,8 +63,9 @@ function updateGrandTotal(){
         .forEach(field => {baseTotal += getNumber(field.value);});
     const standardAccessoriesTotal = parseFloat(document.getElementById('standardAccessoriesGrandTotal')?.innerText) || 0;
     const packingCharge = getNumber(document.getElementById('packingCharge')?.value);
+    const panelTotal = parseFloat(document.getElementById('panelGrandTotal')?.innerText) || 0;
     const installationCharge = getNumber(document.getElementById('installationCharge')?.value);
-    const grandTotal = baseTotal + packingCharge + installationCharge + standardAccessoriesTotal;
+    const grandTotal = baseTotal + packingCharge + installationCharge + standardAccessoriesTotal + panelTotal;
     const grandTotalField = document.getElementById('grandTotal');
     if(grandTotalField){
         grandTotalField.value = '₹ ' + grandTotal.toFixed(2);

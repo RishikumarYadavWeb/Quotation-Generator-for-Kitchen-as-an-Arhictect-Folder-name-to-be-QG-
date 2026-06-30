@@ -94,6 +94,20 @@ async function updateQuotation(){
                 total: row.querySelector('.accessoryTotal')?.value || 0
             });
         });
+        const panels = [];
+        document
+        .querySelectorAll('.panelRow')
+        .forEach(row => {
+            panels.push({
+                width_mm: row.querySelector('.panelWidth')?.value || 0,
+                height_mm: row.querySelector('.panelHeight')?.value || 0,
+                sqft: row.querySelector('.panelSqft')?.value || 0,
+                shutter_category_id: row.querySelector('.panelCategory')?.value || 0,
+                shutter_material_id: row.querySelector('.panelMaterial')?.value || 0,
+                panel_price: row.querySelector('.panelPrice')?.value || 0
+            });
+        });
+        quotationData.panels = panels;
         const standardAccessories = [];
         document
         .querySelectorAll('.standardAccessoryRow')
