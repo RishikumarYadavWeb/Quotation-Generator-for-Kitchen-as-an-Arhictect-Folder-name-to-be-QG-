@@ -1,5 +1,8 @@
 <?php 
     include '../../../includes/auth.php';
+    if(!can('shutter_create')){
+        die('Access Denied');
+    }
     include '../../../db.php'; 
     include '../../../includes/header.php'; 
     include '../../../includes/sidebar.php';

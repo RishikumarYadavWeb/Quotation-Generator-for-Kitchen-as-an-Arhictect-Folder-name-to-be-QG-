@@ -23,36 +23,23 @@
 <div class="generated-unit loft-master">
     <div class="generated-title">Loft Units</div>
     <div id="loftCategoryTemplates" style="display:none;">
-        <!-- Loft -->
-
-    <select id="loftCarcassCategoryTemplate">
-
-        <option value="">Select Category</option>
-
-        <?php
-
-        $query = mysqli_query(
-            $conn,
-            "
-            SELECT *
-            FROM carcass_categories
-            WHERE status=1
-            AND category_name LIKE 'Loft%'
-            "
-        );
-
-        while($row=mysqli_fetch_assoc($query)){
-
-        ?>
-
-            <option value="<?= $row['id'] ?>">
-                <?= $row['category_name'] ?>
-            </option>
-
-        <?php } ?>
-
-    </select>
-
+        <select id="loftCarcassCategoryTemplate">
+            <option value="">Select Category</option>
+            <?php
+                $query = mysqli_query(
+                    $conn,
+                    "
+                    SELECT *
+                    FROM carcass_categories
+                    WHERE status=1
+                    AND category_name LIKE 'Loft%'
+                    "
+                );
+                while($row=mysqli_fetch_assoc($query)){
+            ?>
+                <option value="<?= $row['id'] ?>"><?= $row['category_name'] ?></option>
+            <?php } ?>
+        </select>
         <select id="loftShutterCategoryTemplate">
             <option value="">Select Category</option>
             <?php while($cat = mysqli_fetch_assoc($shutterCategoryQuery)){ ?>
@@ -82,7 +69,6 @@
             </tbody>
         </table>
     </div>
-
     <?php  include __DIR__ . '/shelf-section.php'; ?>
     <div class="row mt-4">
         <div class="col-md-4">

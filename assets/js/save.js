@@ -78,101 +78,35 @@ async function saveQuotation(){
             });
             quotationData.elevations.push(elevationData);
         });
-        /* ==========================================
-        VISIBLE PANELS / SIDE PANELS
-        ========================================== */
-
         const panels = [];
-
         document
         .querySelectorAll('.panelRow')
         .forEach(row => {
-
             panels.push({
-
-                width_mm:
-                    row.querySelector(
-                        '.panelWidth'
-                    )?.value || 0,
-
-                height_mm:
-                    row.querySelector(
-                        '.panelHeight'
-                    )?.value || 0,
-
-                sqft:
-                    row.querySelector(
-                        '.panelSqft'
-                    )?.value || 0,
-
-                shutter_category_id:
-                    row.querySelector(
-                        '.panelCategory'
-                    )?.value || 0,
-
-                shutter_material_id:
-                    row.querySelector(
-                        '.panelMaterial'
-                    )?.value || 0,
-
-                panel_price:
-                    row.querySelector(
-                        '.panelPrice'
-                    )?.value || 0
-
+                width_mm: row.querySelector('.panelWidth')?.value || 0,
+                height_mm: row.querySelector('.panelHeight')?.value || 0,
+                sqft: row.querySelector('.panelSqft')?.value || 0,
+                shutter_category_id: row.querySelector('.panelCategory')?.value || 0,
+                shutter_material_id: row.querySelector('.panelMaterial')?.value || 0,
+                panel_price: row.querySelector('.panelPrice')?.value || 0
             });
-
         });
-
-        /* ADD TO MAIN JSON OBJECT */
-
         quotationData.panels = panels;
         quotationData.accessories = [];
-
         document
         .querySelectorAll('.accessoryRow')
         .forEach(row => {
-
-            const category =
-                row.querySelector(
-                    '.accessoryCategory'
-                )?.value || '';
-
-            const accessoryId =
-                row.querySelector(
-                    '.accessorySelect'
-                )?.value || 0;
-
-            const otherMaterial =
-                row.querySelector(
-                    '.accessoryOtherMaterial'
-                )?.value || '';
-
+            const category = row.querySelector('.accessoryCategory')?.value || '';
+            const accessoryId = row.querySelector('.accessorySelect')?.value || 0;
+            const otherMaterial = row.querySelector('.accessoryOtherMaterial')?.value || '';
             quotationData.accessories.push({
-
                 category_id: category,
-
                 accessory_id: accessoryId,
-
                 other_material: otherMaterial,
-
-                qty:
-                    row.querySelector(
-                        '.accessoryQty'
-                    )?.value || 0,
-
-                price:
-                    row.querySelector(
-                        '.accessoryPrice'
-                    )?.value || 0,
-
-                total:
-                    row.querySelector(
-                        '.accessoryTotal'
-                    )?.value || 0
-
+                qty: row.querySelector('.accessoryQty')?.value || 0,
+                price: row.querySelector('.accessoryPrice')?.value || 0,
+                total: row.querySelector('.accessoryTotal')?.value || 0
             });
-
         });
         const standardAccessories = [];
         document

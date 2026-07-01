@@ -7,4 +7,3 @@ if(
     exit;
 }
 require_once __DIR__ . '/../roles/permission.php';
-?>

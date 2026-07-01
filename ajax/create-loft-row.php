@@ -1,1 +1,1 @@
-<?php include '../components/loft-rows.php';?>
+<?php include '../components/loft-rows.php';

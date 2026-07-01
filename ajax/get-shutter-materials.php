@@ -23,7 +23,5 @@
     );
     while($row = mysqli_fetch_assoc($query)){
 ?>
-    <option value="<?= $row['id'] ?>" data-price="<?= $row['price_per_sqft'] ?>">
-        <?= $row['material_type'] ?>
-    </option>
+    <option value="<?= $row['id'] ?>" data-price="<?= $row['price_per_sqft'] ?>"><?= $row['material_type'] ?></option>
 <?php } ?>

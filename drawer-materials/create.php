@@ -1,12 +1,12 @@
 <?php
 include '../includes/auth.php';
 include '../db.php';
-/** @var mysqli $conn */
-include '../includes/header.php';
-include '../includes/sidebar.php';
 if(!can('drawers_create')){
     die('Access Denied');
 }
+/** @var mysqli $conn */
+include '../includes/header.php';
+include '../includes/sidebar.php';
 $categoryQuery = mysqli_query($conn,"SELECT * FROM drawer_categories WHERE status = 1");
 ?>
 <div class="form-card">

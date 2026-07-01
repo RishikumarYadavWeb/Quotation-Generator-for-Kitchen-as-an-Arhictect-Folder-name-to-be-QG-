@@ -127,234 +127,86 @@
                     'Permissions',
                     isActive('/permissions/', $current_uri)
                 );
-            }
-            /* MASTERS */
-            
+            }  
         ?>
-
         <?php
         if( 
-                can('drawers_view') || can('shelves_view') || can('materials_view')
-            ){
-                echo '<li class="menu-title">Masters</li>';
-            }
+            can('drawers_view') || can('shelves_view') || can('materials_view')
+        ){
+            echo '<li class="menu-title">Masters</li>';
+        }
         if(can('carcass_view')){ ?>
-
         <li class="sidebar-dropdown">
-
             <a href="#">
-                <span>
-                    <i class="fa-solid fa-cube"
-                    style="margin-right:10px;"></i>
-
-                    Carcass
-                </span>
-
+                <span><i class="fa-solid fa-cube" style="margin-right:10px;"></i>Carcass</span>
                 <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
-
             <ul class="submenu">
-
-                <li>
-                    <a href="/QG/materials/carcass/categories/manage.php"
-                    class="<?= isActive('/materials/carcass/categories/', $current_uri) ?>">
-                        Categories
-                    </a>
-                </li>
-
-                <li>
-                    <a href="/QG/materials/carcass/manage.php"
-                    class="<?= isActive('/materials/carcass/', $current_uri) ?>">
-                        Materials
-                    </a>
-                </li>
-
+                <li><a href="/QG/materials/carcass/categories/manage.php" class="<?= isActive('/materials/carcass/categories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/materials/carcass/manage.php" class="<?= isActive('/materials/carcass/', $current_uri) ?>">Materials</a></li>
             </ul>
-
         </li>
-
         <?php } ?>
         <?php if(can('shutter_view')){ ?>
-
         <li class="sidebar-dropdown">
-
             <a href="#">
-                <span>
-                    <i class="fa-solid fa-table-columns"
-                    style="margin-right:10px;"></i>
-
-                    Shutter
-                </span>
-
+                <span><i class="fa-solid fa-table-columns" style="margin-right:10px;"></i>Shutter</span>
                 <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
-
             <ul class="submenu">
-
-                <li>
-                    <a href="/QG/materials/shutter/categories/manage.php"
-                    class="<?= isActive('/materials/shutter/categories/', $current_uri) ?>">
-                        Categories
-                    </a>
-                </li>
-
-                <li>
-                    <a href="/QG/materials/shutter/materials/manage.php"
-                    class="<?= isActive('/materials/shutter/materials/', $current_uri) ?>">
-                        Materials
-                    </a>
-                </li>
-
+                <li> <a href="/QG/materials/shutter/categories/manage.php" class="<?= isActive('/materials/shutter/categories/', $current_uri) ?>">Categories</a></li>
+                <li> <a href="/QG/materials/shutter/materials/manage.php" class="<?= isActive('/materials/shutter/materials/', $current_uri) ?>">Materials</a></li>
             </ul>
-
         </li>
-
         <?php } ?>
         <?php if(can('drawers_view')){ ?>
-
         <li class="sidebar-dropdown">
-
             <a href="#">
-                <span>
-                    <i class="fa-solid fa-box-open"
-                    style="margin-right:10px;"></i>
-
-                    Drawers
-                </span>
-
+                <span><i class="fa-solid fa-box-open" style="margin-right:10px;"></i>Drawers</span>
                 <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
-
             <ul class="submenu">
-
-                <li>
-                    <a href="/QG/drawer-categories/manage.php"
-                    class="<?= isActive('/drawer-categories/', $current_uri) ?>">
-                        Categories
-                    </a>
-                </li>
-
-                <li>
-                    <a href="/QG/drawer-materials/manage.php"
-                    class="<?= isActive('/drawer-materials/', $current_uri) ?>">
-                        Materials
-                    </a>
-                </li>
-
+                <li><a href="/QG/drawer-categories/manage.php" class="<?= isActive('/drawer-categories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/drawer-materials/manage.php" class="<?= isActive('/drawer-materials/', $current_uri) ?>">Materials</a></li>
             </ul>
-
         </li>
-
         <?php } ?>
         <?php if(can('shelves_view')){ ?>
-
         <li class="sidebar-dropdown">
-
             <a href="#">
-                <span>
-                    <i class="fa-solid fa-layer-group"
-                    style="margin-right:10px;"></i>
-
-                    Shelves
-                </span>
-
+                <span><i class="fa-solid fa-layer-group" style="margin-right:10px;"></i>Shelves</span>
                 <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
-
             <ul class="submenu">
-
-                <li>
-                    <a href="/QG/shelf-categories/manage.php"
-                    class="<?= isActive('/shelf-categories/', $current_uri) ?>">
-                        Categories
-                    </a>
-                </li>
-
-                <li>
-                    <a href="/QG/shelf-materials/manage.php"
-                    class="<?= isActive('/shelf-materials/', $current_uri) ?>">
-                        Materials
-                    </a>
-                </li>
-
+                <li><a href="/QG/shelf-categories/manage.php" class="<?= isActive('/shelf-categories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/shelf-materials/manage.php" class="<?= isActive('/shelf-materials/', $current_uri) ?>">Materials</a></li>
             </ul>
-
         </li>
-
         <?php } ?>
         <?php if(can('accessories_view')){ ?>
-
         <li class="sidebar-dropdown">
-
             <a href="#">
-                <span>
-                    <i class="fa-solid fa-toolbox"
-                    style="margin-right:10px;"></i>
-
-                    Standard Accessories
-                </span>
-
+                <span><i class="fa-solid fa-toolbox" style="margin-right:10px;"></i>Standard Accessories</span>
                 <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
-
             <ul class="submenu">
-
-                <li>
-                    <a href="/QG/standard-accessories/index.php"
-                    class="<?= isActive('/standard-accessories/', $current_uri) ?>">
-                        Categories
-                    </a>
-                </li>
-
-                <li>
-                    <a href="/QG/standard-accessories/materials/index.php"
-                    class="<?= isActive('/standard-accessories/materials/', $current_uri) ?>">
-                        Materials
-                    </a>
-                </li>
-
+                <li><a href="/QG/standard-accessories/index.php" class="<?= isActive('/standard-accessories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/standard-accessories/materials/index.php" class="<?= isActive('/standard-accessories/materials/', $current_uri) ?>">Materials</a></li>
             </ul>
-
         </li>
-
         <?php } ?>
         <?php if(can('accessories_view')){ ?>
-
         <li class="sidebar-dropdown">
-
             <a href="#">
-                <span>
-                    <i class="fa-solid fa-screwdriver-wrench"
-                    style="margin-right:10px;"></i>
-
-                    Accessories
-                </span>
-
+                <span><i class="fa-solid fa-screwdriver-wrench" style="margin-right:10px;"></i>Accessories</span>
                 <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
-
             <ul class="submenu">
-
-                <li>
-                    <a href="/QG/accessory-categories/manage.php"
-                    class="<?= isActive('/accessory-categories/', $current_uri) ?>">
-                        Categories
-                    </a>
-                </li>
-
-                <li>
-                    <a href="/QG/accessories/manage.php"
-                    class="<?= isActive('/accessories/', $current_uri) ?>">
-                        Materials
-                    </a>
-                </li>
-
+                <li><a href="/QG/accessory-categories/manage.php" class="<?= isActive('/accessory-categories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/accessories/manage.php" class="<?= isActive('/accessories/', $current_uri) ?>">Materials</a></li>
             </ul>
-
         </li>
-
         <?php } ?>
-        
         <!-- LOGOUT -->
         <li class="logout-item">
             <a href="/QG/auth/logout.php" onclick="return confirm('Logout from ERP?')">

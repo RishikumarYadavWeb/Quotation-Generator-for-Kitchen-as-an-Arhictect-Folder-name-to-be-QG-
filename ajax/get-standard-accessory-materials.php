@@ -1,11 +1,7 @@
 <?php
-
 require '../db.php';
 /** @var mysqli $conn */
-
-$category_id =
-(int)($_POST['category_id'] ?? 0);
-
+$category_id = (int)($_POST['category_id'] ?? 0);
 $query = mysqli_query(
     $conn,
     "
@@ -16,14 +12,7 @@ $query = mysqli_query(
     ORDER BY material_name ASC
     "
 );
-
 while($row = mysqli_fetch_assoc($query)){
-
     echo '
-    <option
-        value="'.$row['id'].'"
-        data-price="'.$row['price'].'"
-    >
-        '.$row['material_name'].'
-    </option>';
+    <option value="'.$row['id'].'" data-price="'.$row['price'].'">'.$row['material_name'].'</option>';
 }

@@ -1,18 +1,18 @@
 <?php
     include '../includes/auth.php';
     include '../db.php';
-    /** @var mysqli $conn */
-    include '../includes/header.php';
-    include '../includes/sidebar.php';
     if(!can('drawers_view')){
         die('Access Denied');
     }
+    /** @var mysqli $conn */
+    include '../includes/header.php';
+    include '../includes/sidebar.php';
     $query = mysqli_query($conn,"SELECT * FROM drawer_categories ORDER BY id ASC");
 ?>
 <div class="page-card">
     <div class="page-header">
         <h1>Drawer Categories</h1>
-        <?php if(can('crdashboard_view')){ ?>
+        <?php if(can('drawers_create')){ ?>
             <a href="create.php" class="theme-btn">+ Add Category</a>
         <?php } ?>
     </div>
@@ -38,10 +38,10 @@
                         <?php } ?>
                     </td>
                     <td>
-                        <?php if(can('crdashboard_view')){ ?>
+                        <?php if(can('drawers_edit')){ ?>
                             <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
                         <?php } ?>
-                        <?php if(can('crdashboard_view')){ ?>
+                        <?php if(can('drawers_delete')){ ?>
                             <a href="delete.php?id=<?= $row['id'] ?>" class="delete-btn">Delete</a>
                         <?php } ?>
                     </td>

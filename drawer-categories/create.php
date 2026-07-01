@@ -1,10 +1,10 @@
 <?php
     include '../includes/auth.php';
-    include '../includes/header.php';
-    include '../includes/sidebar.php';
     if(!can('drawers_create')){
         die('Access Denied');
     }
+    include '../includes/header.php';
+    include '../includes/sidebar.php';
 ?>
 <div class="form-card">
     <h1>Add Drawer Category</h1>

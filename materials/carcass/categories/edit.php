@@ -1,6 +1,9 @@
 <?php
     include '../../../includes/auth.php';
     include '../../../db.php';
+    if(!can('carcass_edit')){
+        die('Access Denied');
+    }
     /** @var mysqli $conn */
 
     $id = (int) ($_GET['id'] ?? 0);

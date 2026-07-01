@@ -1,32 +1,26 @@
 <?php
-
 include '../../includes/auth.php';
 include '../../db.php';
+if(!can('standard_accessories_view')){
+    die('Access Denied');
+}
 /** @var mysqli $conn */
 include '../../includes/header.php';
 include '../../includes/sidebar.php';
-
 $query = mysqli_query(
     $conn,
     "
     SELECT
         standard_accessory_materials.*,
         standard_accessory_categories.category_name
-
     FROM standard_accessory_materials
-
     LEFT JOIN standard_accessory_categories
-
-    ON standard_accessory_categories.id =
-    standard_accessory_materials.category_id
-
+    ON standard_accessory_categories.id = standard_accessory_materials.category_id
     ORDER BY
     standard_accessory_materials.id DESC
     "
 );
-
 ?>
-
 <div class="page-card">
 
 <div class="page-header">
@@ -41,6 +35,7 @@ class="theme-btn"
 >
 Add Material
 </a>
+
 
 </div>
 
@@ -107,19 +102,12 @@ $row['price'],
 
 <td>
 
-<a
-href="edit.php?id=<?= $row['id'] ?>"
-class="edit-btn"
->
-Edit
-</a>
-
-<a
-href="delete.php?id=<?= $row['id'] ?>"
-class="delete-btn"
->
-Delete
-</a>
+                        <?php if(can('standard_accessories_edit')){ ?>
+                            <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
+                        <?php } ?>
+                        <?php if(can('standard_accessories_delete')){ ?>
+                            <a href="delete.php?id=<?= $row['id'] ?>" class="delete-btn" onclick="return confirm('Delete Category?')">Delete</a>
+                        <?php } ?>
 
 </td>
 

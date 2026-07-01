@@ -66,7 +66,6 @@
     include '../includes/header.php';
     include '../includes/sidebar.php';
 ?>
-
 <div class="page-card">
     <div class="create-user-header">
         <div>

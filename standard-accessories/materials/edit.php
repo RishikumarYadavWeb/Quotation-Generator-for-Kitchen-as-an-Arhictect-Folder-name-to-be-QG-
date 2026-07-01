@@ -1,13 +1,13 @@
 <?php
 include '../../includes/auth.php';
 include '../../db.php';
+if(!can('standard_accessories_edit')){
+    die('Access Denied');
+}
 /** @var mysqli $conn */
 include '../../includes/header.php';
 include '../../includes/sidebar.php';
-
-
 $id = (int)($_GET['id'] ?? 0);
-
 $query = mysqli_query(
     $conn,
     "
@@ -16,9 +16,7 @@ $query = mysqli_query(
     WHERE id='$id'
     "
 );
-
 $row = mysqli_fetch_assoc($query);
-
 $categories = mysqli_query(
     $conn,
     "
@@ -29,158 +27,46 @@ $categories = mysqli_query(
     "
 );
 ?>
-
 <div class="page-card">
-
     <div class="page-header">
         <h1>Edit Standard Accessory Material</h1>
     </div>
-
     <form action="update.php" method="POST">
-
-        <input
-            type="hidden"
-            name="id"
-            value="<?= $row['id'] ?>"
-        >
-
+        <input type="hidden" name="id" value="<?= $row['id'] ?>">
         <div class="form-grid">
-
             <div class="form-group">
-
                 <label>Category</label>
-
-                <select
-                    name="category_id"
-                    class="form-control"
-                    required
-                >
-
-                    <option value="">
-                        Select Category
-                    </option>
-
+                <select name="category_id" class="form-control" required>
+                    <option value="">Select Category</option>
                     <?php while($category = mysqli_fetch_assoc($categories)){ ?>
-
-                        <option
-                            value="<?= $category['id'] ?>"
-                            <?= $category['id'] == $row['category_id']
-                                ? 'selected'
-                                : '' ?>
-                        >
-                            <?= htmlspecialchars(
-                                $category['category_name']
-                            ) ?>
-                        </option>
-
+                        <option value="<?= $category['id'] ?>" <?= $category['id'] == $row['category_id'] ? 'selected' : '' ?>><?= htmlspecialchars($category['category_name']) ?></option>
                     <?php } ?>
-
                 </select>
-
             </div>
-
             <div class="form-group">
-
                 <label>Material Name</label>
-
-                <input
-                    type="text"
-                    name="material_name"
-                    class="form-control"
-                    value="<?= htmlspecialchars(
-                        $row['material_name']
-                    ) ?>"
-                    required
-                >
-
+                <input type="text" name="material_name" class="form-control" value="<?= htmlspecialchars($row['material_name']) ?>" required>
             </div>
-
             <div class="form-group">
-
                 <label>Unit</label>
-
-                <select
-                    name="unit"
-                    class="form-control"
-                    required
-                >
-
-                    <option
-                        value="Nos"
-                        <?= $row['unit'] == 'Nos'
-                            ? 'selected'
-                            : '' ?>
-                    >
-                        Nos
-                    </option>
-
-                    <option
-                        value="Meter"
-                        <?= $row['unit'] == 'Meter'
-                            ? 'selected'
-                            : '' ?>
-                    >
-                        Meter
-                    </option>
-
+                <select name="unit" class="form-control" required>
+                    <option value="Nos" <?= $row['unit'] == 'Nos' ? 'selected' : '' ?>>Nos</option>
+                    <option value="Meter" <?= $row['unit'] == 'Meter' ? 'selected' : '' ?>>Meter</option>
                 </select>
-
             </div>
-
             <div class="form-group">
-
                 <label>Price</label>
-
-                <input
-                    type="number"
-                    step=".01"
-                    name="price"
-                    class="form-control"
-                    value="<?= $row['price'] ?>"
-                    required
-                >
-
+                <input type="number" step="1" name="price" class="form-control" value="<?= $row['price'] ?>" required>
             </div>
             <div class="form-group">
-
                 <label>Status</label>
-
-                <select
-                    name="status"
-                    class="form-control"
-                    required
-                >
-
-                    <option
-                        value="1"
-                        <?= $row['status'] == 1
-                            ? 'selected'
-                            : '' ?>
-                    >
-                        Active
-                    </option>
-
-                    <option
-                        value="0"
-                        <?= $row['status'] == 0
-                            ? 'selected'
-                            : '' ?>
-                    >
-                        Inactive
-                    </option>
-
+                <select name="status" class="form-control" required>
+                    <option value="1" <?= $row['status'] == 1 ? 'selected' : '' ?>>Active</option>
+                    <option value="0" <?= $row['status'] == 0 ? 'selected' : '' ?>>Inactive</option>
                 </select>
-
             </div>
-
         </div>
-
-        <button class="theme-btn">
-            Update Material
-        </button>
-
+        <button class="theme-btn">Update Material</button>
     </form>
-
 </div>
-
 <?php include '../../includes/footer.php'; ?>

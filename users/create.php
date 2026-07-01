@@ -77,9 +77,7 @@
     </div>
     <div class="">
         <?php if(isset($error)){ ?>
-            <div class="user-error">
-                <?= $error; ?>
-            </div>
+            <div class="user-error"><?= $error; ?></div>
         <?php } ?>
         <form method="POST">
             <div class="row">
@@ -100,9 +98,7 @@
                     <select name="role_id" class="modern-input" required>
                         <option value="">Select Role</option>
                         <?php while($role =mysqli_fetch_assoc($rolesResult)){?>
-                        <option value="<?= $role['id']; ?>">
-                            <?= $role['role_name']; ?>
-                        </option>
+                            <option value="<?= $role['id']; ?>"><?= $role['role_name']; ?></option>
                         <?php } ?>
                     </select>
                 </div>
@@ -111,9 +107,7 @@
                     <select name="entity_id" class="modern-input" required>
                         <option value="">Select Entity</option>
                         <?php while($entity =mysqli_fetch_assoc($entityResult)){?>
-                            <option value="<?= $entity['id']; ?>">
-                                <?= $entity['entity_name']; ?>
-                            </option>
+                            <option value="<?= $entity['id']; ?>"><?= $entity['entity_name']; ?></option>
                         <?php } ?>
                     </select>
                 </div>

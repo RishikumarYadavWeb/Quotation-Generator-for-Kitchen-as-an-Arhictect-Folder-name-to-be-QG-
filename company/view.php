@@ -1,6 +1,9 @@
 <?php
     include '../includes/auth.php';
     include '../db.php';
+    if(!can('company_view')){ 
+        die('Access Denied');
+    }
     /** @var mysqli $conn */
     $company = mysqli_query($conn, "SELECT * FROM company LIMIT 1");
     $data = mysqli_fetch_assoc($company);

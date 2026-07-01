@@ -1,14 +1,8 @@
 <?php
 include '../db.php';
 /** @var mysqli $conn */
-
-$categoryName = mysqli_real_escape_string(
-    $conn,
-    $_POST['category_name']
-);
-
+$categoryName = mysqli_real_escape_string($conn,$_POST['category_name']);
 $status = (int)$_POST['status'];
-
 mysqli_query(
     $conn,
     "
@@ -22,6 +16,5 @@ mysqli_query(
     )
     "
 );
-
 header('Location: manage.php');
 exit;

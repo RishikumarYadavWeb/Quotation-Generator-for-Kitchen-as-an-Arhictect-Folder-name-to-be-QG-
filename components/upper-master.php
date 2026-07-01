@@ -22,34 +22,22 @@
 <div class="generated-unit upper-master" >
     <div class="generated-title">Upper Units</div>
     <div id="upperCategoryTemplates" style="display:none;">
-        <!-- Upper -->
-
     <select id="upperCarcassCategoryTemplate">
-
         <option value="">Select Category</option>
-
         <?php
-
-        $query = mysqli_query(
-            $conn,
-            "
-            SELECT *
-            FROM carcass_categories
-            WHERE status=1
-            AND category_name LIKE 'Wall%'
-            "
-        );
-
-        while($row=mysqli_fetch_assoc($query)){
-
+            $query = mysqli_query(
+                $conn,
+                "
+                SELECT *
+                FROM carcass_categories
+                WHERE status=1
+                AND category_name LIKE 'Wall%'
+                "
+            );
+            while($row=mysqli_fetch_assoc($query)){
         ?>
-
-            <option value="<?= $row['id'] ?>">
-                <?= $row['category_name'] ?>
-            </option>
-
+            <option value="<?= $row['id'] ?>"><?= $row['category_name'] ?></option>
         <?php } ?>
-
     </select>
         <select id="upperShutterCategoryTemplate">
             <option value="">Select Category</option>
@@ -80,7 +68,6 @@
             </tbody>
         </table>
     </div>
-
     <?php include __DIR__ . '/shelf-section.php'; ?>
     <div class="row mt-4">
         <div class="col-md-4">

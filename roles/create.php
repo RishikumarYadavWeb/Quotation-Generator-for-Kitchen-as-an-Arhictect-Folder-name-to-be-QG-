@@ -1,12 +1,12 @@
-
 <?php
+    include '../includes/auth.php';
     include '../db.php';
-    /** @var mysqli $conn */
-    include '../includes/header.php';
-    include '../includes/sidebar.php';
     if(!can('roles_create')){
         die('Access Denied');
     }
+    /** @var mysqli $conn */
+    include '../includes/header.php';
+    include '../includes/sidebar.php';
     $permissions = mysqli_query($conn,
     "SELECT *
     FROM permissions

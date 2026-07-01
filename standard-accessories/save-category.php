@@ -1,12 +1,7 @@
 <?php
-
 include '../db.php';
 /** @var mysqli $conn */
-
-$category_name = trim(
-    $_POST['category_name']
-);
-
+$category_name = trim($_POST['category_name']);
 mysqli_query(
     $conn,
     "
@@ -14,13 +9,9 @@ mysqli_query(
     standard_accessory_categories(
         category_name
     )
-    VALUES(
-        '$category_name'
-    )
+    VALUES('$category_name')
     "
 );
-
 header(
     'Location:index.php'
-)
-?>
+);

@@ -6,9 +6,7 @@
     $email = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
     if(
-        empty($email)
-        ||
-        empty($password)
+        empty($email) || empty($password)
     ){
         die('Email and Password required');
     }

@@ -1,5 +1,9 @@
 <?php
+include '../includes/auth.php';
 include '../db.php';
+if(!can('quotation_delete')){
+    die('Access Denied');
+}
 /** @var mysqli $conn */
 $id = (int)($_GET['id'] ?? 0);
 if(!$id){die('Invalid Quotation ID');}

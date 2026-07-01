@@ -54,11 +54,7 @@ async function generateShelves(button){
             let depth = 350;
             const generatedUnit = button.closest('.generated-unit');
             if(
-                generatedUnit &&
-                (
-                    generatedUnit.classList.contains('tall-master') ||
-                    generatedUnit.classList.contains('bottom-master')
-                )
+                generatedUnit && (generatedUnit.classList.contains('tall-master') || generatedUnit.classList.contains('bottom-master'))
             ){
                 depth = 600;
             }
@@ -156,15 +152,9 @@ function loadShelfMaterials(select){
     });
 }
 function loadShelfCategories(row){
-
-    const dropdown =
-        row.querySelector('.shelfCategory');
-
+    const dropdown = row.querySelector('.shelfCategory');
     let unitType = '';
-
-    const unit =
-        row.closest('.generated-unit');
-
+    const unit = row.closest('.generated-unit');
     if(unit.classList.contains('tall-master')){
         unitType = 'Tall';
     }
@@ -177,27 +167,14 @@ function loadShelfCategories(row){
     else if(unit.classList.contains('loft-master')){
         unitType = 'Loft';
     }
-
     $.ajax({
-
         url:'/QG/ajax/get-shelf-categories.php',
-
         type:'GET',
-
-        data:{
-            unit_type:unitType
-        },
-
+        data:{unit_type:unitType},
         success:function(response){
-
-            dropdown.innerHTML =
-                '<option value="">Select Category</option>' +
-                response;
-
+            dropdown.innerHTML = '<option value="">Select Category</option>' + response;
         }
-
     });
-console.log("loadShelfCategories called");
 }
 function getShelfRow(){
     return `

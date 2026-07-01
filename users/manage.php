@@ -1,38 +1,23 @@
 <?php
 include '../includes/auth.php';
 include '../db.php';
+ if(!can('users_view')){
+    die('Access Denied');
+}
 /** @var mysqli $conn */
 include '../includes/header.php';
 include '../includes/sidebar.php';
-
-/* PAGINATION */
-
 $limit = 15;
-
-$page = isset($_GET['page'])
-    ? (int)$_GET['page']
-    : 1;
-
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $page = max($page, 1);
-
 $offset = ($page - 1) * $limit;
-
-/* TOTAL RECORDS */
-
 $totalUsersQuery = mysqli_query(
     $conn,
     "SELECT COUNT(*) AS total
      FROM users"
 );
-
-$totalRecords = mysqli_fetch_assoc(
-    $totalUsersQuery
-)['total'];
-
+$totalRecords = mysqli_fetch_assoc($totalUsersQuery)['total'];
 $totalPages = ceil($totalRecords / $limit);
-
-/* FETCH USERS */
-
 $query = "
     SELECT
         users.*,
@@ -43,33 +28,19 @@ $query = "
     ORDER BY users.id DESC
     LIMIT $limit OFFSET $offset
 ";
-
 $result = mysqli_query($conn, $query);
 ?>
-
 <div class="page-card">
-
     <div class="users-page-header">
-
         <div>
             <h1>Manage Users</h1>
             <p>Create and manage ERP users</p>
         </div>
-
         <?php if(can('users_create')){ ?>
-
-            <a href="create.php" class="theme-btn">
-                <i class="fa-solid fa-plus"
-                    style="margin-right:10px;"></i>
-                Create User
-            </a>
-
+            <a href="create.php" class="theme-btn"><i class="fa-solid fa-plus" style="margin-right:10px;"></i>Create User</a>
         <?php } ?>
-
     </div>
-
     <table class="custom-table">
-
         <thead>
             <tr>
                 <th>Name</th>
@@ -80,186 +51,65 @@ $result = mysqli_query($conn, $query);
                 <th>Actions</th>
             </tr>
         </thead>
-
         <tbody>
-
             <?php while($user = mysqli_fetch_assoc($result)){ ?>
-
                 <tr>
-
                     <td>
                         <div class="user-name-cell">
-
-                            <div class="user-avatar">
-                                <?= strtoupper(
-                                    substr(
-                                        $user['name'],
-                                        0,
-                                        1
-                                    )
-                                ); ?>
-                            </div>
-
-                            <div>
-                                <?= htmlspecialchars(
-                                    $user['name']
-                                ); ?>
-                            </div>
-
+                            <div class="user-avatar"><?= strtoupper(substr($user['name'],0,1)); ?></div>
+                            <div><?= htmlspecialchars($user['name']); ?></div>
                         </div>
                     </td>
-
+                    <td><?= htmlspecialchars($user['email']); ?></td>
                     <td>
-                        <?= htmlspecialchars(
-                            $user['email']
-                        ); ?>
+                        <span class="role-badge"><?= htmlspecialchars($user['role_name']); ?></span>
                     </td>
-
                     <td>
-                        <span class="role-badge">
-                            <?= htmlspecialchars(
-                                $user['role_name']
-                            ); ?>
-                        </span>
+                        <span class="status-badge <?= $user['status'] == 'Active' ? 'status-active' : 'status-inactive'; ?>"><?= $user['status']; ?></span>
                     </td>
-
+                    <td><?= date('d M Y',strtotime($user['created_at'])); ?></td>
                     <td>
-
-                        <span class="
-                            status-badge
-                            <?= $user['status'] == 'Active'
-                                ? 'status-active'
-                                : 'status-inactive'; ?>
-                        ">
-
-                            <?= $user['status']; ?>
-
-                        </span>
-
-                    </td>
-
-                    <td>
-                        <?= date(
-                            'd M Y',
-                            strtotime(
-                                $user['created_at']
-                            )
-                        ); ?>
-                    </td>
-
-                    <td>
-
                         <div class="table-actions">
-
                             <?php if(can('users_edit')){ ?>
-
-                                <a
-                                    href="edit.php?id=<?= $user['id']; ?>"
-                                    class="edit-btn"
-                                >
-                                    Edit
-                                </a>
-
+                                <a href="edit.php?id=<?= $user['id']; ?>" class="edit-btn">Edit</a>
                             <?php } ?>
-
                             <?php if(can('users_delete')){ ?>
-
-                                <a
-                                    href="delete.php?id=<?= $user['id']; ?>"
-                                    class="delete-btn"
-                                    onclick="
-                                        return confirm(
-                                            'Delete this user?'
-                                        )
-                                    "
-                                >
-                                    Delete
-                                </a>
-
+                                <a href="delete.php?id=<?= $user['id']; ?>" class="delete-btn" onclick="return confirm('Delete this user?')">Delete</a>
                             <?php } ?>
-
                         </div>
-
                     </td>
-
                 </tr>
-
             <?php } ?>
-
         </tbody>
-
     </table>
-
-    <!-- PAGINATION -->
-
     <?php if($totalPages > 1){ ?>
-
         <div class="pagination">
-
             <?php if($page > 1){ ?>
-                <a href="?page=<?= $page - 1 ?>">
-                    &laquo; Prev
-                </a>
+                <a href="?page=<?= $page - 1 ?>">&laquo; Prev</a>
             <?php } ?>
-
             <?php if($page > 3){ ?>
-
                 <a href="?page=1">1</a>
-
                 <?php if($page > 4){ ?>
-                    <span class="pagination-dots">
-                        ...
-                    </span>
+                    <span class="pagination-dots">...</span>
                 <?php } ?>
-
             <?php } ?>
-
             <?php
-
-            $start = max(1, $page - 2);
-            $end = min($totalPages, $page + 2);
-
-            for($i = $start; $i <= $end; $i++){
-
+                $start = max(1, $page - 2);
+                $end = min($totalPages, $page + 2);
+                for($i = $start; $i <= $end; $i++){
             ?>
-
-                <a
-                    href="?page=<?= $i ?>"
-                    class="<?= ($i == $page)
-                        ? 'active'
-                        : '' ?>"
-                >
-                    <?= $i ?>
-                </a>
-
+                <a href="?page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>"><?= $i ?></a>
             <?php } ?>
-
             <?php if($page < $totalPages - 2){ ?>
-
                 <?php if($page < $totalPages - 3){ ?>
-                    <span class="pagination-dots">
-                        ...
-                    </span>
+                    <span class="pagination-dots">...</span>
                 <?php } ?>
-
-                <a href="?page=<?= $totalPages ?>">
-                    <?= $totalPages ?>
-                </a>
-
+                <a href="?page=<?= $totalPages ?>"><?= $totalPages ?></a>
             <?php } ?>
-
             <?php if($page < $totalPages){ ?>
-
-                <a href="?page=<?= $page + 1 ?>">
-                    Next &raquo;
-                </a>
-
+                <a href="?page=<?= $page + 1 ?>">Next &raquo;</a>
             <?php } ?>
-
         </div>
-
     <?php } ?>
-
 </div>
-
 <?php include '../includes/footer.php'; ?>

@@ -24,12 +24,8 @@ $query = mysqli_query(
 if(mysqli_num_rows($query) > 0){
 while($row = mysqli_fetch_assoc($query)){
 ?>
-    <option value="<?= $row['id'] ?>" data-price="<?= $row['price_per_sqft'] ?>">
-        <?= $row['material_name'] ?>
-    </option>
+    <option value="<?= $row['id'] ?>" data-price="<?= $row['price_per_sqft'] ?>"><?= $row['material_name'] ?></option>
 <?php }
 }else{ ?>
-    <option value="">
-        No Material Found
-    </option>
+    <option value="">No Material Found</option>
 <?php } ?>

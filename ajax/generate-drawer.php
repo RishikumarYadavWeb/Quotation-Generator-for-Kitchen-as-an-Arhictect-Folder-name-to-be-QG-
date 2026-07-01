@@ -1,1 +1,1 @@
-<?php include '../ajax/drawer-table.php';?>
+<?php include '../ajax/drawer-table.php';

@@ -24,9 +24,7 @@
                     <input type="text" name="accessory_name" class="form-control" placeholder="Enter accessory name" required>
                 </div>
                 <div class="form-group">
-                    <label>
-                        Category
-                    </label>
+                    <label>Category</label>
                     <input type="text" name="category" class="form-control" placeholder="Enter category">
                 </div>
                 <div class="form-group">
@@ -34,14 +32,10 @@
                     <input type="text" name="unit" class="form-control" placeholder="Eg: pcs, sqft, set">
                 </div>
                 <div class="form-group">
-                    <label>
-                        Price
-                    </label>
-
+                    <label>Price</label>
                     <input type="number" step="1" name="price" class="form-control" placeholder="Enter price">
                 </div>
             </div>
-            <!-- BUTTON -->
             <div style="margin-top:25px;">
                 <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i>Save Accessory</button>
             </div>

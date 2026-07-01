@@ -1,5 +1,8 @@
 <?php
     include '../../../includes/auth.php';
+    if(!can('carcass_create')){
+        die('Access Denied');
+    }
     include '../../../includes/header.php';
     include '../../../includes/sidebar.php';
 ?>

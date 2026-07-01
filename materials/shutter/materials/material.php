@@ -1,6 +1,9 @@
 <?php
     include '../../../includes/auth.php';
     include '../../../db.php';
+    if(!can('shutter_create')){
+        die('Access Denied');
+    }
     /** @var mysqli $conn */
     include '../../../includes/header.php'; 
     include '../../../includes/sidebar.php'

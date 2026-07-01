@@ -1,1 +1,1 @@
-<?php include '../components/bottom-rows.php';?>
+<?php include '../components/bottom-rows.php';

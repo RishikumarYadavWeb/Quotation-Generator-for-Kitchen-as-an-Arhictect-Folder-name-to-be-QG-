@@ -20,33 +20,22 @@
 .table-responsive{overflow-x:auto}.generated-unit table{min-width:2200px}.generated-unit thead{background:linear-gradient(135deg,#f97316,#ea580c)}.generated-unit th{color:#fff;white-space:nowrap;text-align:center;padding:12px;font-size:13px}.generated-unit td{padding:8px;vertical-align:middle}.generated-unit .modern-input{min-width:140px;width:100%;font-size:13px}.generated-unit select{min-width:220px}
 </style>
 <div id="categoryTemplates" style="display:none;">
-    <!-- Tall -->
     <select id="carcassCategoryTemplate">
-
         <option value="">Select Category</option>
-
         <?php
-
-        $query = mysqli_query(
-            $conn,
-            "
-            SELECT *
-            FROM carcass_categories
-            WHERE status=1
-            AND category_name LIKE 'Tall%'
-            "
-        );
-
-        while($row=mysqli_fetch_assoc($query)){
-
+            $query = mysqli_query(
+                $conn,
+                "
+                SELECT *
+                FROM carcass_categories
+                WHERE status=1
+                AND category_name LIKE 'Tall%'
+                "
+            );
+            while($row=mysqli_fetch_assoc($query)){
         ?>
-
-            <option value="<?= $row['id'] ?>">
-                <?= $row['category_name'] ?>
-            </option>
-
+            <option value="<?= $row['id'] ?>"><?= $row['category_name'] ?></option>
         <?php } ?>
-
     </select>
     <select id="shutterCategoryTemplate">
         <option value="">Select Category</option>

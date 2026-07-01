@@ -17,7 +17,5 @@ $query = mysqli_query(
 );
 while($row = mysqli_fetch_assoc($query)){
     echo
-        '<option value="'.$row['id'].'" data-price="'.$row['price'].'">'
-            .htmlspecialchars($row['accessory_name']).
-        '</option>';
+        '<option value="'.$row['id'].'" data-price="'.$row['price'].'">'.htmlspecialchars($row['accessory_name']).'</option>';
 }

@@ -1,12 +1,12 @@
 <?php
     include '../includes/auth.php';
     include '../db.php';
-    /** @var mysqli $conn */
-    include '../includes/header.php';
-    include '../includes/sidebar.php';
     if(!can('shelves_view')){
         die('Access Denied');
     }
+    /** @var mysqli $conn */
+    include '../includes/header.php';
+    include '../includes/sidebar.php';
     $query = mysqli_query(
         $conn,
         "SELECT *
@@ -46,7 +46,7 @@
                         <?php if(can('shelves_edit')){ ?>
                             <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
                         <?php } ?>
-                        <?php if(can('shelves_edit')){ ?>
+                        <?php if(can('shelves_delete')){ ?>
                             <a href="delete.php?id=<?= $row['id'] ?>" class="delete-btn">Delete</a>
                         <?php } ?>
                     </td>

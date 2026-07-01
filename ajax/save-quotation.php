@@ -7,10 +7,7 @@ if(session_status() === PHP_SESSION_NONE){
     session_start();
 }
 header('Content-Type: application/json');
-$data = json_decode(
-    file_get_contents('php://input'),
-    true
-);
+$data = json_decode(file_get_contents('php://input'),true);
 $uploadedLineImages = $data['uploaded_line_images'] ?? [];
 mysqli_begin_transaction($conn);
 try{ 
@@ -417,10 +414,11 @@ try{
         'status' => true,
         'quotation_id' => $quotationId
     ]);
-}catch(Exception $e){
+}
+catch(Exception $e){
     mysqli_rollback($conn);
     echo json_encode([
         'status' => false,
         'message' => $e->getMessage()
-    ]);
+]);
 }

@@ -7,10 +7,7 @@ if(session_status() === PHP_SESSION_NONE){
     session_start();
 }
 header('Content-Type: application/json');
-$data = json_decode(
-    file_get_contents('php://input'),
-    true
-);
+$data = json_decode(file_get_contents('php://input'),true);
 $quotation_id = intval($data['quotation_id']);
 $uploadedLineImages = $data['uploaded_line_images'] ?? [];
 mysqli_begin_transaction($conn);
@@ -61,54 +58,14 @@ try{
             updated_at = NOW()
         WHERE id = '$quotationId'
     ");
-    mysqli_query(
-        $conn,
-        "DELETE FROM quotation_accessories
-        WHERE quotation_id = '$quotationId'"
-    );
-    mysqli_query(
-        $conn,
-        "DELETE FROM quotation_standard_accessories
-        WHERE quotation_id = '$quotationId'"
-    );
-    mysqli_query(
-        $conn,
-        "DELETE FROM drawers_data
-        WHERE quotation_id = '$quotationId'"
-    );
-    mysqli_query(
-        $conn,
-        "DELETE FROM shelves_data
-        WHERE quotation_id = '$quotationId'"
-    );
-    mysqli_query(
-        $conn,
-        "DELETE FROM elevation_line_images
-        WHERE elevation_id IN (
-            SELECT id
-            FROM elevations
-            WHERE quotation_id = '$quotationId'
-        )"
-    );
-    mysqli_query(
-        $conn,
-        "DELETE FROM units
-        WHERE elevation_id IN (
-            SELECT id
-            FROM elevations
-            WHERE quotation_id = '$quotationId'
-        )"
-    );
-    mysqli_query(
-        $conn,
-        "DELETE FROM elevations
-        WHERE quotation_id = '$quotationId'"
-    );
-    mysqli_query(
-        $conn,
-        " DELETE FROM quotation_panels
-        WHERE quotation_id = '$quotationId'"
-    );
+    mysqli_query($conn,"DELETE FROM quotation_accessories WHERE quotation_id = '$quotationId'");
+    mysqli_query($conn,"DELETE FROM quotation_standard_accessories WHERE quotation_id = '$quotationId'");
+    mysqli_query($conn,"DELETE FROM drawers_data WHERE quotation_id = '$quotationId'");
+    mysqli_query($conn,"DELETE FROM shelves_data WHERE quotation_id = '$quotationId'");
+    mysqli_query($conn,"DELETE FROM elevation_line_images WHERE elevation_id IN (SELECT id FROM elevations WHERE quotation_id = '$quotationId')");
+    mysqli_query($conn,"DELETE FROM units WHERE elevation_id IN (SELECT id FROM elevations WHERE quotation_id = '$quotationId')");
+    mysqli_query($conn,"DELETE FROM elevations WHERE quotation_id = '$quotationId'");
+    mysqli_query($conn,"DELETE FROM quotation_panels WHERE quotation_id = '$quotationId'");
     if(
         isset($data['elevations']) &&
         is_array($data['elevations'])
@@ -145,9 +102,7 @@ try{
             );
             $elevationId = mysqli_insert_id($conn);
             if(
-                isset(
-                    $uploadedLineImages[$elevationNo]
-                )
+                isset($uploadedLineImages[$elevationNo])
             ){
                 foreach(
                     $uploadedLineImages[$elevationNo]
@@ -305,72 +260,45 @@ try{
             );
         }
     }
-if(
-    isset($data['accessories']) &&
-    is_array($data['accessories'])
-){
-
-    foreach(
-        $data['accessories']
-        as $accessory
+    if(
+        isset($data['accessories']) &&
+        is_array($data['accessories'])
     ){
-
-        $categoryId =
-            (int)($accessory['category_id'] ?? 0);
-
-        $accessoryId =
-            (int)($accessory['accessory_id'] ?? 0);
-
-        $otherMaterial =
-            mysqli_real_escape_string(
+        foreach(
+            $data['accessories']
+            as $accessory
+        ){
+            $categoryId = (int)($accessory['category_id'] ?? 0);
+            $accessoryId = (int)($accessory['accessory_id'] ?? 0);
+            $otherMaterial = mysqli_real_escape_string($conn,trim($accessory['other_material'] ?? ''));
+            $qty = (float)($accessory['qty'] ?? 0);
+            $price = (float)preg_replace('/[^0-9.]/','',$accessory['price'] ?? 0);
+            $total = (float)preg_replace('/[^0-9.]/','',$accessory['total'] ?? 0);
+            mysqli_query(
                 $conn,
-                trim($accessory['other_material'] ?? '')
+                "
+                INSERT INTO quotation_accessories(
+                    quotation_id,
+                    accessory_id,
+                    category_id,
+                    other_material,
+                    qty,
+                    price,
+                    total
+                )
+                VALUES(
+                    '$quotationId',
+                    '$accessoryId',
+                    '$categoryId',
+                    '$otherMaterial',
+                    '$qty',
+                    '$price',
+                    '$total'
+                )
+                "
             );
-
-        $qty =
-            (float)($accessory['qty'] ?? 0);
-
-        $price =
-            (float)preg_replace(
-                '/[^0-9.]/',
-                '',
-                $accessory['price'] ?? 0
-            );
-
-        $total =
-            (float)preg_replace(
-                '/[^0-9.]/',
-                '',
-                $accessory['total'] ?? 0
-            );
-
-        mysqli_query(
-            $conn,
-            "
-            INSERT INTO quotation_accessories(
-                quotation_id,
-                accessory_id,
-                category_id,
-                other_material,
-                qty,
-                price,
-                total
-            )
-            VALUES(
-                '$quotationId',
-                '$accessoryId',
-                '$categoryId',
-                '$otherMaterial',
-                '$qty',
-                '$price',
-                '$total'
-            )
-            "
-        );
-
+        }
     }
-
-}
     if(
         isset($data['drawers']) &&
         is_array($data['drawers'])
@@ -475,7 +403,8 @@ if(
         'status' => true,
         'quotation_id' => $quotationId
     ]);
-}catch(Exception $e){
+}
+catch(Exception $e){
     mysqli_rollback($conn);
     echo json_encode([
         'status' => false,

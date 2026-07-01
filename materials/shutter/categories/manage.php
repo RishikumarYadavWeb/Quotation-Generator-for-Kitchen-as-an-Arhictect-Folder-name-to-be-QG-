@@ -1,6 +1,9 @@
 <?php 
     include '../../../includes/auth.php';
     include '../../../db.php'; 
+    if(!can('shutter_view')){
+        die('Access Denied');
+    }
     /** @var mysqli $conn */
     include '../../../includes/header.php'; 
     include '../../../includes/sidebar.php'; 
@@ -8,7 +11,9 @@
 <div class="container">
     <div class="top-bar">
         <h2>Manage Categories</h2>
-        <a href="category.php" class="theme-btn">+ Add Category</a>
+        <?php if(can('shutter_create')){ ?>
+            <a href="category.php" class="theme-btn">+ Add Category</a>
+        <?php } ?>
     </div>
     <div>
         <table class="custom-table">
@@ -38,8 +43,12 @@
                             <?php } ?>
                         </td>
                         <td class="d-flex">
-                            <a href="edit.php?id=<?= $row['id']; ?>" class="edit-btn">Edit</a>
-                            <a href="delete.php?id=<?= $row['id']; ?>" class="delete-btn">Delete</a>
+                            <?php if(can('shutteredit')){ ?>
+                                <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
+                            <?php } ?>
+                            <?php if(can('shutterdelete')){ ?>
+                                <a href="delete.php?id=<?= $row['id'] ?>" class="delete-btn" onclick="return confirm('Delete Category?')">Delete</a>
+                            <?php } ?>
                         </td>
                     </tr>
                 <?php } ?>
