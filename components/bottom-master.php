@@ -21,10 +21,31 @@
 </style>
 <div id="categoryTemplates" style="display:none;">
     <select id="bottomCarcassCategoryTemplate">
+
         <option value="">Select Category</option>
-        <?php while($cat = mysqli_fetch_assoc($carcassCategoryQuery)){ ?>
-            <option value="<?= $cat['id'] ?>"><?= $cat['category_name'] ?></option>
+
+        <?php
+
+        $query = mysqli_query(
+            $conn,
+            "
+            SELECT *
+            FROM carcass_categories
+            WHERE status=1
+            AND category_name LIKE 'Base%'
+            "
+        );
+
+        while($row=mysqli_fetch_assoc($query)){
+
+        ?>
+
+            <option value="<?= $row['id'] ?>">
+                <?= $row['category_name'] ?>
+            </option>
+
         <?php } ?>
+
     </select>
     <select id="bottomShutterCategoryTemplate">
         <option value="">Select Category</option>

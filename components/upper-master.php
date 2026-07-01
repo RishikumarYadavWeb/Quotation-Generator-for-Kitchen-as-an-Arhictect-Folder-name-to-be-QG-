@@ -22,12 +22,35 @@
 <div class="generated-unit upper-master" >
     <div class="generated-title">Upper Units</div>
     <div id="upperCategoryTemplates" style="display:none;">
-        <select id="upperCarcassCategoryTemplate">
-            <option value="">Select Category</option>
-            <?php while($cat = mysqli_fetch_assoc($carcassCategoryQuery)){ ?>
-                <option value="<?= $cat['id'] ?>"><?= $cat['category_name'] ?></option>
-            <?php } ?>
-        </select>
+        <!-- Upper -->
+
+    <select id="upperCarcassCategoryTemplate">
+
+        <option value="">Select Category</option>
+
+        <?php
+
+        $query = mysqli_query(
+            $conn,
+            "
+            SELECT *
+            FROM carcass_categories
+            WHERE status=1
+            AND category_name LIKE 'Wall%'
+            "
+        );
+
+        while($row=mysqli_fetch_assoc($query)){
+
+        ?>
+
+            <option value="<?= $row['id'] ?>">
+                <?= $row['category_name'] ?>
+            </option>
+
+        <?php } ?>
+
+    </select>
         <select id="upperShutterCategoryTemplate">
             <option value="">Select Category</option>
             <?php while($cat = mysqli_fetch_assoc($shutterCategoryQuery)){ ?>

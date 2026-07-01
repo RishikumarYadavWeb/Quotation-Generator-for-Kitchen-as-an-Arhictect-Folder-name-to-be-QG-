@@ -156,14 +156,48 @@ function loadShelfMaterials(select){
     });
 }
 function loadShelfCategories(row){
-    const dropdown = row.querySelector('.shelfCategory');
+
+    const dropdown =
+        row.querySelector('.shelfCategory');
+
+    let unitType = '';
+
+    const unit =
+        row.closest('.generated-unit');
+
+    if(unit.classList.contains('tall-master')){
+        unitType = 'Tall';
+    }
+    else if(unit.classList.contains('upper-master')){
+        unitType = 'Upper';
+    }
+    else if(unit.classList.contains('bottom-master')){
+        unitType = 'Bottom';
+    }
+    else if(unit.classList.contains('loft-master')){
+        unitType = 'Loft';
+    }
+
     $.ajax({
+
         url:'/QG/ajax/get-shelf-categories.php',
+
         type:'GET',
+
+        data:{
+            unit_type:unitType
+        },
+
         success:function(response){
-            dropdown.innerHTML = '<option value="">Select Category</option>' + response;
+
+            dropdown.innerHTML =
+                '<option value="">Select Category</option>' +
+                response;
+
         }
+
     });
+console.log("loadShelfCategories called");
 }
 function getShelfRow(){
     return `
