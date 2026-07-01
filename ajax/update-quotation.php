@@ -305,38 +305,72 @@ try{
             );
         }
     }
-    if(
-        isset($data['accessories']) &&
-        is_array($data['accessories'])
+if(
+    isset($data['accessories']) &&
+    is_array($data['accessories'])
+){
+
+    foreach(
+        $data['accessories']
+        as $accessory
     ){
-        foreach(
-            $data['accessories']
-            as $accessory
-        ){
-            $accessoryId = (int)($accessory['accessory_id'] ?? 0);
-            $qty = (float)($accessory['qty'] ?? 0);
-            $price = (float)preg_replace( '/[^0-9.]/', '', $accessory['price'] ?? 0 );
-            $total = (float)preg_replace( '/[^0-9.]/', '', $accessory['total'] ?? 0 );
-            mysqli_query($conn,
-                "
-                INSERT INTO quotation_accessories(
-                    quotation_id,
-                    accessory_id,
-                    qty,
-                    price,
-                    total
-                )
-                VALUES(
-                    '$quotationId',
-                    '$accessoryId',
-                    '$qty',
-                    '$price',
-                    '$total'
-                )
-                "
+
+        $categoryId =
+            (int)($accessory['category_id'] ?? 0);
+
+        $accessoryId =
+            (int)($accessory['accessory_id'] ?? 0);
+
+        $otherMaterial =
+            mysqli_real_escape_string(
+                $conn,
+                trim($accessory['other_material'] ?? '')
             );
-        }
+
+        $qty =
+            (float)($accessory['qty'] ?? 0);
+
+        $price =
+            (float)preg_replace(
+                '/[^0-9.]/',
+                '',
+                $accessory['price'] ?? 0
+            );
+
+        $total =
+            (float)preg_replace(
+                '/[^0-9.]/',
+                '',
+                $accessory['total'] ?? 0
+            );
+
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_accessories(
+                quotation_id,
+                accessory_id,
+                category_id,
+                other_material,
+                qty,
+                price,
+                total
+            )
+            VALUES(
+                '$quotationId',
+                '$accessoryId',
+                '$categoryId',
+                '$otherMaterial',
+                '$qty',
+                '$price',
+                '$total'
+            )
+            "
+        );
+
     }
+
+}
     if(
         isset($data['drawers']) &&
         is_array($data['drawers'])

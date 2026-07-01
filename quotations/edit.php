@@ -64,14 +64,50 @@
     while($row = mysqli_fetch_assoc($shelfQuery)){
         $EDIT_SHELVES[] = $row;
     }
-    $accessories = [];
-    $sql = "
-        SELECT *
-        FROM quotation_accessories
-        WHERE quotation_id = '$quotation_id'
-    ";
-    $result = mysqli_query($conn, $sql);
-    while($row = mysqli_fetch_assoc($result)){$accessories[] = $row;}
+$accessories = [];
+
+$sql = "
+SELECT
+    qa.*,
+    a.category_id
+FROM quotation_accessories qa
+
+LEFT JOIN accessories a
+ON qa.accessory_id = a.id
+
+WHERE qa.quotation_id = '$quotation_id'
+";
+
+$result = mysqli_query($conn, $sql);
+
+while($row = mysqli_fetch_assoc($result)){
+    $accessories[] = $row;
+}
+/* ACCESSORY CATEGORY OPTIONS */
+
+$accessoryCategoryOptions = '';
+
+$categoryQuery = mysqli_query(
+    $conn,
+    "
+    SELECT *
+    FROM accessory_categories
+    WHERE status = 1
+    ORDER BY category_name ASC
+    "
+);
+
+while($category = mysqli_fetch_assoc($categoryQuery)){
+
+    $accessoryCategoryOptions .=
+        '<option value="'.$category['id'].'">'.
+        htmlspecialchars($category['category_name']).
+        '</option>';
+
+}
+
+$accessoryCategoryOptions .=
+    '<option value="other">Other</option>';
     $elevationImages = [];
     $sql = "
         SELECT
@@ -985,27 +1021,121 @@
                         }
                     );
                 }
-                // Accessories
-                if(
-                    EDIT_ACCESSORIES &&
-                    EDIT_ACCESSORIES.length > 0
-                ){
-                    document.getElementById('accessoryCount' ).value = EDIT_ACCESSORIES.length;
-                    generateAccessories();
-                    const rows = document.querySelectorAll('.accessoryRow');
-                    EDIT_ACCESSORIES.forEach(
-                        (accessory,index) => {
-                            const row = rows[index];
-                            if(!row) return;
-                            row.querySelector('.accessorySelect').value = accessory.accessory_id;
-                            row.querySelector('.accessorySelect').dispatchEvent(new Event('change'));
-                            row.querySelector('.accessoryQty').value = accessory.qty;
-                            row.querySelector('.accessoryPrice').value = parseFloat(accessory.price).toFixed(2);
-                            row.querySelector('.accessoryTotal').value =parseFloat(accessory.total).toFixed(2);
-                        }
-                    );
-                    calculateAccessoriesGrandTotal();
+// Accessories
+console.log(EDIT_ACCESSORIES);
+if(
+    EDIT_ACCESSORIES &&
+    EDIT_ACCESSORIES.length > 0
+){
+
+    document.getElementById(
+        'accessoryCount'
+    ).value = EDIT_ACCESSORIES.length;
+
+    generateAccessories();
+
+    const rows =
+        document.querySelectorAll(
+            '.accessoryRow'
+        );
+
+    EDIT_ACCESSORIES.forEach((accessory,index)=>{
+
+        const row = rows[index];
+
+        if(!row) return;
+
+        const category =
+            row.querySelector('.accessoryCategory');
+
+        const material =
+            row.querySelector('.accessorySelect');
+
+        const otherInput =
+            row.querySelector('.accessoryOtherMaterial');
+
+        // OTHER ACCESSORY
+
+        if(accessory.other_material){
+
+            // Make sure "Other" exists in dropdown
+            if(!category.querySelector('option[value="other"]')){
+                category.insertAdjacentHTML(
+                    'beforeend',
+                    '<option value="other">Other</option>'
+                );
+            }
+
+            category.value = 'other';
+
+            loadAccessoryMaterials(category);
+
+            material.style.display = 'none';
+
+            otherInput.style.display = 'block';
+
+            otherInput.value =
+                accessory.other_material;
+
+            row.querySelector(
+                '.accessoryPrice'
+            ).removeAttribute('readonly');
+            console.log(accessory);
+console.log(accessory.other_material);
+console.log(accessoryCategoryOptions);
+
+        }
+        else{
+
+            category.value =
+                accessory.category_id;
+
+            $.ajax({
+
+                url:'/QG/ajax/get-accessory-materials.php',
+
+                type:'POST',
+
+                data:{
+                    category_id:
+                        accessory.category_id
+                },
+
+                success:function(response){
+
+                    material.innerHTML =
+                        '<option value="">Select Material</option>' +
+                        response;
+
+                    material.value =
+                        accessory.accessory_id;
+
                 }
+
+            });
+
+        }
+
+        row.querySelector(
+            '.accessoryQty'
+        ).value =
+            accessory.qty;
+
+        row.querySelector(
+            '.accessoryPrice'
+        ).value =
+            accessory.price;
+
+        row.querySelector(
+            '.accessoryTotal'
+        ).value =
+            accessory.total;
+
+    });
+
+    calculateAccessoriesGrandTotal();
+
+}
                 if(
                     EDIT_STANDARD_ACCESSORIES &&
                     EDIT_STANDARD_ACCESSORIES.length > 0
@@ -1124,7 +1254,8 @@
             }
         }
     }
-    const accessoryOptions = ` <?= $accessoryOptions ?> `;
+const accessoryCategoryOptions =
+`<?= $accessoryCategoryOptions ?>`;
     function generateAccessories(){
         const count = parseInt(document.getElementById('accessoryCount').value) || 0;
         const container = document.getElementById('accessoriesContainer');
@@ -1137,8 +1268,9 @@
                         <thead>
                             <tr>
                                 <th>Sr. No.</th>
-                                <th>Accessory</th>
-                                <th>Price</th>
+                                <th>Category</th>
+                                <th>Material</th>
+                                <th>Unit Price</th>
                                 <th>Qty</th>
                                 <th>Total</th>
                             </tr>
@@ -1161,18 +1293,22 @@
                     'beforeend',
                     `
                     <tr class="accessoryRow">
-                        <td class="accessorySrNo" style="display: flex;justify-content: center;align-items: center;height: 90px;">${i + 1}</td>
+                        <td class="accessorySrNo" style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
                         <td>
-                            <select name="accessory_id[]" class="form-control accessorySelect">
-                                <option value="">
-                                    Select Accessory
-                                </option>
-                                ${accessoryOptions}
+                            <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
+                                <option value="">Select Category</option>
+                                ${accessoryCategoryOptions}
                             </select>
                         </td>
-                        <td><input type="number" step="0.01" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
-                        <td><input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
-                        <td><input type="number" step="0.01" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
+                        <td>
+                            <select class="form-control accessorySelect">
+                                <option value="">Select Material</option>
+                            </select>
+                            <input type="text" class="form-control accessoryOtherMaterial" placeholder="Enter Material" style="display:none;">
+                        </td>
+                        <td> <input type="number" step="1" min="0" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
+                        <td> <input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
+                        <td> <input type="number" step="1" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
                     </tr>
                     `
                 );
@@ -1190,31 +1326,132 @@
         attachAccessoryEvents();
         calculateAccessoriesGrandTotal();
     }
-    function attachAccessoryEvents(){
-        document
-        .querySelectorAll('.accessorySelect')
-        .forEach(select => {
-            select.onchange = function(){
-                const row = this.closest('tr');
-                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
-                row.querySelector('.accessoryPrice').value = price.toFixed(2);
-                calculateAccessoryTotal(row);
-            };
-        });
-        document
-        .querySelectorAll('.accessoryQty')
-        .forEach(input => {
-            input.oninput = function(){
-                const row = this.closest('tr');
-                calculateAccessoryTotal(row);
-            };
-        });
+function loadAccessoryMaterials(category){
+
+    const row = category.closest('tr');
+
+    const materialSelect =
+        row.querySelector('.accessorySelect');
+
+    const otherInput =
+        row.querySelector('.accessoryOtherMaterial');
+
+    const priceField =
+        row.querySelector('.accessoryPrice');
+
+    // Reset fields
+    materialSelect.value = '';
+    otherInput.value = '';
+    priceField.value = '';
+    row.querySelector('.accessoryTotal').value = '';
+
+    // OTHER
+    if(category.value === 'other'){
+
+        materialSelect.style.display = 'none';
+        otherInput.style.display = 'block';
+
+        priceField.removeAttribute('readonly');
+
+        calculateAccessoryTotal(row);
+
+        return;
     }
+
+    // NORMAL CATEGORY
+
+    materialSelect.style.display = 'block';
+    otherInput.style.display = 'none';
+
+    priceField.setAttribute('readonly', true);
+
+    $.ajax({
+
+        url:'/QG/ajax/get-accessory-materials.php',
+
+        type:'POST',
+
+        data:{
+            category_id: category.value
+        },
+
+        success:function(response){
+
+            materialSelect.innerHTML =
+                '<option value="">Select Material</option>' +
+                response;
+
+            calculateAccessoryTotal(row);
+
+        }
+
+    });
+
+}
+     function attachAccessoryEvents(){
+
+    // Material Change
+    document
+    .querySelectorAll('.accessorySelect')
+    .forEach(select => {
+
+        select.onchange = function(){
+
+            const row = this.closest('tr');
+
+            const price =
+                parseFloat(
+                    this.options[
+                        this.selectedIndex
+                    ]?.dataset.price
+                ) || 0;
+
+            row.querySelector(
+                '.accessoryPrice'
+            ).value = price.toFixed(2);
+
+            calculateAccessoryTotal(row);
+
+        };
+
+    });
+
+    // Qty Change
+    document
+    .querySelectorAll('.accessoryQty')
+    .forEach(input => {
+
+        input.oninput = function(){
+
+            calculateAccessoryTotal(
+                this.closest('tr')
+            );
+
+        };
+
+    });
+
+    // Price Change (for Other accessories)
+    document
+    .querySelectorAll('.accessoryPrice')
+    .forEach(input => {
+
+        input.oninput = function(){
+
+            calculateAccessoryTotal(
+                this.closest('tr')
+            );
+
+        };
+
+    });
+
+}
     function calculateAccessoryTotal(row){
         const qty = parseFloat(row.querySelector('.accessoryQty').value) || 0;
         const price = parseFloat(row.querySelector('.accessoryPrice').value) || 0;
         const total = qty * price;
-        row.querySelector('.accessoryTotal').value = total.toFixed(2);
+        row.querySelector('.accessoryTotal').value =total.toFixed(2);
         calculateAccessoriesGrandTotal();
     }
     function calculateAccessoriesGrandTotal(){
@@ -1490,5 +1727,30 @@
         });
         document.getElementById('panelGrandTotal').innerText = total.toFixed(2);
     }
+    
 </script>
+<?php
+$getAccessoryCategories = mysqli_query(
+    $conn,
+    "
+    SELECT *
+    FROM accessory_categories
+    WHERE status=1
+    ORDER BY category_name
+    "
+);
+
+$accessoryCategoryOptions='';
+
+while($cat=mysqli_fetch_assoc($getAccessoryCategories)){
+
+    $accessoryCategoryOptions .=
+    '<option value="'.$cat['id'].'">'
+    .$cat['category_name'].
+    '</option>';
+
+}
+
+$accessoryCategoryOptions .=
+'<option value="other">Other</option>'; ?>
 <?php include '../includes/footer.php'; ?>

@@ -46,6 +46,7 @@
             quotations.special_discount,
             quotations.final_customer_price,
             quotations.updated_at,
+            quotations.created_at,
             clients.client_name,
             clients.phone,
             clients.email,
@@ -238,7 +239,7 @@
             $pageHeight - 7,
             'Date: ' . date(
                 'd-m-Y',
-                strtotime($quotation['updated_at'])
+                strtotime(!empty($quotation['updated_at']) ? $quotation['updated_at'] : $quotation['created_at'])
             )
         );
 
@@ -338,9 +339,7 @@
                 $pageHeight - 7,
                 'Date: '.date(
                     'd-m-Y',
-                    strtotime(
-                        $quotation['updated_at']
-                    )
+                    strtotime(!empty($quotation['updated_at']) ? $quotation['updated_at'] : $quotation['created_at'])
                 )
             );
             // PROFORMA

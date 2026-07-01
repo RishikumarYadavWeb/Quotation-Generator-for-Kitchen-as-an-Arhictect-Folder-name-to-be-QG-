@@ -624,14 +624,12 @@
                         </td>
                         <td>
                             <select name="standard_accessory_id[]" class=" form-control standardAccessoryMaterial">
-                                <option value="">
-                                    Select Material
-                                </option>
+                                <option value="">Select Material</option>
                             </select>
                         </td>
                         <td><input type="number" step="1" name="standard_accessory_price[]" class=" form-control standardAccessoryPrice" readonly></td>
                         <td><input type="number" name="standard_accessory_qty[]" class="form-control standardAccessoryQty" value="1" min="1"></td>
-                        <td><input type="number" step="0.01" name="standard_accessory_total[]" class="form-control standardAccessoryTotal" readonly></td>
+                        <td><input type="number" step="1" name="standard_accessory_total[]" class="form-control standardAccessoryTotal" readonly></td>
                     </tr>
                     `
                 );
@@ -716,14 +714,9 @@
     function generatePanels(){
         const count = parseInt(document.getElementById('panelCount').value) || 0;
         const container = document.getElementById('panelContainer');
-        const panelShutterCategoryOptions =
-            shutterCategories
+        const panelShutterCategoryOptions = shutterCategories
             .filter(cat => ![4, 9].includes(parseInt(cat.id)))
-            .map(cat => `
-                <option value="${cat.id}">
-                    ${cat.category_name}
-                </option>
-            `)
+            .map(cat => `<option value="${cat.id}">${cat.category_name}</option>`)
             .join('');
         let html = `
         <div class="table-responsive">
@@ -803,8 +796,7 @@
         materialSelect.innerHTML = '<option value="">Select Material</option>';
         shutterMaterials
         .filter(
-            mat =>
-            mat.category_id == categoryId
+            mat => mat.category_id == categoryId
         )
         .forEach(mat => {
             materialSelect.innerHTML += `
@@ -830,9 +822,7 @@
         let total = 0;
         document
         .querySelectorAll('.panelPrice')
-        .forEach(input => {
-            total += parseFloat(input.value) || 0;
-        });
+        .forEach(input => {total += parseFloat(input.value) || 0;});
         document.getElementById('panelGrandTotal').innerText = total.toFixed(2);
     }
 </script>

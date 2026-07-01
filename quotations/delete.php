@@ -1,18 +1,8 @@
 <?php
 include '../db.php';
 /** @var mysqli $conn */
-
 $id = (int)($_GET['id'] ?? 0);
-
-if(!$id){
-    die('Invalid Quotation ID');
-}
-
-/*
-|--------------------------------------------------------------------------
-| Get Quotation Details
-|--------------------------------------------------------------------------
-*/
+if(!$id){die('Invalid Quotation ID');}
 $quotationQuery = mysqli_query(
     $conn,
     "
@@ -22,23 +12,9 @@ $quotationQuery = mysqli_query(
     LIMIT 1
     "
 );
-
 $quotation = mysqli_fetch_assoc($quotationQuery);
-
-if(!$quotation){
-    die('Quotation not found');
-}
-
+if(!$quotation){die('Quotation not found');}
 $clientId = $quotation['client_id'] ?? 0;
-
-/*
-|--------------------------------------------------------------------------
-| Delete Uploaded Elevation Line Image Files
-|--------------------------------------------------------------------------
-|
-| Change 'image_path' below if your column name is different.
-|
-*/
 $imageQuery = mysqli_query(
     $conn,
     "
@@ -49,24 +25,14 @@ $imageQuery = mysqli_query(
     WHERE e.quotation_id = '$id'
     "
 );
-
 while($image = mysqli_fetch_assoc($imageQuery)){
-
     if(!empty($image['image_path'])){
-
         $filePath = "../uploads/line-images/" . $image['image_path'];
-
         if(file_exists($filePath)){
             unlink($filePath);
         }
     }
 }
-
-/*
-|--------------------------------------------------------------------------
-| Delete Line Image Records
-|--------------------------------------------------------------------------
-*/
 mysqli_query(
     $conn,
     "
@@ -77,12 +43,6 @@ mysqli_query(
     WHERE e.quotation_id = '$id'
     "
 );
-
-/*
-|--------------------------------------------------------------------------
-| Delete Related Data
-|--------------------------------------------------------------------------
-*/
 mysqli_query(
     $conn,
     "
@@ -90,7 +50,6 @@ mysqli_query(
     WHERE quotation_id = '$id'
     "
 );
-
 mysqli_query(
     $conn,
     "
@@ -98,7 +57,6 @@ mysqli_query(
     WHERE quotation_id = '$id'
     "
 );
-
 mysqli_query(
     $conn,
     "
@@ -106,7 +64,6 @@ mysqli_query(
     WHERE quotation_id = '$id'
     "
 );
-
 mysqli_query(
     $conn,
     "
@@ -117,7 +74,6 @@ mysqli_query(
     WHERE e.quotation_id = '$id'
     "
 );
-
 mysqli_query(
     $conn,
     "
@@ -125,12 +81,6 @@ mysqli_query(
     WHERE quotation_id = '$id'
     "
 );
-
-/*
-|--------------------------------------------------------------------------
-| Delete Quotation
-|--------------------------------------------------------------------------
-*/
 mysqli_query(
     $conn,
     "
@@ -138,14 +88,7 @@ mysqli_query(
     WHERE id = '$id'
     "
 );
-
-/*
-|--------------------------------------------------------------------------
-| Delete Client If No Quotations Exist
-|--------------------------------------------------------------------------
-*/
 if($clientId){
-
     $checkClient = mysqli_query(
         $conn,
         "
@@ -154,11 +97,8 @@ if($clientId){
         WHERE client_id = '$clientId'
         "
     );
-
     $clientData = mysqli_fetch_assoc($checkClient);
-
     if(($clientData['total'] ?? 0) == 0){
-
         mysqli_query(
             $conn,
             "
@@ -168,7 +108,6 @@ if($clientId){
         );
     }
 }
-
 header('Location: manage.php');
 exit;
 ?>

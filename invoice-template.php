@@ -85,7 +85,7 @@
         
         <tr style="height:10px;">
           <td colspan="2" style="border:1px solid #000;text-align:center;"><?= $quotation['proforma_no'] ?></td>
-          <td style="border:1px solid #000; font-size:10px; text-align: center;"><?= date('d/m/Y', strtotime($quotation['updated_at'])); ?></td>
+          <td style="border:1px solid #000; font-size:10px; text-align: center;"><?= date('d/m/Y',strtotime(!empty($quotation['updated_at']) ? $quotation['updated_at'] : $quotation['created_at'])); ?></td>
         </tr>
         
         <tr style="height:10px;">
@@ -411,21 +411,25 @@
                 "
             );
             if(mysqli_num_rows($accessoryQuery) > 0){
-                $accessoryRowNo = count($elevations) + 1;
-                $accessoriesTotal = 0;
-                $accessoryTotalQuery = mysqli_query(
-                    $conn,
-                    "
-                    SELECT
-                        SUM(total) AS total
-                    FROM quotation_accessories
-                    WHERE quotation_id = '".$quotation['id']."'
-                    "
-                );
-                if($accessoryTotalQuery){
-                  $accessoryTotalData = mysqli_fetch_assoc($accessoryTotalQuery);
-                  $accessoriesTotal = floatval($accessoryTotalData['total']);
-                }
+              $accessoryRowNo = count($elevations);
+              if(mysqli_num_rows($panelQuery) > 0){
+                  $accessoryRowNo++;
+              }
+              $accessoryRowNo++;
+              $accessoriesTotal = 0;
+              $accessoryTotalQuery = mysqli_query(
+                  $conn,
+                  "
+                  SELECT
+                      SUM(total) AS total
+                  FROM quotation_accessories
+                  WHERE quotation_id = '".$quotation['id']."'
+                  "
+              );
+              if($accessoryTotalQuery){
+                $accessoryTotalData = mysqli_fetch_assoc($accessoryTotalQuery);
+                $accessoriesTotal = floatval($accessoryTotalData['total']);
+              }
           ?>
           <tr>
               <td style="text-align:center;"><?= $accessoryRowNo; ?></td>
@@ -448,8 +452,15 @@
                             while($accessory = mysqli_fetch_assoc($accessoryQuery)){
                           ?>
                             <strong><?= $sr++; ?>]</strong>
-                            <?= htmlspecialchars($accessory['accessory_name']); ?> |
-                            Qty : <?= $accessory['qty']; ?> <br>
+                            <?php
+                            if(!empty($accessory['other_material'])){
+                              echo 'Other - '.htmlspecialchars($accessory['other_material']);
+                            }else{
+                              echo htmlspecialchars($accessory['accessory_name']);
+                            }
+                            ?>
+                            | Qty : <?= $accessory['qty']; ?>
+                            <br>
                           <?php } ?>
                       </td>
                     </tr>
@@ -477,27 +488,28 @@
             if(
                 mysqli_num_rows($standardAccessoriesQuery) > 0
             ){
-                $standardAccessoryRowNo = count($elevations);
-                if(
-                    mysqli_num_rows($accessoryQuery) > 0
-                ){
-                    $standardAccessoryRowNo++;
-                }
-                $standardAccessoryRowNo++;
-                $standardAccessoriesTotal = 0;
-                $standardTotalQuery = mysqli_query(
-                    $conn,
-                    "
-                    SELECT
-                        SUM(total_price) AS total
-                    FROM quotation_standard_accessories
-                    WHERE quotation_id = '".$quotation['id']."'
-                    "
-                );
-                if($standardTotalQuery){
-                    $standardTotalData = mysqli_fetch_assoc($standardTotalQuery);
-                    $standardAccessoriesTotal = floatval($standardTotalData['total']);
-                }
+              $standardAccessoryRowNo = count($elevations);
+              if(mysqli_num_rows($panelQuery) > 0){
+                  $standardAccessoryRowNo++;
+              }
+              if(mysqli_num_rows($accessoryQuery) > 0){
+                  $standardAccessoryRowNo++;
+              }
+              $standardAccessoryRowNo++;
+              $standardAccessoriesTotal = 0;
+              $standardTotalQuery = mysqli_query(
+                  $conn,
+                  "
+                  SELECT
+                      SUM(total_price) AS total
+                  FROM quotation_standard_accessories
+                  WHERE quotation_id = '".$quotation['id']."'
+                  "
+              );
+              if($standardTotalQuery){
+                  $standardTotalData = mysqli_fetch_assoc($standardTotalQuery);
+                  $standardAccessoriesTotal = floatval($standardTotalData['total']);
+              }
           ?>
           <tr>
             <td style="text-align:center;"><?= $standardAccessoryRowNo; ?></td>
@@ -525,66 +537,7 @@
             </td>
           </tr>
           <?php } ?>
-          <?php
-            $accessoryQuery = mysqli_query(
-                $conn,
-                "
-                SELECT
-                    qa.*,
-                    a.accessory_name
-                FROM quotation_accessories qa
-                LEFT JOIN accessories a
-                ON qa.accessory_id = a.id
-                WHERE qa.quotation_id = '".$quotation['id']."'
-                "
-            );
-            if(mysqli_num_rows($accessoryQuery) > 0){
-              $accessoryRowNo = count($elevations) + 1;
-              $accessoriesTotal = 0;
-              $accessoryTotalQuery = mysqli_query(
-                  $conn,
-                  "
-                  SELECT SUM(total) AS total
-                  FROM quotation_accessories
-                  WHERE quotation_id = '".$quotation['id']."'
-                  "
-              );
-              if($accessoryTotalQuery){
-                  $accessoryTotalData = mysqli_fetch_assoc($accessoryTotalQuery);
-                  $accessoriesTotal = floatval($accessoryTotalData['total']);
-              }
-          ?>
-          <tr>
-            <td style="text-align:center;"><?= $accessoryRowNo; ?></td>
-            <td><strong>Additional Accessories</strong></td>
-            <td style="text-align:center;">940350</td>
-            <td style="text-align:center;">1</td>
-            <td style="text-align:center;">Nos.</td>
-            <td style="text-align:right;">INR <?= number_format($accessoriesTotal,2); ?></td>
-            <td style="text-align:right;">INR <?= number_format($accessoriesTotal,2); ?></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td colspan="6" style="border-left: none !important;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr>
-                  <td style="border:none;">
-                    <?php
-                    mysqli_data_seek($accessoryQuery, 0);
-                    $sr = 1;
-                    while($accessory = mysqli_fetch_assoc($accessoryQuery)){
-                    ?>
-                        <strong><?= $sr++; ?>]</strong> <?= $accessory['accessory_name']; ?> | 
-                        Qty : <?= $accessory['qty']; ?> <br>
-                    <?php } ?>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-        <?php } ?>
         <?php endif; ?>
-
         <tr>
           <td style="border-left:1px solid #000; border-right:1px solid #000; border-top:none; border-bottom:none;">&nbsp;</td>
           <td style="border-left:1px solid #000; border-right:1px solid #000; border-top:none; border-bottom:none; padding:10px 10px 20px 10px; vertical-align:top;">
