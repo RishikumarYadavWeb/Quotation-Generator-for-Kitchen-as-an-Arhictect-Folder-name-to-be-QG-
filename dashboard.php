@@ -66,7 +66,7 @@
             <p class="dashboard-subtitle">Executive overview of quotation system</p>
         </div>
         <div class="dashboard-date">
-            <i class="fa-solid fa-calendar-days"></i><?= date('d M Y'); ?>
+            <i class="fa-solid fa-calendar-days" style="margin-right: 10px;"></i><?= date('d M Y'); ?>
         </div>
     </div>
     <div class="dashboard-kpi-grid">
@@ -107,7 +107,7 @@
             </div>
         </div>
     </div>
-    <div class="analytics-title">Project Analytics</div>
+    <div class="analytics-title" style="margin-top: 80px;">Project Analytics</div>
     <div class="dashboard-chart-grid">
         <div class="chart-card revenue-chart-card">
             <div class="chart-header">

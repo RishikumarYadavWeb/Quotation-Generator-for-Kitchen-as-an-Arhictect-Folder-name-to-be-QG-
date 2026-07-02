@@ -611,8 +611,8 @@
                     'beforeend',
                     `
                     <tr class="standardAccessoryRow">
-                        <td style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
-                        <td>
+                        <td data-label="Accessory No:" style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
+                        <td data-label="Category:">
                             <select class="form-control standardAccessoryCategory" onchange="loadStandardAccessoryMaterials(this)">
                                 <option value="">
                                     Select Category
@@ -620,14 +620,14 @@
                                 ${standardAccessoryCategoryOptions}
                             </select>
                         </td>
-                        <td>
+                        <td data-label="Material:">
                             <select name="standard_accessory_id[]" class=" form-control standardAccessoryMaterial">
                                 <option value="">Select Material</option>
                             </select>
                         </td>
-                        <td><input type="number" step="1" name="standard_accessory_price[]" class=" form-control standardAccessoryPrice" readonly></td>
-                        <td><input type="number" name="standard_accessory_qty[]" class="form-control standardAccessoryQty" value="1" min="1"></td>
-                        <td><input type="number" step="1" name="standard_accessory_total[]" class="form-control standardAccessoryTotal" readonly></td>
+                        <td data-label="Unit Price:"><input type="number" step="1" name="standard_accessory_price[]" class=" form-control standardAccessoryPrice" readonly></td>
+                        <td data-label="Quantity:"><input type="number" name="standard_accessory_qty[]" class="form-control standardAccessoryQty" value="1" min="1"></td>
+                        <td data-label="Total:"><input type="number" step="1" name="standard_accessory_total[]" class="form-control standardAccessoryTotal" readonly></td>
                     </tr>
                     `
                 );
@@ -717,8 +717,8 @@
             .map(cat => `<option value="${cat.id}">${cat.category_name}</option>`)
             .join('');
         let html = `
-        <div class="table-responsive">
-            <table class="table table-bordered">
+        <div class="table-responsive panel-table-responsive">
+            <table class="table table-bordered panelTable">
                 <thead>
                     <tr>
                         <th>Sr No.</th>

@@ -1,7 +1,3 @@
-/*==================================================
-    MOBILE TABLE CARD VIEW
-==================================================*/
-
 @media (max-width:768px){
 
     body{
@@ -158,6 +154,137 @@
     }
     .form-gird{
         gap: 0px !important;
+    }
+
+    .dashboard-header{
+        padding-top: 60px !important;
+        margin-bottom: 20px !important
+    }
+
+    .dashboard-kpi-grid{
+
+        grid-template-columns:1fr !important;
+        margin-bottom: -50px !important;
+
+    }
+
+    .dashboard-kpi-card{
+
+        padding:18px;
+
+    }
+
+    .kpi-content{
+
+        overflow:hidden;
+
+    }
+
+    .kpi-label{
+
+        font-size:14px;
+
+    }
+
+    .kpi-value{
+
+        font-size:24px;
+
+        word-break:break-word;
+
+    }
+
+    .kpi-icon{
+
+        width:55px;
+
+        height:55px;
+
+        font-size:22px;
+
+    }
+
+    .revenue-chart-card {
+        min-height: 315px;
+    }
+    .table tbody td {
+        padding: 5px !important;
+    }
+
+}
+@media (max-width:768px){
+
+    .standardAccessoriesTable{
+
+        width:100%;
+
+        border:none;
+
+    }
+
+    .standardAccessoriesTable thead{
+
+        display:none;
+
+    }
+
+    .standardAccessoriesTable,
+    .standardAccessoriesTable tbody,
+    .standardAccessoriesTable tr,
+    .standardAccessoriesTable td{
+
+        display:block;
+        width:100%;
+
+    }
+
+    .standardAccessoriesTable tr{
+
+        background:#fff;
+
+        border:1px solid #e5e7eb;
+
+        border-radius:16px;
+
+        padding:18px;
+
+        margin-bottom:18px;
+
+        box-shadow:0 3px 12px rgba(0,0,0,.05);
+
+    }
+
+
+    .standardAccessoriesTable td{
+
+        display:grid;
+
+        grid-template-columns:110px 1fr;
+
+        align-items:center;
+
+        gap:12px;
+
+        border:none;
+
+        padding:10px 0;
+
+    }
+
+    .standardAccessoriesTable td::before{
+
+        content:attr(data-label);
+
+        font-weight:700;
+
+        color:#374151;
+
+    }
+
+    .standardAccessoriesTable td .form-control{
+
+        width:100%;
+
     }
 
 }
