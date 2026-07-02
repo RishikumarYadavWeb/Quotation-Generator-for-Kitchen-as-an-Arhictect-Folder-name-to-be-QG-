@@ -160,7 +160,7 @@
             htmlspecialchars($row['category_name']).
             '</option>';
     }
-    $accessoryCategoryOptions .= '<option value="other">Other</option>';
+    // $accessoryCategoryOptions .= '<option value="other">Other</option>';
 ?>
 <form  id="quotationForm" enctype="multipart/form-data" novalidate onkeydown="preventEnterSubmit(event)">
     <div class="container-fluid">
@@ -367,8 +367,8 @@
             <input type="text" min="0" id="grandTotal" class="modern-input" readonly style=" font-size:22px; font-weight:700; color:#111827; background:#f8fafc;" >
         </div>
         <div class="col-md-6 mb-4">
-            <label class="form-label" min="0" style="font-size:18px; font-weight:700; margin-bottom:12px; display:block;">Special Discount (%)</label>
-            <input type="number" step="1" id="specialDiscount" class="form-control modern-input" value="0" oninput="calculateFinalPricing()">
+            <label class="form-label" style="font-size:18px; font-weight:700; margin-bottom:12px; display:block;">Special Discount (%)</label>
+            <input type="number" min="0" step="1" id="specialDiscount" class="form-control modern-input" value="0" oninput="calculateFinalPricing()">
         </div>
     </div>
     <div class="row">
@@ -490,7 +490,6 @@
                             <select class="form-control accessorySelect">
                                 <option value="">Select Material</option>
                             </select>
-                            <input type="text" class="form-control accessoryOtherMaterial" placeholder="Enter Material" style="display:none;">
                         </td>
                         <td> <input type="number" step="1" min="0" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
                         <td> <input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
@@ -515,19 +514,11 @@
     function loadAccessoryMaterials(category){
         const row = category.closest('tr');
         const materialSelect = row.querySelector('.accessorySelect');
-        const otherInput = row.querySelector('.accessoryOtherMaterial');
         const priceField = row.querySelector('.accessoryPrice');
-        if(category.value === 'other'){
-            materialSelect.style.display = 'none';
-            otherInput.style.display = 'block';
-            priceField.removeAttribute('readonly');
-            return;
-        }
-        materialSelect.style.display = 'block';
-        otherInput.style.display = 'none';
-        priceField.setAttribute('readonly',true);
+        materialSelect.innerHTML = '<option value="">Select Material</option>';
+        priceField.value = '';
         $.ajax({
-            url: '/QG/ajax/get-accessory-materials.php',
+            url:'/QG/ajax/get-accessory-materials.php',
             type:'POST',
             data:{category_id: category.value},
             success:function(response){
@@ -538,20 +529,27 @@
     function attachAccessoryEvents(){
         document
         .querySelectorAll('.accessorySelect')
-        .forEach(select => {
+        .forEach(select=>{
             select.onchange = function(){
                 const row = this.closest('tr');
-                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                const option = this.options[this.selectedIndex];
+                const price = parseFloat(option.dataset.price) || 0;
                 row.querySelector('.accessoryPrice').value = price.toFixed(2);
                 calculateAccessoryTotal(row);
             };
         });
         document
         .querySelectorAll('.accessoryQty')
-        .forEach(input => {
-            input.oninput = function(){
-                const row = this.closest('tr');
-                calculateAccessoryTotal(row);
+        .forEach(input=>{
+            input.oninput=function(){
+                calculateAccessoryTotal(this.closest('tr'));
+            };
+        });
+        document
+        .querySelectorAll('.accessoryPrice')
+        .forEach(input=>{
+            input.oninput=function(){
+                calculateAccessoryTotal(this.closest('tr'));
             };
         });
     }

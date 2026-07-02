@@ -37,6 +37,11 @@
                             <input type="password" name="password" required placeholder="Enter password">
                         </div>
                     </div>
+                    <div style="text-align:right;margin-top:8px;">
+                        <a href="forgot-password.php" style="color: white;">
+                            Forgot Password?
+                        </a>
+                    </div>
                     <button type="submit" class="login-btn">Login</button>
                 </form>
             </div>

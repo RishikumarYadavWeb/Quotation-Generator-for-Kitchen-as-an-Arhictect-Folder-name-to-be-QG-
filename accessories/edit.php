@@ -29,6 +29,7 @@
     include '../includes/header.php';
     include '../includes/sidebar.php';
 ?>
+<div class="page-card">
     <div class="page-header">
         <div>
             <h1 class="page-title">Edit Accessory</h1>
@@ -39,51 +40,50 @@
             Back
         </a>
     </div>
-    <div class="card">
-        <form action="update.php" method="POST">
-            <input type="hidden" name="id" value="<?= $data['id'] ?>">
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Accessory Name</label>
-                    <input type="text" name="accessory_name" class="form-control" value="<?= htmlspecialchars($data['accessory_name']) ?>" required>
-                </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <select name="category_id" class="form-control" required>
-                        <option value="">Select Category</option>
-                        <?php while( $category = mysqli_fetch_assoc($categories)){ ?>
-                            <option value="<?= $category['id'] ?>" <?= $data['category_id'] == $category['id'] ? 'selected' : ''?>>
-                                <?= htmlspecialchars($category['category_name']) ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Unit</label>
-                    <input type="text" name="unit" class="form-control" value="<?= htmlspecialchars($data['unit']) ?>">
-                </div>
-                <div class="form-group">
-                    <label>Price</label>
-                    <input type="number" step="0.01" name="price" class="form-control" value="<?= $data['price'] ?>">
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select name="status" class="form-control">
-                        <option value="1" <?= $data['status'] == 1 ? 'selected' : ''?>>
-                            Active
-                        </option>
-                        <option value="0" <?= $data['status'] == 0 ? 'selected' : ''?>>
-                            Inactive
-                        </option>
-                    </select>
-                </div>
+    <form action="update.php" method="POST">
+        <input type="hidden" name="id" value="<?= $data['id'] ?>">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Accessory Name</label>
+                <input type="text" name="accessory_name" class="form-control" value="<?= htmlspecialchars($data['accessory_name']) ?>" required>
             </div>
-            <div style="margin-top:25px;">
-                <button type="submit" class="btn btn-success">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    Update Accessory
-                </button>
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category_id" class="form-control" required>
+                    <option value="">Select Category</option>
+                    <?php while( $category = mysqli_fetch_assoc($categories)){ ?>
+                        <option value="<?= $category['id'] ?>" <?= $data['category_id'] == $category['id'] ? 'selected' : ''?>>
+                            <?= htmlspecialchars($category['category_name']) ?>
+                        </option>
+                    <?php } ?>
+                </select>
             </div>
-        </form>
-    </div>
+            <div class="form-group">
+                <label>Unit</label>
+                <input type="text" name="unit" class="form-control" value="<?= htmlspecialchars($data['unit']) ?>">
+            </div>
+            <div class="form-group">
+                <label>Price</label>
+                <input type="number" step="0.01" name="price" class="form-control" value="<?= $data['price'] ?>">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status" class="form-control">
+                    <option value="1" <?= $data['status'] == 1 ? 'selected' : ''?>>
+                        Active
+                    </option>
+                    <option value="0" <?= $data['status'] == 0 ? 'selected' : ''?>>
+                        Inactive
+                    </option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:25px;">
+            <button type="submit" class="btn btn-success">
+                <i class="fa-solid fa-pen-to-square"></i>
+                Update Accessory
+            </button>
+        </div>
+    </form>
+</div>
 <?php include '../includes/footer.php'; ?>

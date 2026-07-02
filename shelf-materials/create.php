@@ -14,7 +14,7 @@
         WHERE status = 1"
     );
 ?>
-<div class="form-card">
+<div class="page-card">
     <h1>Add Shelf Material</h1>
     <form method="POST"action="save.php">
         <div class="mb-3">

@@ -104,13 +104,13 @@
                         while($row = mysqli_fetch_assoc($result)){
                 ?>
                     <tr>
-                        <td><?= $srNo-- ?></td>
-                        <td><?= htmlspecialchars($row['client_name']) ?></td>
-                        <td><?= htmlspecialchars($row['project_type']) ?></td>
-                        <td><?= htmlspecialchars($row['created_user_name']) ?></td>
-                        <td><?= number_format($row['total_sqft'],2) ?></td>
-                        <td>₹ <?= number_format($row['final_customer_price'],2) ?></td>
-                        <td>
+                        <td data-label="Sr No:"><?= $srNo-- ?></td>
+                        <td data-label="Client Name:"><?= htmlspecialchars($row['client_name']) ?></td>
+                        <td data-label="Project Type:"><?= htmlspecialchars($row['project_type']) ?></td>
+                        <td data-label="Created By:"><?= htmlspecialchars($row['created_user_name']) ?></td>
+                        <td data-label="Total Carpentry SqFt:"><?= number_format($row['total_sqft'],2) ?></td>
+                        <td data-label="Customer Price">₹ <?= number_format($row['final_customer_price'],2) ?></td>
+                        <td data-label="Action">
                             <div style="display:flex;gap:10px;flex-wrap:wrap;">
                                 <a href="view.php?id=<?= $row['id']; ?>" class="edit-btn">View</a>
                                 <?php if(can('quotation_edit')){ ?>

@@ -40,6 +40,7 @@
                 <th>Sr No.</th>
                 <th>Module</th>
                 <th>Permission</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -48,9 +49,10 @@
                 while($row = mysqli_fetch_assoc($permissions)){
             ?>
                 <tr>
-                    <td><?= $srNo++ ?></td>
-                    <td><?= htmlspecialchars($row['module']) ?></td>
-                    <td><?= htmlspecialchars($row['permission_name']) ?></td>
+                    <td data-label="Sr No:"><?= $srNo++ ?></td>
+                    <td data-label="Module"><?= htmlspecialchars($row['module']) ?></td>
+                    <td data-label="Permission"><?= htmlspecialchars($row['permission_name']) ?></td>
+                    <td style="visibility: hidden;"></td>
                 </tr>
             <?php } ?>
         </tbody>

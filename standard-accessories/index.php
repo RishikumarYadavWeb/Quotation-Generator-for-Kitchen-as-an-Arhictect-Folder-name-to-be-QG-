@@ -39,16 +39,16 @@ $query = mysqli_query(
             while($row= mysqli_fetch_assoc($query)){
         ?>
             <tr>
-                <td><?= $srNo++ ?></td>
-                <td><?= $row['category_name'] ?></td>
-                    <td>
-                        <?php if($row['status'] == 1){ ?>
-                            <span class="status-active">Active</span>
-                        <?php }else{ ?>
-                            <span class="status-inactive">Inactive</span>
-                        <?php } ?>
-                    </td>
-                <td>
+                <td data-label="Sr No:"><?= $srNo++ ?></td>
+                <td data-label="Category:"><?= $row['category_name'] ?></td>
+                <td data-label="Status:">
+                    <?php if($row['status'] == 1){ ?>
+                        <span class="status-active">Active</span>
+                    <?php }else{ ?>
+                        <span class="status-inactive">Inactive</span>
+                    <?php } ?>
+                </td>
+                <td data-label="Action:">
                     <?php if(can('standard_accessories_edit')){ ?>
                         <a href="edit-category.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
                     <?php } ?>

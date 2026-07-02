@@ -16,12 +16,12 @@
     }
 ?>
 <button class="mobile-menu-btn" onclick="openSidebar()">
-    <i class="fa-solid fa-bars"></i>
+    <i class="fa-solid fa-bars" style="position: absolute;left: 15px;top: 12px;"></i>
 </button>
 <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 <div class="sidebar-fixed">
     <button class="close-sidebar-btn" onclick="closeSidebar()">
-        <i class="fa-solid fa-xmark"></i>
+        <i class="fa-solid fa-xmark" style="position: absolute;left: 15px;top: 12px;"></i>
     </button>
     <!-- <div class="logo-section"> <img src="/QG/assets/images/crafted-logo.png" class="logo-img" alt="Company Logo" loading="lazy" style="filter:brightness(0) invert(1);"></div> -->
     <ul class="sidebar-menu">

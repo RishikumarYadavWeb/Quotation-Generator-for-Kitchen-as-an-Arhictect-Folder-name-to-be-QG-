@@ -6,7 +6,7 @@ if(!can('shelves_create')){
 include '../includes/header.php';
 include '../includes/sidebar.php';
 ?>
-<div class="form-card">
+<div class="page-card">
     <h1>Add Shelf Category</h1>
     <form method="POST" action="save.php">
         <div class="mb-3">

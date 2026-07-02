@@ -54,21 +54,21 @@ $result = mysqli_query($conn, $query);
         <tbody>
             <?php while($user = mysqli_fetch_assoc($result)){ ?>
                 <tr>
-                    <td>
+                    <td data-label="Name:">
                         <div class="user-name-cell">
                             <div class="user-avatar"><?= strtoupper(substr($user['name'],0,1)); ?></div>
                             <div><?= htmlspecialchars($user['name']); ?></div>
                         </div>
                     </td>
-                    <td><?= htmlspecialchars($user['email']); ?></td>
-                    <td>
+                    <td data-label="E-mail:"><?= htmlspecialchars($user['email']); ?></td>
+                    <td data-label="Role:">
                         <span class="role-badge"><?= htmlspecialchars($user['role_name']); ?></span>
                     </td>
-                    <td>
+                    <td data-label="Status:">
                         <span class="status-badge <?= $user['status'] == 'Active' ? 'status-active' : 'status-inactive'; ?>"><?= $user['status']; ?></span>
                     </td>
-                    <td><?= date('d M Y',strtotime($user['created_at'])); ?></td>
-                    <td>
+                    <td data-label="Date Created:"><?= date('d M Y',strtotime($user['created_at'])); ?></td>
+                    <td data-label="Action:">
                         <div class="table-actions">
                             <?php if(can('users_edit')){ ?>
                                 <a href="edit.php?id=<?= $user['id']; ?>" class="edit-btn">Edit</a>

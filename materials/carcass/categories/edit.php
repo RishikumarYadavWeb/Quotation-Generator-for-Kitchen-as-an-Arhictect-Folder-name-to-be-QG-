@@ -28,7 +28,7 @@
     include '../../../includes/sidebar.php';
 ?>
 
-<div class="form-card">
+<div class="page-card">
 
     <div class="page-header mb-4">
 

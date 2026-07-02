@@ -54,18 +54,18 @@
                 while($row = mysqli_fetch_assoc($query)){
             ?>
                 <tr>
-                    <td><?= $srNo++ ?></td>
-                    <td><?= htmlspecialchars($row['category_name']) ?></td>
-                    <td><?= htmlspecialchars($row['material_name']) ?></td>
-                    <td>₹ <?= number_format($row['price_per_sqft'],2) ?></td>
-                    <td>
+                    <td data-label="Sr No:"><?= $srNo++ ?></td>
+                    <td data-label="Category:"><?= htmlspecialchars($row['category_name']) ?></td>
+                    <td data-label="Material:"><?= htmlspecialchars($row['material_name']) ?></td>
+                    <td data-label="Price:">₹ <?= number_format($row['price_per_sqft'],2) ?></td>
+                    <td data-label="Status:">
                         <?php if($row['status'] == 1){ ?>
                             <span class="status-active">Active</span>
                         <?php }else{ ?>
                             <span class="status-inactive">Inactive</span>
                         <?php } ?>
                     </td>
-                    <td>
+                    <td data-label="Action:">
                         <?php if(can('drawers_edit')){ ?>
                             <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
                         <?php } ?>

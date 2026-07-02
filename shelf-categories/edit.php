@@ -22,7 +22,7 @@
     include '../includes/header.php';
     include '../includes/sidebar.php';
 ?>
-<div class="form-card">
+<div class="page-card">
     <div class="page-header mb-4">
         <div>
             <h1 class="page-title">Edit Shelf Category</h1>

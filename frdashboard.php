@@ -1,5 +1,5 @@
 <?php
-    include '../includes/auth.php';
+    include 'includes/auth.php';
     include 'db.php';
     if(!can('frdashboard_view')){
         die('Access Denied');
@@ -135,11 +135,11 @@
             <tbody>
                 <?php while($quotation = mysqli_fetch_assoc($quotationQuery)): ?>
                 <tr>
-                    <td><?= $quotation['project_type'] ?></td>
-                    <td><?= $quotation['created_user_name'] ?></td>
-                    <td><?= $quotation['total_sqft'] ?></td>
-                    <td>₹  <?= number_format($quotation['final_customer_price'] ?? 0) ?></td>
-                    <td><a class="edit-btn" href="/QG/export-pdf.php?id=<?= $quotation['id'] ?>&details=yes" target="_blank">Detailed PDF</a></td>
+                    <td data-label="Project Type:"><?= $quotation['project_type'] ?></td>
+                    <td data-label="Created By:"><?= $quotation['created_user_name'] ?></td>
+                    <td data-label="Total Carpentry SqFt:"><?= $quotation['total_sqft'] ?></td>
+                    <td data-label="Customer Price:">₹  <?= number_format($quotation['final_customer_price'] ?? 0) ?></td>
+                    <td data-label="Action:"><a class="edit-btn" href="/QG/export-pdf.php?id=<?= $quotation['id'] ?>&details=yes" target="_blank">Detailed PDF</a></td>
                 </tr>
                 <?php endwhile; ?>
             </tbody>

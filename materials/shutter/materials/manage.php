@@ -38,8 +38,8 @@
         "
     );
 ?>
-<div class="container">
-    <div class="top-bar">
+<div class="page-card">
+    <div class="top-bar mb-0">
         <h2>Manage Shutter Materials</h2>
         <?php if(can('shutter_create')){ ?>
             <a href="material.php" class="theme-btn">+ Add Material</a>
@@ -63,20 +63,24 @@
                     if(mysqli_num_rows($query) > 0){while($row = mysqli_fetch_assoc($query)){
                 ?>
                     <tr>
-                        <td><?= $srNo++ ?></td>
-                        <td><?= htmlspecialchars($row['category_name']) ?></td>
-                        <td><?= htmlspecialchars($row['material_type']) ?></td>
-                        <td>₹ <?= number_format($row['price_per_sqft'],2) ?></td>
-                        <td>
+                        <td data-label="Sr No:"><?= $srNo++ ?></td>
+                        <td data-label="Category:"><?= htmlspecialchars($row['category_name']) ?></td>
+                        <td data-label="Material:"><?= htmlspecialchars($row['material_type']) ?></td>
+                        <td data-label="Price:">₹ <?= number_format($row['price_per_sqft'],2) ?></td>
+                        <td data-label="Status:">
                             <?php if($row['status'] == 1){ ?>
                                 <span class="status-active">Active</span>
                             <?php }else{ ?>
                                 <span class="status-inactive">Inactive</span>
                             <?php } ?>
                         </td>
-                        <td class="d-flex">
-                            <a href="edit.php?id=<?= $row['id']; ?>" class="edit-btn">Edit</a>
-                            <a href="delete.php?id=<?= $row['id']; ?>" class="delete-btn" onclick="return confirm('Delete Material?')">Delete</a>
+                        <td data-label="Action:" class="d-flex">
+                            <?php if(can('shutter_edit')){ ?>
+                                <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
+                            <?php } ?>
+                            <?php if(can('shutter_delete')){ ?>
+                                <a href="delete.php?id=<?= $row['id'] ?>" class="delete-btn" onclick="return confirm('Delete Material?')">Delete</a>
+                            <?php } ?>
                         </td>
                     </tr>
                 <?php

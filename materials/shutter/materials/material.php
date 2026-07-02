@@ -8,7 +8,7 @@
     include '../../../includes/header.php'; 
     include '../../../includes/sidebar.php'
 ?>
-<div class="container">
+<div class="page-card">
     <div class="top-bar">
         <h2>Shutter Materials</h2>
         <a href="manage.php" class="btn">Manage Materials</a>

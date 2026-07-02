@@ -54,9 +54,9 @@
                     while($row = mysqli_fetch_assoc($query)){
             ?>
             <tr>
-                <td><?= $srNo++ ?></td>
-                <td><?= htmlspecialchars($row['category_name']) ?></td>
-                <td>
+                <td data-label="Sr No:"><?= $srNo++ ?></td>
+                <td data-label="Category:"><?= htmlspecialchars($row['category_name']) ?></td>
+                <td data-label="Status">
                     <?php if(
                         $row['status'] == 1
                     ){ ?>
@@ -65,7 +65,7 @@
                         <span class="status-inactive">Inactive</span>
                     <?php } ?>
                 </td>
-                <td>
+                <td data-label="Action:">
                     <div class="action-btns">
                         <?php if(can('accessories_category_edit')){ ?>
                             <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>

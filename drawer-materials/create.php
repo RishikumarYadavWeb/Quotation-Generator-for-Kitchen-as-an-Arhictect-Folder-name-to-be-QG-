@@ -9,7 +9,7 @@ include '../includes/header.php';
 include '../includes/sidebar.php';
 $categoryQuery = mysqli_query($conn,"SELECT * FROM drawer_categories WHERE status = 1");
 ?>
-<div class="form-card">
+<div class="page-card">
     <h1>Add Drawer Material</h1>
     <form method="POST" action="save.php">
         <div class="mb-3">

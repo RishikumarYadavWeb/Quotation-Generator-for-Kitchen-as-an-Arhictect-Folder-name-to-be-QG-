@@ -28,9 +28,9 @@
             </thead>
             <?php while($row = mysqli_fetch_assoc($roles)) { ?>
                 <tr>
-                    <td><?= $row['id'] ?></td>
-                    <td><?= $row['role_name'] ?></td>
-                    <td>
+                    <td data-label="Sr No:"><?= $row['id'] ?></td>
+                    <td data-label="Role Name:"><?= $row['role_name'] ?></td>
+                    <td data-label="Action:">
                         <div class="action-links">
                             <?php if(can('roles_edit')){ ?>
                                 <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>

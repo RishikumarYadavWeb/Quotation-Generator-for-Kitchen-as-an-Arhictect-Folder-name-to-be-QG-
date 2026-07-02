@@ -7,8 +7,8 @@
     include '../../../includes/header.php'; 
     include '../../../includes/sidebar.php';
 ?>
-<div class="container">
-    <div class="top-bar">
+<div class="page-card">
+    <div class="top-bar mb-0">
         <h2>Shutter Categories</h2>
         <a href="manage.php" class="btn">Manage Categories</a>
     </div>

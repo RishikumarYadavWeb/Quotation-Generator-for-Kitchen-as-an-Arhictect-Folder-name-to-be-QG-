@@ -6,7 +6,7 @@
     include '../../../includes/header.php';
     include '../../../includes/sidebar.php';
 ?>
-<div class="form-card">
+<div class="page-card">
     <h1>Add Carcass Category</h1>
     <form method="POST" action="save.php">
         <div class="mb-3">

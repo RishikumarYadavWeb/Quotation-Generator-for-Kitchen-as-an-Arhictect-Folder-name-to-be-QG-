@@ -61,19 +61,19 @@
                     while($row = mysqli_fetch_assoc($getAccessories)){
                 ?>
                     <tr>
-                        <td><?= $srNo++ ?></td>
-                        <td><?= htmlspecialchars($row['accessory_name']) ?></td>
-                        <td><?= htmlspecialchars($row['category_name']) ?></td>
-                        <td>
+                        <td data-label="Sr No:"><?= $srNo++ ?></td>
+                        <td data-label="Category:"><?= htmlspecialchars($row['category_name']) ?></td>
+                        <td data-label="Material:"><?= htmlspecialchars($row['accessory_name']) ?></td>
+                        <td data-label="Status:">
                             <?php if($row['status'] == 'active'){ ?>
                                 <span class="status-active">Active</span>
                             <?php }else{ ?>
                                 <span class="status-inactive">Inactive</span>
                             <?php } ?>
                         </td>
-                        <td><?= htmlspecialchars($row['unit']) ?></td>
-                        <td>₹ <?= number_format($row['price'],2) ?></td>
-                        <td>
+                        <td data-label="Unit:"><?= htmlspecialchars($row['unit']) ?></td>
+                        <td data-label="Price">₹ <?= number_format($row['price'],2) ?></td>
+                        <td data-label="Action:">
                             <div class="action-btns">
                                 <?php if(can('accessories_edit')){ ?>
                                     <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>

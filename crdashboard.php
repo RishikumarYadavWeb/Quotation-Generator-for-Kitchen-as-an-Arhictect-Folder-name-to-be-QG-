@@ -1,6 +1,6 @@
 <?php
 include 'db.php';
-include '../includes/auth.php';
+include 'includes/auth.php';
 if(!can('crdashboard_view')){
     die('Access Denied');
 }

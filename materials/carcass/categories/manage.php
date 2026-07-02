@@ -34,16 +34,16 @@ $query = mysqli_query(
         <tbody>
             <?php $srNo=1; while($row = mysqli_fetch_assoc($query)){ ?>
                 <tr>
-                    <td><?= $srNo++ ?></td>
-                    <td><?= $row['category_name'] ?></td>
-                    <td>
+                    <td data-label="Sr No:"><?= $srNo++ ?></td>
+                    <td data-label="Category:"><?= $row['category_name'] ?></td>
+                    <td data-label="Status:">
                         <?php if($row['status'] == 1){ ?>
                             <span class="status-active">Active</span>
                         <?php }else{ ?>
                             <span class="status-inactive">Inactive</span>
                         <?php } ?>
                     </td>
-                    <td>
+                    <td data-label="Action:">
                         <?php if(can('carcass_edit')){ ?>
                             <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
                         <?php } ?>

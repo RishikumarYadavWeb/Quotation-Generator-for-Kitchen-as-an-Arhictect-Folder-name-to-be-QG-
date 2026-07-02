@@ -33,20 +33,20 @@
                     while($row = mysqli_fetch_assoc($result)) {
                 ?>
                     <tr>
-                        <td><?= $srNo++ ?></td>
-                        <td><?= $row['category_name']; ?></td>
-                        <td>
+                        <td data-label="Sr No:"><?= $srNo++ ?></td>
+                        <td data-label="Category:"><?= $row['category_name']; ?></td>
+                        <td data-label="Status:">
                             <?php if($row['status'] == 1){ ?>
                                 <span class="status-active">Active</span>
                             <?php }else{ ?>
                                 <span class="status-inactive">Inactive</span>
                             <?php } ?>
                         </td>
-                        <td class="d-flex">
-                            <?php if(can('shutteredit')){ ?>
+                        <td data-label="Action:" class="d-flex">
+                            <?php if(can('shutter_edit')){ ?>
                                 <a href="edit.php?id=<?= $row['id'] ?>" class="edit-btn">Edit</a>
                             <?php } ?>
-                            <?php if(can('shutterdelete')){ ?>
+                            <?php if(can('shutter_delete')){ ?>
                                 <a href="delete.php?id=<?= $row['id'] ?>" class="delete-btn" onclick="return confirm('Delete Category?')">Delete</a>
                             <?php } ?>
                         </td>

@@ -8,7 +8,8 @@
         "setasign/fpdi": "^2.6",
         "setasign/fpdf": "^1.9",
         "tecnickcom/tcpdf": "^6.7",
-        "setasign/fpdi-tcpdf": "^2.3"
+        "setasign/fpdi-tcpdf": "^2.3",
+        "phpmailer/phpmailer": "^7.1"
     },
     "require-dev": {
         "phpstan/phpstan": "^2.2"
