@@ -1,4 +1,5 @@
 <?php
+    include '../includes/auth.php';
     include '../db.php';
     if(!can('roles_edit')){
         die('Access Denied');
