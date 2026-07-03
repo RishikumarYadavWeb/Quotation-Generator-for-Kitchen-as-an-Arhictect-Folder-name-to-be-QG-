@@ -27,6 +27,7 @@ async function generateElevations(){
         }
         container.appendChild(fragment);
         updateElevationNumbers();
+        generateElevationImageInputs();
     }
     else if(count < existing){
         for(
@@ -37,6 +38,7 @@ async function generateElevations(){
             existingCards[i].remove();
         }
         updateElevationNumbers();
+        generateElevationImageInputs();
         updateGrandTotal();
     }
 }

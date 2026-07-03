@@ -348,6 +348,8 @@
                 <h5>Additional Accessories Total : ₹ <span id="accessoriesGrandTotal">0.00</span></h5>
             </div>
         </div>
+        <?php include '../components/project-images.php'; ?>
+        
     </div>
 </form>
 <div class="main-card mt-4">

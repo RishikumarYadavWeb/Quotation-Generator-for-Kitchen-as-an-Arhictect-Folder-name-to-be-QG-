@@ -270,3 +270,385 @@ document.querySelectorAll('.sidebar-dropdown > a')
             .classList.toggle('show');
     });
 });
+
+/* ==========================================================
+   PROJECT IMAGE MANAGER
+========================================================== */
+
+const PROJECT_IMAGES={
+    render:[],
+    floorplan:[],
+    elevations:{}
+};
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+    initializeImageInput("renderImages","renderPreview","render");
+    initializeImageInput("floorImages","floorPreview","floorplan");
+
+});
+
+/* ==========================================================
+   COMMON IMAGE INPUT
+========================================================== */
+
+function initializeImageInput(inputId,previewId,type){
+
+    const input=document.getElementById(inputId);
+
+    if(!input) return;
+
+    input.addEventListener("change",function(){
+
+        const files=Array.from(this.files);
+
+        files.forEach(file=>{
+
+            const exists=PROJECT_IMAGES[type].some(existing=>
+
+                existing.name===file.name &&
+                existing.size===file.size &&
+                existing.lastModified===file.lastModified
+
+            );
+
+            if(!exists){
+
+                PROJECT_IMAGES[type].push(file);
+
+            }
+
+        });
+
+        syncInputFiles(input,PROJECT_IMAGES[type]);
+
+        renderPreview(type,previewId);
+
+    });
+
+}
+
+/* ==========================================================
+   UPDATE INPUT FILELIST
+========================================================== */
+
+function syncInputFiles(input,files){
+
+    const dt=new DataTransfer();
+
+    files.forEach(file=>dt.items.add(file));
+
+    input.files=dt.files;
+
+}
+
+/* ==========================================================
+   COMMON PREVIEW
+========================================================== */
+
+function renderPreview(type,previewId){
+
+    const container=document.getElementById(previewId);
+
+    if(!container) return;
+
+    container.innerHTML="";
+
+    PROJECT_IMAGES[type].forEach((file,index)=>{
+
+        const reader=new FileReader();
+
+        reader.onload=function(e){
+
+            container.innerHTML+=`
+
+            <div class="image-preview-box">
+
+                <img
+                    src="${e.target.result}"
+                    class="image-thumb"
+                    onclick="openImagePreview('${e.target.result}')">
+
+                <button
+                    type="button"
+                    class="image-delete-btn"
+                    onclick="removeProjectImage('${type}',${index},'${previewId}')">
+
+                    ×
+
+                </button>
+
+            </div>
+
+            `;
+
+        }
+
+        reader.readAsDataURL(file);
+
+    });
+
+    updateImageCounters();
+
+}
+
+/* ==========================================================
+   REMOVE IMAGE
+========================================================== */
+
+function removeProjectImage(type,index,previewId){
+
+    PROJECT_IMAGES[type].splice(index,1);
+
+    let input=null;
+
+    if(type==="render")
+        input=document.getElementById("renderImages");
+
+    if(type==="floorplan")
+        input=document.getElementById("floorImages");
+
+    syncInputFiles(input,PROJECT_IMAGES[type]);
+
+    renderPreview(type,previewId);
+
+}
+
+/* ==========================================================
+   IMAGE COUNTERS
+========================================================== */
+
+function updateImageCounters(){
+
+    const renderCount=PROJECT_IMAGES.render.length;
+
+    const floorCount=PROJECT_IMAGES.floorplan.length;
+
+    let elevationCount=0;
+
+    Object.keys(PROJECT_IMAGES.elevations).forEach(key=>{
+
+        elevationCount+=PROJECT_IMAGES.elevations[key].length;
+
+    });
+
+    if(document.getElementById("renderImageCount"))
+        document.getElementById("renderImageCount").innerText=renderCount;
+
+    if(document.getElementById("floorImageCount"))
+        document.getElementById("floorImageCount").innerText=floorCount;
+
+    if(document.getElementById("elevationImageTotal"))
+        document.getElementById("elevationImageTotal").innerText=elevationCount;
+
+    if(document.getElementById("grandImageCount"))
+        document.getElementById("grandImageCount").innerText=
+            renderCount+floorCount+elevationCount;
+
+}
+
+/* ==========================================================
+   DYNAMIC ELEVATION IMAGE MANAGER
+========================================================== */
+
+function generateElevationImageInputs(){
+
+    const cards=document.querySelectorAll(".elevation-card");
+
+    const tbody=document.getElementById("projectImagesTableBody");
+
+    tbody.querySelectorAll(".dynamicElevationRow").forEach(row=>row.remove());
+
+    PROJECT_IMAGES.elevations={};
+
+    cards.forEach((card,index)=>{
+
+        const letter=String.fromCharCode(65+index);
+
+        PROJECT_IMAGES.elevations[index]=[];
+
+        tbody.insertAdjacentHTML("beforeend",`
+
+            <tr class="dynamicElevationRow">
+
+                <td>
+                    <strong>Elevation ${letter}</strong>
+                </td>
+
+                <td>
+
+                    <input
+                        type="file"
+                        id="elevationImageInput_${index}"
+                        class="form-control"
+                        multiple
+                        accept="image/*">
+
+                </td>
+
+                <td>
+
+                    <div
+                        id="elevationPreview_${index}"
+                        class="image-preview-container">
+
+                    </div>
+
+                </td>
+
+                <td>
+
+                    -
+
+                </td>
+
+            </tr>
+
+        `);
+
+    });
+
+    initializeElevationInputs();
+
+    updateImageCounters();
+
+}
+function initializeElevationInputs(){
+
+    Object.keys(PROJECT_IMAGES.elevations).forEach(index=>{
+
+        const input=document.getElementById("elevationImageInput_"+index);
+
+        if(!input) return;
+
+        input.addEventListener("change",function(){
+
+            const files=Array.from(this.files);
+
+            files.forEach(file=>{
+
+                const exists=PROJECT_IMAGES.elevations[index].some(existing=>
+
+                    existing.name===file.name &&
+                    existing.size===file.size &&
+                    existing.lastModified===file.lastModified
+
+                );
+
+                if(!exists){
+
+                    PROJECT_IMAGES.elevations[index].push(file);
+
+                }
+
+            });
+
+            syncInputFiles(
+
+                input,
+
+                PROJECT_IMAGES.elevations[index]
+
+            );
+
+            renderElevationPreview(index);
+
+        });
+
+        renderElevationPreview(index);
+
+    });
+
+}
+function renderElevationPreview(index){
+
+    const container=document.getElementById("elevationPreview_"+index);
+
+    if(!container) return;
+
+    container.innerHTML="";
+
+    PROJECT_IMAGES.elevations[index].forEach((file,fileIndex)=>{
+
+        const reader=new FileReader();
+
+        reader.onload=function(e){
+
+            container.innerHTML+=`
+
+            <div class="image-preview-box">
+
+                <img
+                    src="${e.target.result}"
+                    class="image-thumb"
+                    onclick="openImagePreview('${e.target.result}')">
+
+                <button
+                    class="image-delete-btn"
+                    type="button"
+                    onclick="removeElevationImage(${index},${fileIndex})">
+
+                    ×
+
+                </button>
+
+            </div>
+
+            `;
+
+        }
+
+        reader.readAsDataURL(file);
+
+    });
+
+    updateImageCounters();
+
+}
+function removeElevationImage(index,fileIndex){
+
+    PROJECT_IMAGES.elevations[index].splice(fileIndex,1);
+
+    syncInputFiles(
+
+        document.getElementById("elevationImageInput_"+index),
+
+        PROJECT_IMAGES.elevations[index]
+
+    );
+
+    renderElevationPreview(index);
+
+}
+/* ==========================================================
+   IMAGE PREVIEW MODAL
+========================================================== */
+
+function openImagePreview(src){
+
+    const modal=document.getElementById("imagePreviewModal");
+
+    const img=document.getElementById("imagePreviewModalImg");
+
+    img.src=src;
+
+    modal.style.display="flex";
+
+}
+
+document.addEventListener("click",function(e){
+
+    const modal=document.getElementById("imagePreviewModal");
+
+    if(!modal) return;
+
+    if(
+        e.target.classList.contains("image-preview-close") ||
+        e.target===modal
+    ){
+
+        modal.style.display="none";
+
+    }
+
+});

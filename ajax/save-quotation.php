@@ -9,6 +9,7 @@ if(session_status() === PHP_SESSION_NONE){
 header('Content-Type: application/json');
 $data = json_decode(file_get_contents('php://input'),true);
 $uploadedLineImages = $data['uploaded_line_images'] ?? [];
+$projectImages = $data['project_images'] ?? [];
 mysqli_begin_transaction($conn);
 try{ 
     $entityId = (int)($data['entity_id'] ?? 0);
@@ -83,6 +84,23 @@ try{
         "
     );
     $quotationId = mysqli_insert_id($conn);
+    /* ==========================================================
+    CREATE QUOTATION IMAGE FOLDERS
+    ========================================================== */
+
+    $quotationFolder = dirname(__DIR__) . "/uploads/quotations/" . preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo);
+
+    $renderFolder = $quotationFolder . "/render";
+    $floorFolder = $quotationFolder . "/floorplan";
+
+    if(!is_dir($renderFolder)){
+        mkdir($renderFolder,0775,true);
+    }
+
+    if(!is_dir($floorFolder)){
+        mkdir($floorFolder,0775,true);
+    }
+    
     if(
         isset($data['elevations']) &&
         is_array($data['elevations'])
@@ -96,6 +114,7 @@ try{
             $ceilingHeightFT = (float)$elevation['ceiling_height_ft'];
             $showNote = (int)($elevation['show_note']?? 0);
             $elevationNote = mysqli_real_escape_string($conn,$elevation['elevation_note'] ?? '');
+            
             mysqli_query( $conn,
                 "
                 INSERT INTO elevations(
@@ -135,6 +154,71 @@ try{
                     );
                 }
             }
+/* ===========================
+   SAVE ELEVATION IMAGES
+=========================== */
+
+if(!empty($projectImages['elevations'][$index])){
+
+    foreach($projectImages['elevations'][$index] as $image){
+
+        $imagePath = mysqli_real_escape_string($conn,$image['image_path']);
+        $originalName = mysqli_real_escape_string($conn,$image['original_name']);
+        $storedName = mysqli_real_escape_string($conn,$image['stored_name']);
+        $fileSize = (int)$image['file_size'];
+        $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
+        $imageWidth = (int)$image['image_width'];
+        $imageHeight = (int)$image['image_height'];
+$letter = chr(65 + $index);
+
+$elevationFolder = $quotationFolder."/elevation_".$letter;
+
+if(!is_dir($elevationFolder)){
+    mkdir($elevationFolder,0775,true);
+}
+
+$tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+
+$newPath = $elevationFolder."/".$storedName;
+
+if(file_exists($tempPath)){
+    rename($tempPath,$newPath);
+}
+
+$imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/elevation_".$letter."/".$storedName;
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_images(
+                quotation_id,
+                elevation_id,
+                image_type,
+                original_name,
+                stored_name,
+                image_path,
+                file_size,
+                mime_type,
+                image_width,
+                image_height
+            )
+            VALUES(
+                '$quotationId',
+                '$elevationId',
+                'elevation',
+                '$originalName',
+                '$storedName',
+                '$imagePath',
+                '$fileSize',
+                '$mimeType',
+                '$imageWidth',
+                '$imageHeight'
+            )
+            "
+        );
+
+    }
+
+}
             foreach(
                 $elevation['units']
                 as $unit
@@ -406,6 +490,122 @@ try{
             );
         }
     }
+// $projectImages = $data['project_images'] ?? [];
+
+/* ===========================
+   SAVE RENDER IMAGES
+=========================== */
+
+if(!empty($projectImages['render'])){
+
+    foreach($projectImages['render'] as $image){
+
+        $imagePath = mysqli_real_escape_string($conn,$image['image_path']);
+        $originalName = mysqli_real_escape_string($conn,$image['original_name']);
+        $storedName = mysqli_real_escape_string($conn,$image['stored_name']);
+        $fileSize = (int)$image['file_size'];
+        $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
+        $imageWidth = (int)$image['image_width'];
+        $imageHeight = (int)$image['image_height'];
+$tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+
+$newPath = $renderFolder."/".$storedName;
+
+if(file_exists($tempPath)){
+    rename($tempPath,$newPath);
+}
+
+$imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/render/".$storedName;
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_images(
+                quotation_id,
+                elevation_id,
+                image_type,
+                original_name,
+                stored_name,
+                image_path,
+                file_size,
+                mime_type,
+                image_width,
+                image_height
+            )
+            VALUES(
+                '$quotationId',
+                NULL,
+                'render',
+                '$originalName',
+                '$storedName',
+                '$imagePath',
+                '$fileSize',
+                '$mimeType',
+                '$imageWidth',
+                '$imageHeight'
+            )
+            "
+        );
+
+    }
+
+}
+/* ===========================
+   SAVE FLOOR PLAN IMAGES
+=========================== */
+
+if(!empty($projectImages['floorplan'])){
+
+    foreach($projectImages['floorplan'] as $image){
+
+        $imagePath = mysqli_real_escape_string($conn,$image['image_path']);
+        $originalName = mysqli_real_escape_string($conn,$image['original_name']);
+        $storedName = mysqli_real_escape_string($conn,$image['stored_name']);
+        $fileSize = (int)$image['file_size'];
+        $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
+        $imageWidth = (int)$image['image_width'];
+        $imageHeight = (int)$image['image_height'];
+$tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+
+$newPath = $floorFolder."/".$storedName;
+
+if(file_exists($tempPath)){
+    rename($tempPath,$newPath);
+}
+
+$imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/floorplan/".$storedName;
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_images(
+                quotation_id,
+                elevation_id,
+                image_type,
+                original_name,
+                stored_name,
+                image_path,
+                file_size,
+                mime_type,
+                image_width,
+                image_height
+            )
+            VALUES(
+                '$quotationId',
+                NULL,
+                'floorplan',
+                '$originalName',
+                '$storedName',
+                '$imagePath',
+                '$fileSize',
+                '$mimeType',
+                '$imageWidth',
+                '$imageHeight'
+            )
+            "
+        );
+
+    }
+
+}
     mysqli_commit($conn); mysqli_report(
         MYSQLI_REPORT_ERROR |
         MYSQLI_REPORT_STRICT

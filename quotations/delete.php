@@ -10,7 +10,7 @@ if(!$id){die('Invalid Quotation ID');}
 $quotationQuery = mysqli_query(
     $conn,
     "
-    SELECT client_id
+    SELECT client_id , proforma_no
     FROM quotations
     WHERE id = '$id'
     LIMIT 1
@@ -19,6 +19,11 @@ $quotationQuery = mysqli_query(
 $quotation = mysqli_fetch_assoc($quotationQuery);
 if(!$quotation){die('Quotation not found');}
 $clientId = $quotation['client_id'] ?? 0;
+$proformaNo = preg_replace(
+    '/[^A-Za-z0-9_-]/',
+    '_',
+    $quotation['proforma_no'] ?? ''
+);
 $imageQuery = mysqli_query(
     $conn,
     "
@@ -37,6 +42,32 @@ while($image = mysqli_fetch_assoc($imageQuery)){
         }
     }
 }
+/* ==========================================================
+   DELETE PROJECT IMAGES
+========================================================== */
+
+$projectImageQuery = mysqli_query(
+    $conn,
+    "
+    SELECT image_path
+    FROM quotation_images
+    WHERE quotation_id = '$id'
+    "
+);
+
+while($image = mysqli_fetch_assoc($projectImageQuery)){
+
+    if(empty($image['image_path'])){
+        continue;
+    }
+
+    $filePath = "../uploads/" . $image['image_path'];
+
+    if(file_exists($filePath)){
+        unlink($filePath);
+    }
+
+}
 mysqli_query(
     $conn,
     "
@@ -45,6 +76,13 @@ mysqli_query(
     INNER JOIN elevations e
         ON eli.elevation_id = e.id
     WHERE e.quotation_id = '$id'
+    "
+);
+mysqli_query(
+    $conn,
+    "
+    DELETE FROM quotation_images
+    WHERE quotation_id = '$id'
     "
 );
 mysqli_query(
@@ -112,6 +150,41 @@ if($clientId){
         );
     }
 }
+/* ==========================================================
+   DELETE EMPTY QUOTATION FOLDER
+========================================================== */
+
+function deleteFolder($folder){
+
+    if(!is_dir($folder)){
+        return;
+    }
+
+    $items = array_diff(scandir($folder), ['.','..']);
+
+    foreach($items as $item){
+
+        $path = $folder . "/" . $item;
+
+        if(is_dir($path)){
+            deleteFolder($path);
+        }else{
+            unlink($path);
+        }
+
+    }
+
+    rmdir($folder);
+
+}
+
+if($proformaNo){
+
+    deleteFolder(
+        "../uploads/quotations/".$proformaNo
+    );
+
+}
+
 header('Location: manage.php');
 exit;
-?>
