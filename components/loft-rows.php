@@ -3,7 +3,7 @@
     <td class="description"></td>
     <td><input type="number" class="modern-input widthMM" oninput="calculateUnitSqft(this)" min="0"></td>
     <td><input type="number" class="modern-input heightMM" oninput="calculateUnitSqft(this)" min="0"></td>
-    <td><input type="number" class="modern-input depthMM" value="350" min="0"></td>
+    <td><input type="number" class="modern-input depthMM" min="0" max="600" oninput="if(this.value > 600) this.value = 600; if(this.value < 0) this.value = 0;"></td>
     <td><input type="text" class="modern-input sqft" readonly></td>
     <td class="carcassCategoryCell"></td>
     <td>

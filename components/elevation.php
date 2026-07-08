@@ -17,11 +17,11 @@
     </div>
     <div class="row mb-4 mt-3">
         <div class="col-md-6">
-            <label>Ceiling Height MM</label>
+            <label>Elevation Height MM</label>
             <input type="number" min="0" class="modern-input ceilingHeightMM" placeholder="Enter MM" oninput="convertCeilingMMFT(this)">
         </div>
         <div class="col-md-6">
-            <label> Ceiling Height FT </label>
+            <label>Elevation Height FT </label>
             <input type="number" min="0" class="modern-input ceilingHeightFT" placeholder="Enter FT" oninput="convertCeilingFTMM(this)">
         </div>
     </div>
