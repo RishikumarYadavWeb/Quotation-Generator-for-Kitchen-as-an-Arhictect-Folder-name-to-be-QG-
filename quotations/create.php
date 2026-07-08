@@ -86,7 +86,7 @@
     while($row = mysqli_fetch_assoc($shelfResult)){
         $shelves[] = $row;
     }
-    /* ACCESSORIES */
+    /* ADDITIONAL ACCESSORIES */
     $getAccessories = mysqli_query($conn, "
             SELECT
                 id,
@@ -104,6 +104,7 @@
             </option>
         ';
     }
+    /* STANDARD ACCESSORIES */
     $standardAccessoryOptions = '';
     $standardAccessories = mysqli_query(
         $conn,
@@ -181,12 +182,12 @@
                             <select name="entity_id" class="form-control" required >
                                 <option value=""> Select Entity </option>
                                 <?php
-                                $result = mysqli_query( $conn,
-                                    "SELECT *
-                                    FROM entities
-                                    ORDER BY entity_name"
-                                );
-                                while($row = mysqli_fetch_assoc($result)){
+                                    $result = mysqli_query( $conn,
+                                        "SELECT *
+                                        FROM entities
+                                        ORDER BY entity_name"
+                                    );
+                                    while($row = mysqli_fetch_assoc($result)){
                                 ?>
                                     <option value="<?= $row['id']; ?>">
                                         <?= $row['entity_name']; ?>
@@ -443,6 +444,9 @@
             }
         }
     }
+    // ----------------------
+    // Additional Accessories
+    // ----------------------
     const accessoryCategoryOptions = `<?= $accessoryCategoryOptions ?>`;
     function generateAccessories(){
         const count = parseInt(document.getElementById('accessoryCount').value) || 0;
@@ -574,6 +578,9 @@
         }
         updateGrandTotal();
     }
+    // --------------------
+    // Standard Accessories
+    // --------------------
     const standardAccessoryOptions =`<?= $standardAccessoryOptions ?>`;
     const standardAccessoryCategoryOptions =`<?= $standardAccessoryCategoryOptions ?>`;
     function generateStandardAccessories(){
@@ -711,6 +718,9 @@
         }
         updateGrandTotal();
     }
+    // -------------------------
+    // Visible Panel / End Panel
+    // -------------------------
     function generatePanels(){
         const count = parseInt(document.getElementById('panelCount').value) || 0;
         const container = document.getElementById('panelContainer');

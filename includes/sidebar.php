@@ -186,6 +186,30 @@
         <?php if(can('accessories_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
+                <span><i class="fa-solid fa-screwdriver-wrench" style="margin-right:10px;"></i>Visible Panel / End Panel</span>
+                <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="/QG/visible-panel-categories/manage.php" class="<?= isActive('/accessory-categories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/visible-panel-materials/manage.php" class="<?= isActive('/accessories/', $current_uri) ?>">Materials</a></li>
+            </ul>
+        </li>
+        <?php } ?>
+        <?php if(can('accessories_view')){ ?>
+        <li class="sidebar-dropdown">
+            <a href="#">
+                <span><i class="fa-solid fa-screwdriver-wrench" style="margin-right:10px;"></i>Visible Side Panel</span>
+                <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+            </a>
+            <ul class="submenu">
+                <li><a href="/QG/visible-side-categories/manage.php" class="<?= isActive('/accessory-categories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/visible-side-materials/manage.php" class="<?= isActive('/accessories/', $current_uri) ?>">Materials</a></li>
+            </ul>
+        </li>
+        <?php } ?>
+        <?php if(can('accessories_view')){ ?>
+        <li class="sidebar-dropdown">
+            <a href="#">
                 <span><i class="fa-solid fa-toolbox" style="margin-right:10px;"></i>Standard Accessories</span>
                 <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
             </a>
