@@ -183,12 +183,9 @@
             "
             SELECT *
             FROM quotation_images
-            WHERE
-                quotation_id = '$id'
-            AND
-                elevation_id = '".$elevation['id']."'
-            AND
-                image_type = 'elevation'
+            WHERE quotation_id = '$id'
+            AND elevation_id = '".$elevation['id']."'
+            AND image_type = 'elevation'
             ORDER BY id ASC
             "
         );
@@ -433,54 +430,6 @@
             <?php } ?>
         </div>
     <?php } ?>
-    <?php if(mysqli_num_rows($standardAccessoriesQuery) > 0){ ?>
-    <div class="main-card" style="margin-top:30px;">
-        <div class="page-header mb-3">
-            <div>
-                <h2 class="generated-title">Standard Accessories</h2>
-            </div>
-        </div>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Sr No.</th>
-                    <th>Category</th>
-                    <th>Material</th>
-                    <th>Unit</th>
-                    <th>Unit Price</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                    $srNo = 1;
-                    $grandTotal = 0;
-                    while(
-                        $row = mysqli_fetch_assoc($standardAccessoriesQuery)
-                    ){
-                        $grandTotal += $row['total_price'];
-                ?>
-                    <tr>
-                        <td><?= $srNo++ ?></td>
-                        <td><?= htmlspecialchars($row['category_name']) ?></td>
-                        <td><?= htmlspecialchars($row['material_name']) ?></td>
-                        <td><?= htmlspecialchars($row['unit']) ?></td>
-                        <td>₹ <?= number_format($row['unit_price'],2) ?></td>
-                        <td><?= $row['qty'] ?></td>
-                        <td>₹ <?= number_format($row['total_price'],2) ?></td>
-                    </tr>
-                <?php } ?>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <th colspan="6" style="text-align:center;">Grand Total</th>
-                    <th>₹ <?= number_format($grandTotal,2) ?></th>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    <?php } ?>
     <?php
     $visiblePanelQuery = mysqli_query(
         $conn,
@@ -591,6 +540,54 @@
         </table>
     </div>
     <?php } ?>
+    <?php if(mysqli_num_rows($standardAccessoriesQuery) > 0){ ?>
+    <div class="main-card" style="margin-top:30px;">
+        <div class="page-header mb-3">
+            <div>
+                <h2 class="generated-title">Standard Accessories</h2>
+            </div>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Category</th>
+                    <th>Material</th>
+                    <th>Unit</th>
+                    <th>Unit Price</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                    $srNo = 1;
+                    $grandTotal = 0;
+                    while(
+                        $row = mysqli_fetch_assoc($standardAccessoriesQuery)
+                    ){
+                        $grandTotal += $row['total_price'];
+                ?>
+                    <tr>
+                        <td><?= $srNo++ ?></td>
+                        <td><?= htmlspecialchars($row['category_name']) ?></td>
+                        <td><?= htmlspecialchars($row['material_name']) ?></td>
+                        <td><?= htmlspecialchars($row['unit']) ?></td>
+                        <td>₹ <?= number_format($row['unit_price'],2) ?></td>
+                        <td><?= $row['qty'] ?></td>
+                        <td>₹ <?= number_format($row['total_price'],2) ?></td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="6" style="text-align:center;">Grand Total</th>
+                    <th>₹ <?= number_format($grandTotal,2) ?></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <?php } ?>
     <?php 
         $accessoryQuery = mysqli_query(
             $conn,
@@ -607,6 +604,7 @@
             WHERE qa.quotation_id = '$id'
             "
         );
+        if(mysqli_num_rows($accessoryQuery) > 0){
     ?>
     <div class="main-card mt-4">
         <div class="generated-title">Additional Accessories</div>
@@ -653,6 +651,7 @@
             </tbody>
         </table>
     </div>
+    <?php } ?>
     <div class="main-card mt-4">
         <div class="generated-title">Commercial Summary</div>
         <div class="">

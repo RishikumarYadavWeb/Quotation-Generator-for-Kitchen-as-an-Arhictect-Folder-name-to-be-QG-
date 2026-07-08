@@ -11,6 +11,7 @@
     $result = $stmt->get_result();
     $quotation = $result->fetch_assoc();
     if (!$quotation) {die("Quotation not found.");}
+    // CLIENT
     $client_id = $quotation['client_id'];
     $client_sql = "SELECT * FROM clients WHERE id = ?";
     $client_stmt = $conn->prepare($client_sql);
@@ -25,6 +26,7 @@
         WHERE quotation_id = ?
         ORDER BY id ASC
     ";
+    // ELEVATION
     $stmt = $conn->prepare($elevation_sql);
     $stmt->bind_param("i", $quotation_id);
     $stmt->execute();
@@ -44,6 +46,7 @@
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {$units[$row['elevation_id']][] = $row;}
+    // DRAWERS
     $quotationDrawers = [];
     $drawerQuery = mysqli_query(
         $conn,
@@ -52,6 +55,7 @@
     );
     $EDIT_DRAWERS = [];
     while($row = mysqli_fetch_assoc($drawerQuery)){$EDIT_DRAWERS[] = $row;}
+    // SHELVES
     $shelves_data = [];
     $shelfQuery = mysqli_query(
         $conn,
@@ -60,6 +64,7 @@
     );
     $EDIT_SHELVES = [];
     while($row = mysqli_fetch_assoc($shelfQuery)){$EDIT_SHELVES[] = $row;}
+    // ACCESSORIES
     $accessories = [];
     $sql = "
     SELECT
@@ -85,6 +90,7 @@
     while($category = mysqli_fetch_assoc($categoryQuery)){
     $accessoryCategoryOptions .= '<option value="'.$category['id'].'">'. htmlspecialchars($category['category_name']). '</option>';}
     $accessoryCategoryOptions .= '<option value="other">Other</option>';
+    // IMAGE
     $elevationImages = [];
     $sql = "
         SELECT
@@ -218,6 +224,7 @@
     while($acc = mysqli_fetch_assoc($getAccessories)){
         $accessoryOptions .= '<option value=\"'.$acc['id'].'\" data-price=\"'.$acc['price'].'\">'.$acc['accessory_name'].'</option>';
     }
+    // STANDARD ACCESSORIES
     $standardAccessoriesQuery = mysqli_query(
     $conn,
         "
@@ -278,17 +285,80 @@
         $row['category_name'].
         '</option>';
     }
-    $panelQuery = mysqli_query(
+    // VISIBLE PANEL
+    $visiblePanelCategories = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_panel_categories 
+            WHERE status=1
+            "
+        ),
+        MYSQLI_ASSOC
+    );
+    $visiblePanelMaterials = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_panel_materials 
+            WHERE status=1
+            "
+        ),
+        MYSQLI_ASSOC
+    );
+    $visiblePanels = [];
+    $query = mysqli_query(
         $conn,
         "
         SELECT *
-        FROM quotation_panels
+        FROM quotation_visible_panels
         WHERE quotation_id = '$quotation_id'
         ORDER BY id ASC
         "
     );
-    $panels = [];
-    while($row = mysqli_fetch_assoc($panelQuery)){$panels[] = $row;}
+    while($row = mysqli_fetch_assoc($query)){
+        $visiblePanels[] = $row;
+    }
+    // VISIBLE SIDE PANEL
+    $visibleSidePanels = [];
+    $query = mysqli_query(
+        $conn,
+        "
+        SELECT *
+        FROM quotation_visible_side_panels
+        WHERE quotation_id = '$quotation_id'
+        ORDER BY id ASC
+        "
+    );
+    while($row = mysqli_fetch_assoc($query)){
+        $visibleSidePanels[] = $row;
+    }
+    $visibleSideCategories = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_side_categories
+            WHERE status = 1
+            ORDER BY category_name
+            "
+        ),
+        MYSQLI_ASSOC
+    );
+    $visibleSideMaterials = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_side_materials
+            WHERE status = 1
+            ORDER BY material_name
+            "
+        ),
+        MYSQLI_ASSOC
+    );
 ?>
 <form id="quotationForm" novalidate onkeydown="preventEnterSubmit(event)">
     <div class="container-fluid">
@@ -416,24 +486,91 @@
         <div id="elevationContainer"></div>
         <div class="main-card" style="margin-top:30px;">
             <div class="page-header mb-0">
-                <div>
-                    <h2 class="page-title">Visible Panels / Side Panels</h2>
+                <h2 class="page-title">Visible Panels</h2>
+            </div>
+            <div class="form-group">
+                <label>Visible Panels</label>
+                <div class="panel-radio-group">
+                    <label class="panel-radio">
+                        <input type="radio" name="hasPanels" value="1">
+                        <span>Yes</span>
+                    </label>
+                    <label class="panel-radio">
+                        <input type="radio" name="hasPanels" value="0" checked>
+                        <span>No</span>
+                    </label>
                 </div>
+                <style>.panel-radio-group{display:flex;gap:20px;margin-top:10px;}.panel-radio{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;}.panel-radio input[type="radio"]{width:16px;height:16px;margin:0;cursor:pointer;}</style>
+            </div>
+            <div id="panelSection" style="display:none;">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Width (MM)</th>
+                                <th>Height (MM)</th>
+                                <th>Sq Ft</th>
+                                <th>Category</th>
+                                <th>Material</th>
+                                <th>Price</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="panelContainer"></tbody>
+                    </table>
+                </div>
+                <div style="margin:15px 0;">
+                    <button type="button" class="btn btn-primary" onclick="addPanelRow()">+ Add Panel</button>
+                </div>
+            </div>
+            <div class="card mt-4" style="background:#f8fafc;">
+                <h5>Visible Panels Total : ₹ <span id="panelGrandTotal">0.00</span></h5>
+            </div>
+        </div>
+        <div class="main-card" style="margin-top:30px;">
+            <div class="page-header mb-0">
+                <h2 class="page-title">Visible Side Panels</h2>
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label>Number Of Panels</label>
-                    <input type="number" id="panelCount" class="form-control" min="0">
+                    <label>Visible Side Panels</label>
+                    <div class="panel-radio-group">
+                        <label class="panel-radio">
+                            <input type="radio" name="hasSidePanels" value="1">
+                            <span>Yes</span>
+                        </label>
+                        <label class="panel-radio">
+                            <input type="radio" name="hasSidePanels" value="0" checked>
+                            <span>No</span>
+                        </label>
+                    </div>
                 </div>
             </div>
-            <div style="margin-top:20px;">
-                <button type="button" class="btn btn-primary" onclick="generatePanels()">
-                    Generate Panels
-                </button>
+            <div id="sidePanelSection" style="display:none;">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Width (MM)</th>
+                                <th>Height (MM)</th>
+                                <th>Sq Ft</th>
+                                <th>Category</th>
+                                <th>Material</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sidePanelContainer"></tbody>
+                    </table>
+                </div>
+                <div style="margin:15px 0;">
+                    <button type="button" class="btn btn-primary" onclick="addSidePanelRow()">+ Add Side Panel</button>
+                </div>
             </div>
-            <div id="panelContainer" style="margin-top:25px;"></div>
-            <div class="card" style="background:#f8fafc;">
-                <h5>Panels Total : ₹ <span id="panelGrandTotal">0.00</span></h5>
+            <div class="card mt-4" style="background:#f8fafc;">
+                <h5>Visible Side Total : ₹ <span id="sidePanelGrandTotal">0.00</span></h5>
             </div>
         </div>
         <div class="main-card" style="margin-top:30px;">
@@ -443,37 +580,55 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Number Of Standard Accessories</label>
-                <input type="number" id="standardAccessoryCount" class="form-control" min="0" placeholder="Add Number of Standard Accessories">
+                <label>Standard Accessories</label>
+                <div class="panel-radio-group">
+                    <label class="panel-radio">
+                        <input type="radio" name="hasStandardAccessories" value="1" checked>
+                        <span>Yes</span>
+                    </label>
+                    <label class="panel-radio">
+                        <input type="radio" name="hasStandardAccessories" value="0">
+                        <span>No</span>
+                    </label>
+                </div>
             </div>
-            <div style="margin-top:20px;">
-                <button type="button" class="btn btn-primary" onclick="generateStandardAccessories()">Generate Standard Accessories </button>
+            <div id="standardAccessorySection">
+                <div style="margin:15px 0;">
+                    <div id="standardAccessoriesContainer"></div>
+                    <button type="button" class="btn btn-primary" onclick="addStandardAccessoryRow()">+ Add Standard Accessory</button>
+                </div>
             </div>
-            <div id="standardAccessoriesContainer" style="margin-top:25px;"></div>
             <div class="card" style="background:#f8fafc;">
-                <h5>
-                    Standard Accessories Total : ₹ <span id="standardAccessoriesGrandTotal"> 0.00</span>
-                </h5>
+                <h5>Standard Accessories Total : ₹ <span id="standardAccessoriesGrandTotal"> 0.00</span></h5>
             </div>
         </div>
         <div class="main-card" style="margin-top:30px;">
-            <div class="page-header">
+            <div class="page-header mb-0">
                 <div>
-                    <h2 class="page-title"> Accessories </h2>
-                    <p class="page-subtitle"> Add accessories details </p>
+                    <h2 class="page-title">Additional Accessories </h2>
                 </div>
             </div>
             <div class="form-group">
-                <label>Number Of Accessories</label>
-                <input type="number" id="accessoryCount" class="form-control" min="0" placeholder="Add Number of Accessories">
+                <label>Additional Accessories</label>
+                <div class="panel-radio-group">
+                    <label class="panel-radio">
+                        <input type="radio" name="hasAccessories" value="1" checked>
+                        <span>Yes</span>
+                    </label>
+                    <label class="panel-radio">
+                        <input type="radio" name="hasAccessories" value="0">
+                        <span>No</span>
+                    </label>
+                </div>
             </div>
-            <div style="margin-top:20px;">
-                <button type="button" class="btn btn-primary" onclick="generateAccessories()">Generate Accessories</button>
-            </div>
-            <div id="accessoriesContainer" style="margin-top:25px;">
+            <div id="accessorySection">
+                <div id="accessoriesContainer"></div>
+                <div style="margin:15px 0;">
+                    <button type="button" class="btn btn-primary" onclick="addAccessoryRow()">+ Add Accessory</button>
+                </div>
             </div>
             <div class="card" style="background:#f8fafc;">
-                <h5>Accessories Total : ₹ <span id="accessoriesGrandTotal">0.00</span></h5>
+                <h5>Additional Accessories Total : ₹ <span id="accessoriesGrandTotal">0.00</span></h5>
             </div>
         </div>
         <?php include '../components/project-images.php'; ?>
@@ -522,7 +677,12 @@
     const QUOTATION = <?= json_encode($quotation); ?>;
     const EDIT_IMAGES = <?= json_encode($elevationImages); ?>;
     const EDIT_STANDARD_ACCESSORIES = <?= json_encode($EDIT_STANDARD_ACCESSORIES ?? []) ?>;
-    const EDIT_PANELS = <?= json_encode($panels); ?>;
+    const visiblePanelCategories = <?= json_encode($visiblePanelCategories); ?>;
+    const visiblePanelMaterials = <?= json_encode($visiblePanelMaterials); ?>;
+    const EDIT_VISIBLE_PANELS = <?= json_encode($visiblePanels); ?>;
+    const EDIT_VISIBLE_SIDE_PANELS = <?= json_encode($visibleSidePanels); ?>;
+    const visibleSideCategories = <?= json_encode($visibleSideCategories); ?>;
+    const visibleSideMaterials = <?= json_encode($visibleSideMaterials); ?>;
     const EDIT_PROJECT_IMAGES = <?= json_encode($projectImages); ?>;
     window.oldElevationImages = {};
     window.deletedImages = [];
@@ -606,7 +766,7 @@
                     PROJECT_IMAGES.elevations[index] = [...EDIT_PROJECT_IMAGES.elevations[elevation.id]];
                     renderElevationPreview(index);
                 }
-                // Ceiling Height
+                // ELEVATION Height
                 card.querySelector('.ceilingHeightMM').value = elevation.ceiling_height_mm;
                 card.querySelector('.ceilingHeightFT').value = elevation.ceiling_height_ft;
                 // Units
@@ -954,12 +1114,8 @@
                             row.querySelector('.drawerHeightFT').value = drawer.height_ft;
                             const category = row.querySelector('.drawerCategory');
                             category.value = drawer.drawer_categories_id;
-                            await loadDrawerMaterials(
-                                category
-                            );
-                            await new Promise(
-                                resolve => setTimeout(resolve, 50)
-                            );
+                            await loadDrawerMaterials(category);
+                            await new Promise(resolve => setTimeout(resolve, 50));
                             row.querySelector('.drawerMaterial').value = drawer.drawer_materials_id;
                             row.querySelector('.drawerPrice').value = drawer.price;
                             row.querySelector('.drawerTotal').value = '₹ ' + drawer.total;
@@ -1029,101 +1185,106 @@
                         }
                     }
                 }
+                // Visible panel
                 if(
-                    EDIT_PANELS &&
-                    EDIT_PANELS.length > 0
+                    EDIT_VISIBLE_PANELS &&
+                    EDIT_VISIBLE_PANELS.length > 0
                 ){
-                    document.getElementById('panelCount').value = EDIT_PANELS.length;
-                    generatePanels();
-                    const rows = document.querySelectorAll('.panelRow');
-                    EDIT_PANELS.forEach(
-                        (panel,index) => {
-                            const row = rows[index];
-                            if(!row) return;
-                            row.querySelector('.panelWidth').value = panel.width_mm;
-                            row.querySelector('.panelHeight').value = panel.height_mm;
-                            row.querySelector('.panelCategory').value = panel.shutter_category_id;
-                            loadPanelMaterials(panel.shutter_category_id,row);
-                            setTimeout(() => {
-                                row.querySelector('.panelMaterial').value = panel.shutter_material_id;
-                                calculatePanelRow(row);
-                            },100);
-                        }
-                    );
+                    document.querySelector('input[name="hasPanels"][value="1"]').checked = true;
+                    document.getElementById("panelSection").style.display = "block";
+                    EDIT_VISIBLE_PANELS.forEach(panel=>{
+                        addPanelRow();
+                        const rows = document.querySelectorAll(".panelRow");
+                        const row = rows[rows.length-1];
+                        row.querySelector(".panelWidth").value = panel.width_mm;
+                        row.querySelector(".panelHeight").value = panel.height_mm;
+                        row.querySelector(".panelCategory").value = panel.category_id;
+                        loadPanelMaterials(panel.category_id,row);
+                        setTimeout(()=>{
+                            row.querySelector(".panelMaterial").value = panel.material_id;
+                            calculatePanelRow(row);
+                        },100);
+                    });
+                }
+                // Visible Side panel
+                if(
+                    EDIT_VISIBLE_SIDE_PANELS &&
+                    EDIT_VISIBLE_SIDE_PANELS.length > 0
+                ){
+                    document.querySelector('input[name="hasSidePanels"][value="1"]').checked = true;
+                    document.getElementById("sidePanelSection").style.display = "block";
+                    EDIT_VISIBLE_SIDE_PANELS.forEach(panel => {
+                        addSidePanelRow();
+                        const rows = document.querySelectorAll(".sidePanelRow");
+                        const row = rows[rows.length - 1];
+                        row.querySelector(".sidePanelWidth").value = panel.width_mm;
+                        row.querySelector(".sidePanelHeight").value = panel.height_mm;
+                        row.querySelector(".sidePanelCategory").value = panel.category_id;
+                        loadSidePanelMaterials(panel.category_id,row);
+                        setTimeout(() => {
+                            row.querySelector(".sidePanelMaterial").value = panel.material_id;
+                            calculateSidePanelRow(row);
+                        },100);
+                    });
                 }
                 // Accessories
                 if(
                     EDIT_ACCESSORIES &&
                     EDIT_ACCESSORIES.length > 0
                 ){
-                    document.getElementById('accessoryCount').value = EDIT_ACCESSORIES.length;
-                    generateAccessories();
-                    const rows = document.querySelectorAll('.accessoryRow');
-                    EDIT_ACCESSORIES.forEach((accessory,index)=>{
-                        const row = rows[index];
-                        if(!row) return;
-                        const category = row.querySelector('.accessoryCategory');
-                        const material = row.querySelector('.accessorySelect');
-                        const otherInput = row.querySelector('.accessoryOtherMaterial');
-                        if(accessory.other_material){
-                            if(!category.querySelector('option[value="other"]')){
-                                category.insertAdjacentHTML('beforeend','<option value="other">Other</option>');
-                            }
-                            category.value = 'other';
-                            loadAccessoryMaterials(category);
-                            material.style.display = 'none';
-                            otherInput.style.display = 'block';
-                            otherInput.value = accessory.other_material;
-                            row.querySelector('.accessoryPrice').removeAttribute('readonly');
-                        }
-                        else{
-                            category.value = accessory.category_id;
+                    document.querySelector('input[name="hasAccessories"][value="1"]').checked = true;
+                    document.getElementById("accessorySection").style.display = "block";
+                    document.getElementById("accessoriesContainer").innerHTML = "";
+                    for(const accessory of EDIT_ACCESSORIES){
+                        addAccessoryRow();
+                        const rows = document.querySelectorAll(".accessoryRow");
+                        const row = rows[rows.length - 1];
+                        const category = row.querySelector(".accessoryCategory");
+                        const material = row.querySelector(".accessorySelect");
+                        category.value = accessory.category_id;
+                        await new Promise((resolve,reject)=>{
                             $.ajax({
-                                url:'/QG/ajax/get-accessory-materials.php',
-                                type:'POST',
-                                data:{category_id:accessory.category_id},
-                                success:function(response){
+                                url: BASE_URL + 'ajax/get-accessory-materials.php',
+                                type: 'POST',
+                                data: {category_id: accessory.category_id},
+                                success: function(response){
                                     material.innerHTML = '<option value="">Select Material</option>' + response;
-                                    material.value = accessory.accessory_id;
+                                    resolve();
+                                },
+                                error: function(error){
+                                    reject(error);
                                 }
                             });
-                        }
-                        row.querySelector('.accessoryQty').value =accessory.qty;
-                        row.querySelector('.accessoryPrice').value =accessory.price;
-                        row.querySelector('.accessoryTotal').value =accessory.total;
-                    });
+                        });
+                        material.value = accessory.accessory_id;
+                        material.dispatchEvent(new Event("change"));
+                        row.querySelector(".accessoryQty").value = accessory.qty;
+                        row.querySelector(".accessoryPrice").value = accessory.price;
+                        calculateAccessoryTotal(row);
+                    }
                     calculateAccessoriesGrandTotal();
                 }
                 if(
                     EDIT_STANDARD_ACCESSORIES &&
                     EDIT_STANDARD_ACCESSORIES.length > 0
                 ){
-                    document.getElementById('standardAccessoryCount').value = EDIT_STANDARD_ACCESSORIES.length;
-                    generateStandardAccessories();
-                    const rows = document.querySelectorAll('.standardAccessoryRow');
-                    EDIT_STANDARD_ACCESSORIES.forEach(
-                        async (accessory,index) => {
-                            const row = rows[index];
-                            if(!row) return;
-                            const category = row.querySelector('.standardAccessoryCategory');
-                            if(category){
-                                category.value = accessory.category_id;
-                                await loadStandardAccessoryMaterials(category);
-                                await new Promise(
-                                    resolve =>
-                                    setTimeout(resolve,100)
-                                );
-                            }
-                            const material = row.querySelector('.standardAccessoryMaterial');
-                            if(material){
-                                material.value = accessory.standard_accessory_id;
-                                material.dispatchEvent(new Event('change'));
-                            }
-                            row.querySelector('.standardAccessoryQty').value = accessory.qty;
-                            row.querySelector('.standardAccessoryPrice').value = accessory.unit_price;
-                            row.querySelector('.standardAccessoryTotal').value = accessory.total_price;
-                        }
-                    );
+                    document.querySelector('input[name="hasStandardAccessories"][value="1"]').checked = true;
+                    document.getElementById("standardAccessorySection").style.display = "block";
+                    document.getElementById("standardAccessoriesContainer").innerHTML = "";
+                    for(const accessory of EDIT_STANDARD_ACCESSORIES){
+                        addStandardAccessoryRow();
+                        const rows = document.querySelectorAll(".standardAccessoryRow");
+                        const row = rows[rows.length - 1];
+                        const category = row.querySelector(".standardAccessoryCategory");
+                        category.value = accessory.category_id;
+                        await loadStandardAccessoryMaterials(category);
+                        const material = row.querySelector(".standardAccessoryMaterial");
+                        material.value = accessory.standard_accessory_id;
+                        material.dispatchEvent(new Event("change"));
+                        row.querySelector(".standardAccessoryQty").value = accessory.qty;
+                        row.querySelector(".standardAccessoryPrice").value = accessory.unit_price;
+                        calculateStandardAccessoryTotal(row);
+                    }
                     calculateStandardAccessoriesGrandTotal();
                 }
                 for(
@@ -1139,7 +1300,6 @@
                     updateGrandTotal();
                 }
             }
-
         }
     );
     function waitForUnits(callback){
@@ -1213,129 +1373,380 @@
             }
         }
     }
-    const accessoryCategoryOptions = `<?= $accessoryCategoryOptions ?>`;
-    function generateAccessories(){
-        const count = parseInt(document.getElementById('accessoryCount').value) || 0;
-        const container = document.getElementById('accessoriesContainer');
-        if(
-            !container.querySelector('.accessoriesTable')
-        ){
+    // Visible Panel
+    function addPanelRow(){
+        const tbody = document.getElementById("panelContainer");
+        const srNo = tbody.querySelectorAll(".panelRow").length + 1;
+        const panelCategoryOptions = visiblePanelCategories
+            .map(cat => `<option value="${cat.id}">${cat.category_name}</option>`)
+            .join("");
+        const row = document.createElement("tr");
+        row.className = "panelRow";
+        row.innerHTML = `
+            <td class="panelSr">${srNo}</td>
+            <td><input type="number" class="form-control panelWidth" min="0"></td>
+            <td><input type="number" class="form-control panelHeight" min="0"></td>
+            <td><input type="number" class="form-control panelSqft" readonly></td>
+            <td>
+                <select class="form-control panelCategory">
+                    <option value="">Select Category</option>
+                    ${panelCategoryOptions}
+                </select>
+            </td>
+            <td>
+                <select class="form-control panelMaterial">
+                    <option value="">Select Material</option>
+                </select>
+            </td>
+            <td><input type="number" class="form-control panelPrice" readonly></td>
+            <td><button type="button" class="delete-btn removePanel">✕</button></td>
+        `;
+        tbody.appendChild(row);
+        attachPanelEvents();
+    }
+    function attachPanelEvents(){
+        document.querySelectorAll(".panelRow")
+        .forEach(row=>{
+            row.querySelectorAll(".panelWidth,.panelHeight")
+            .forEach(input=>{
+                input.oninput = function(){
+                    calculatePanelRow(row);
+                };
+            });
+            row.querySelector(".panelCategory")
+            .onchange = function(){
+                loadPanelMaterials(this.value,row);
+            };
+            row.querySelector(".panelMaterial")
+            .onchange = function(){
+                calculatePanelRow(row);
+            };
+        });
+    }
+    function loadPanelMaterials(categoryId,row){
+        const materialSelect = row.querySelector(".panelMaterial");
+        materialSelect.innerHTML = '<option value="">Select Material</option>';
+        visiblePanelMaterials
+        .filter(mat => mat.category_id == categoryId)
+        .forEach(mat => {
+            materialSelect.innerHTML += `
+                <option value="${mat.id}" data-price="${mat.price_per_sqft}">
+                    ${mat.material_name}
+                </option>
+            `;
+        });
+    }
+    document.querySelectorAll('input[name="hasPanels"]')
+        .forEach(radio => {
+        radio.addEventListener('change', function(){
+            const panelSection = document.getElementById('panelSection');
+            if(this.value == "1"){
+                panelSection.style.display = "block";
+                if(document.querySelectorAll('.panelRow').length === 0){
+                    addPanelRow();
+                }
+            }else{
+                panelSection.style.display = "none";
+                document.getElementById('panelContainer').innerHTML = "";
+                document.getElementById('panelGrandTotal').innerText = "0.00";
+                updateGrandTotal();
+            }
+        });
+    });
+    document.addEventListener("click", function(e){
+        if(!e.target.classList.contains("removePanel")) return;
+        const row = e.target.closest("tr");
+        row.remove();
+        updatePanelSerialNumbers();
+        calculatePanelsGrandTotal();
+        updateGrandTotal();
+    });
+    function updatePanelSerialNumbers(){
+        document.querySelectorAll("#panelContainer .panelRow")
+        .forEach((row,index)=>{
+            row.querySelector(".panelSr").innerText = index + 1;
+        });
+    }
+    function calculatePanelRow(row){
+        const width = parseFloat(row.querySelector('.panelWidth').value) || 0;
+        const height = parseFloat(row.querySelector('.panelHeight').value) || 0;
+        const sqft = (width / 304.8) * (height / 304.8);
+        row.querySelector('.panelSqft').value = sqft.toFixed(2);
+        const material = row.querySelector('.panelMaterial');
+        const pricePerSqft = parseFloat(material.selectedOptions[0] ?.dataset.price) || 0;
+        const total = sqft * pricePerSqft;
+        row.querySelector('.panelPrice').value = total.toFixed(2);
+        calculatePanelsGrandTotal();
+        updateGrandTotal();
+    }
+    function calculatePanelsGrandTotal(){
+        let total = 0;
+        document
+        .querySelectorAll('.panelPrice')
+        .forEach(input => {total += parseFloat(input.value) || 0;});
+        document.getElementById('panelGrandTotal').innerText = total.toFixed(2);
+    }
+    // Standard Accessories
+    const standardAccessoryOptions =`<?= $standardAccessoryOptions ?>`;
+    const standardAccessoryCategoryOptions =`<?= $standardAccessoryCategoryOptions ?>`;
+    function addStandardAccessoryRow(){
+        const container = document.getElementById('standardAccessoriesContainer');
+        if(!container.querySelector('.standardAccessoriesTable')){
             container.innerHTML = `
                 <div class="table-responsive">
-                    <table class="table table-bordered accessoriesTable">
+                    <table class="table table-bordered standardAccessoriesTable">
                         <thead>
                             <tr>
-                                <th>Sr. No.</th>
+                                <th>Sr No.</th>
                                 <th>Category</th>
                                 <th>Material</th>
                                 <th>Unit Price</th>
                                 <th>Qty</th>
                                 <th>Total</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody class="accessoriesTableBody">
-                        </tbody>
+                        <tbody class="standardAccessoriesTableBody"></tbody>
+                    </table>
+                </div>
+            `;
+        }
+        const tbody = container.querySelector('.standardAccessoriesTableBody');
+        const srNo = tbody.querySelectorAll('tr').length + 1;
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr class="standardAccessoryRow">
+                <td class="standardAccessorySrNo">${srNo}</td>
+                <td>
+                    <select class="form-control standardAccessoryCategory" onchange="loadStandardAccessoryMaterials(this)">
+                        <option value="">Select Category</option>
+                        ${standardAccessoryCategoryOptions}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control standardAccessoryMaterial">
+                        <option value="">Select Material</option>
+                    </select>
+                </td>
+                <td><input type="number" class="form-control standardAccessoryPrice" readonly></td>
+                <td><input type="number" class="form-control standardAccessoryQty" value="1" min="1"></td>
+                <td><input type="number" class="form-control standardAccessoryTotal" readonly></td>
+                <td><button type="button" class="delete-btn removeStandardAccessory">✕</button></td>
+            </tr>
+            `
+        );
+        attachStandardAccessoryEvents();
+    }
+    function attachStandardAccessoryEvents(){
+        document
+        .querySelectorAll('.standardAccessoryMaterial')
+        .forEach(select => {
+            select.onchange = function(){
+                const row = this.closest('tr');
+                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                row.querySelector('.standardAccessoryPrice').value = price.toFixed(2);
+                calculateStandardAccessoryTotal(row);
+            };
+        });
+        document
+        .querySelectorAll('.standardAccessoryQty')
+        .forEach(input => {
+            input.oninput = function(){
+                calculateStandardAccessoryTotal(this.closest('tr'));
+            };
+        });
+    }
+    function loadStandardAccessoryMaterials(select){
+
+        return new Promise((resolve,reject)=>{
+
+            const categoryId = select.value;
+
+            const row = select.closest('tr');
+
+            const materialDropdown =
+            row.querySelector('.standardAccessoryMaterial');
+
+            $.ajax({
+
+                url: BASE_URL + 'ajax/get-standard-accessory-materials.php',
+
+                type:'POST',
+
+                data:{
+                    category_id: categoryId
+                },
+
+                success:function(response){
+
+                    materialDropdown.innerHTML =
+                        '<option value="">Select Material</option>' +
+                        response;
+
+                    resolve();
+
+                },
+
+                error:function(error){
+
+                    console.error(error);
+
+                    reject(error);
+
+                }
+
+            });
+
+        });
+
+    }
+    function calculateStandardAccessoryTotal(row){
+        const qty = parseFloat(row.querySelector('.standardAccessoryQty').value) || 0;
+        const price = parseFloat(row.querySelector('.standardAccessoryPrice').value) || 0;
+        const total = qty * price;
+        row.querySelector('.standardAccessoryTotal').value = total.toFixed(2);
+        calculateStandardAccessoriesGrandTotal();
+    }
+    function calculateStandardAccessoriesGrandTotal(){
+        let grand = 0;
+        document
+        .querySelectorAll('.standardAccessoryTotal')
+        .forEach(input => {
+            grand += parseFloat(input.value) || 0;
+        });
+        const grandField = document.getElementById('standardAccessoriesGrandTotal');
+        if(grandField){
+            grandField.innerText = grand.toFixed(2);
+        }
+        updateGrandTotal();
+    }
+    document.querySelectorAll('input[name="hasStandardAccessories"]')
+    .forEach(radio => {
+        radio.addEventListener('change', function(){
+            const section = document.getElementById('standardAccessorySection');
+            if(this.value == "1"){
+                section.style.display = "block";
+                if(document.querySelectorAll('.standardAccessoryRow').length === 0){
+                    addStandardAccessoryRow();
+                }
+            }else{
+                section.style.display = "none";
+                document.getElementById('standardAccessoriesContainer').innerHTML = "";
+                document.getElementById('standardAccessoriesGrandTotal').innerText = "0.00";
+                updateGrandTotal();
+            }
+        });
+    });
+    document.addEventListener("DOMContentLoaded", function(){
+        if(document.querySelectorAll(".standardAccessoryRow").length === 0){
+            addStandardAccessoryRow();
+        }
+    });
+    document.addEventListener("click", function(e){
+        if(!e.target.classList.contains("removeStandardAccessory")) return;
+        const row = e.target.closest("tr");
+        row.remove();
+        updateStandardAccessorySerialNumbers();
+        calculateStandardAccessoriesGrandTotal();
+        updateGrandTotal();
+    });
+    function updateStandardAccessorySerialNumbers(){
+        document
+        .querySelectorAll(".standardAccessorySrNo")
+        .forEach((td,index)=>{
+            td.innerText = index + 1;
+        });
+    }
+    // Additional Accessories
+    const accessoryCategoryOptions = `<?= $accessoryCategoryOptions ?>`;
+    function addAccessoryRow(){
+        const container = document.getElementById('accessoriesContainer');
+        if(!container.querySelector('.accessoriesTable')){
+            container.innerHTML = `
+                <div class="table-responsive">
+                    <table class="table accessoriesTable">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Category</th>
+                                <th>Material</th>
+                                <th>Unit Price</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="accessoriesTableBody"></tbody>
                     </table>
                 </div>
             `;
         }
         const tbody = container.querySelector('.accessoriesTableBody');
-        const existingRows = tbody.querySelectorAll('tr');
-        if(count > existingRows.length){
-            for(
-                let i = existingRows.length;
-                i < count;
-                i++
-            ){
-                tbody.insertAdjacentHTML(
-                    'beforeend',
-                    `
-                    <tr class="accessoryRow">
-                        <td class="accessorySrNo" style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
-                        <td>
-                            <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
-                                <option value="">Select Category</option>
-                                ${accessoryCategoryOptions}
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-control accessorySelect">
-                                <option value="">Select Material</option>
-                            </select>
-                            <input type="text" class="form-control accessoryOtherMaterial" placeholder="Enter Material" style="display:none;">
-                        </td>
-                        <td> <input type="number" step="1" min="0" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
-                        <td> <input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
-                        <td> <input type="number" step="1" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
-                    </tr>
-                    `
-                );
-            }
-        }
-        else if(count < existingRows.length){
-            for(
-                let i = existingRows.length;
-                i > count;
-                i--
-            ){
-                tbody.lastElementChild.remove();
-            }
-        }
+        const srNo = tbody.querySelectorAll('tr').length + 1;
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr class="accessoryRow">
+                <td class="accessorySrNo">${srNo}</td>
+                <td>
+                    <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
+                        <option value="">Select Category</option>
+                        ${accessoryCategoryOptions}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control accessorySelect">
+                        <option value="">Select Material</option>
+                    </select>
+                </td>
+                <td><input type="number" class="form-control accessoryPrice" readonly></td>
+                <td><input type="number" class="form-control accessoryQty" value="1" min="1"></td>
+                <td><input type="number" class="form-control accessoryTotal" readonly></td>
+                <td><button type="button" class="delete-btn removeAccessory">✕</button></td>
+            </tr>
+            `
+        );
         attachAccessoryEvents();
-        calculateAccessoriesGrandTotal();
     }
     function loadAccessoryMaterials(category){
         const row = category.closest('tr');
         const materialSelect = row.querySelector('.accessorySelect');
-        const otherInput = row.querySelector('.accessoryOtherMaterial');
         const priceField = row.querySelector('.accessoryPrice');
-        materialSelect.value = '';
-        otherInput.value = '';
+        materialSelect.innerHTML = '<option value="">Select Material</option>';
         priceField.value = '';
-        row.querySelector('.accessoryTotal').value = '';
-        if(category.value === 'other'){
-            materialSelect.style.display = 'none';
-            otherInput.style.display = 'block';
-            priceField.removeAttribute('readonly');
-            calculateAccessoryTotal(row);
-            return;
-        }
-        materialSelect.style.display = 'block';
-        otherInput.style.display = 'none';
-        priceField.setAttribute('readonly', true);
         $.ajax({
             url:'/QG/ajax/get-accessory-materials.php',
             type:'POST',
             data:{category_id: category.value},
             success:function(response){
                 materialSelect.innerHTML = '<option value="">Select Material</option>' + response;
-                calculateAccessoryTotal(row);
             }
         });
     }
     function attachAccessoryEvents(){
         document
         .querySelectorAll('.accessorySelect')
-        .forEach(select => {
+        .forEach(select=>{
             select.onchange = function(){
                 const row = this.closest('tr');
-                const price =
-                    parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                const option = this.options[this.selectedIndex];
+                const price = parseFloat(option.dataset.price) || 0;
                 row.querySelector('.accessoryPrice').value = price.toFixed(2);
                 calculateAccessoryTotal(row);
             };
         });
         document
         .querySelectorAll('.accessoryQty')
-        .forEach(input => {
-            input.oninput = function(){
+        .forEach(input=>{
+            input.oninput=function(){
                 calculateAccessoryTotal(this.closest('tr'));
             };
         });
         document
         .querySelectorAll('.accessoryPrice')
-        .forEach(input => {
-            input.oninput = function(){
+        .forEach(input=>{
+            input.oninput=function(){
                 calculateAccessoryTotal(this.closest('tr'));
             };
         });
@@ -1359,268 +1770,153 @@
         }
         updateGrandTotal();
     }
-    const standardAccessoryOptions =`<?= $standardAccessoryOptions ?>`;
-    const standardAccessoryCategoryOptions =`<?= $standardAccessoryCategoryOptions ?>`;
-    function generateStandardAccessories(){
-        const count = parseInt(document.getElementById('standardAccessoryCount').value) || 0;
-        const container = document.getElementById('standardAccessoriesContainer');
-        if(
-            !container.querySelector('.standardAccessoriesTable')
-        ){
-            container.innerHTML = `
-                <div class="table-responsive">
-                    <table class=" table table-bordered standardAccessoriesTable">
-                        <thead>
-                            <tr>
-                                <th>Sr No.</th>
-                                <th>Category</th>
-                                <th>Material</th>
-                                <th>Unit Price</th>
-                                <th>Qty</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody class="standardAccessoriesTableBody">
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-        const tbody = container.querySelector('.standardAccessoriesTableBody');
-        const existingRows = tbody.querySelectorAll('tr');
-        if(count > existingRows.length){
-            for(
-                let i = existingRows.length;
-                i < count;
-                i++
-            ){
-                tbody.insertAdjacentHTML(
-                    'beforeend',
-                    `
-                    <tr class="standardAccessoryRow">
-                        <td style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
-                        <td>
-                            <select class="form-control standardAccessoryCategory" onchange="loadStandardAccessoryMaterials(this)">
-                                <option value="">
-                                    Select Category
-                                </option>
-                                ${standardAccessoryCategoryOptions}
-                            </select>
-                        </td>
-                        <td>
-                            <select name="standard_accessory_id[]" class=" form-control standardAccessoryMaterial">
-                                <option value="">
-                                    Select Material
-                                </option>
-                            </select>
-                        </td>
-                        <td><input type="number" step="1" name="standard_accessory_price[]" class=" form-control standardAccessoryPrice" readonly></td>
-                        <td><input type="number" name="standard_accessory_qty[]" class="form-control standardAccessoryQty" value="1" min="1"></td>
-                        <td><input type="number" step="0.01" name="standard_accessory_total[]" class="form-control standardAccessoryTotal" readonly></td>
-                    </tr>
-                    `
-                );
-            }
-        }else if(count < existingRows.length){
-            for(
-                let i = existingRows.length;
-                i > count;
-                i--
-            ){
-                tbody.lastElementChild.remove();
-            }
-        }
-        attachStandardAccessoryEvents();
-        calculateStandardAccessoriesGrandTotal();
-    }
-    function attachStandardAccessoryEvents(){
-        document
-        .querySelectorAll('.standardAccessorySelect')
-        .forEach(select => {
-            select.onchange = function(){
-                const row = this.closest('tr');
-                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
-                row.querySelector('.standardAccessoryPrice').value = price.toFixed(2);
-                calculateStandardAccessoryTotal(row);
-            };
-        });
-        document
-        .querySelectorAll('.standardAccessoryMaterial')
-        .forEach(select => {
-            select.onchange = function(){
-                const row = this.closest('tr');
-                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
-                row.querySelector('.standardAccessoryPrice').value = price.toFixed(2);
-                calculateStandardAccessoryTotal(row);
-            };
-        });
-        document
-        .querySelectorAll('.standardAccessoryQty')
-        .forEach(input => {
-            input.oninput = function(){
-                calculateStandardAccessoryTotal(this.closest('tr'));
-            };
-        });
-    }
-    function loadStandardAccessoryMaterials(select){
-        const categoryId = select.value;
-        const row = select.closest('tr');
-        const materialDropdown = row.querySelector('.standardAccessoryMaterial');
-        $.ajax({
-            url: BASE_URL + 'ajax/get-standard-accessory-materials.php',
-            type:'POST',
-            data:{category_id: categoryId},
-            success:function(response){
-                materialDropdown.innerHTML = '<option value="">Select Material</option>' + response;
-            },
-            error:function(error){
-                console.error('Standard Material Error:',error);
-            }
-        });
-    }
-    function calculateStandardAccessoryTotal(row){
-        const qty = parseFloat(row.querySelector('.standardAccessoryQty').value) || 0;
-        const price = parseFloat(row.querySelector('.standardAccessoryPrice').value) || 0;
-        const total = qty * price;
-        row.querySelector('.standardAccessoryTotal').value = total.toFixed(2);
-        calculateStandardAccessoriesGrandTotal();
-    }
-    function calculateStandardAccessoriesGrandTotal(){
-        let grand = 0;
-        document
-        .querySelectorAll('.standardAccessoryTotal')
-        .forEach(input => {
-            grand += parseFloat(input.value) || 0;
-        });
-        const grandField = document.getElementById('standardAccessoriesGrandTotal');
-        if(grandField){
-            grandField.innerText = grand.toFixed(2);
-        }
-        updateGrandTotal();
-    }
-    function generatePanels(){
-        const count = parseInt(document.getElementById('panelCount').value) || 0;
-        const container = document.getElementById('panelContainer');
-        const panelShutterCategoryOptions =
-            shutterCategories
-            .filter(cat => ![4, 9].includes(parseInt(cat.id)))
-            .map(cat => `
-                <option value="${cat.id}">
-                    ${cat.category_name}
-                </option>
-            `)
-            .join('');
-        let html = `
-        <div class="table-responsive">
-            <table class="custom-table">
-                <thead>
-                    <tr>
-                        <th>Sr No.</th>
-                        <th>Width (MM)</th>
-                        <th>Height (MM)</th>
-                        <th>Sq Ft</th>
-                        <th>Shutter Category</th>
-                        <th>Shutter Material</th>
-                        <th>Panel Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        for(let i = 1; i <= count; i++){
-            html += `
-                    <tr class="panelRow">
-                        <td>${i}</td>
-                        <td><input type="number" step="0.01" class="form-control panelWidth"></td>
-                        <td><input type="number" step="0.01" class="form-control panelHeight"></td>
-                        <td><input type="number" class="form-control panelSqft" readonly></td>
-                        <td>
-                            <select class="form-control panelCategory">
-                                <option value="">Select Category</option>
-                                ${panelShutterCategoryOptions}
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-control panelMaterial">
-                                <option value="">Select Material</option>
-                            </select>
-                        </td>
-                        <td><input type="number" class="form-control panelPrice" readonly></td>
-                    </tr>
-            `;
-        }
-        html += `
-                </tbody>
-            </table>
-        </div>
-        `;
-        container.innerHTML = html;
-        attachPanelEvents();
-    }
-    function attachPanelEvents(){
-        document
-        .querySelectorAll('.panelRow')
-        .forEach(row => {
-            row
-            .querySelectorAll('.panelWidth,.panelHeight')
-            .forEach(input => {
-                input.addEventListener('input',() => calculatePanelRow(row));
-            });
-            row
-            .querySelector('.panelCategory')
-            .addEventListener(
-                'change',
-                function(){
-                    loadPanelMaterials(this.value,row);
+    document.querySelectorAll('input[name="hasAccessories"]')
+        .forEach(radio=>{
+            radio.addEventListener('change',function(){
+                const section = document.getElementById('accessorySection');
+                if(this.value=="1"){
+                    section.style.display="block";
+                    if(document.querySelectorAll('.accessoryRow').length===0){
+                        addAccessoryRow();
+                    }
+                }else{
+                    section.style.display="none";
+                    document.getElementById('accessoriesContainer').innerHTML="";
+                    document.getElementById('accessoriesGrandTotal').innerText="0.00";
+                    updateGrandTotal();
                 }
-            );
-            row
-            .querySelector('.panelMaterial')
-            .addEventListener(
-                'change', () => calculatePanelRow(row)
-            );
+            });
+        }
+    );
+    document.addEventListener("click", function(e){
+        if(!e.target.classList.contains("removeAccessory")) return;
+        const row = e.target.closest("tr");
+        row.remove();
+        updateAccessorySerialNumbers();
+        calculateAccessoriesGrandTotal();
+        updateGrandTotal();
+    });
+    function updateAccessorySerialNumbers(){
+        document.querySelectorAll(".accessorySrNo")
+        .forEach((td,index)=>{td.innerText = index + 1;});
+    }
+    document.addEventListener("DOMContentLoaded", function(){
+        if(document.querySelectorAll(".accessoryRow").length === 0){
+            addAccessoryRow();
+        }
+    });
+    // Visible side panel
+    document.querySelectorAll('input[name="hasSidePanels"]')
+        .forEach(radio => {
+            radio.addEventListener('change', function(){
+                const section = document.getElementById('sidePanelSection');
+                if(this.value == "1"){
+                    section.style.display = "block";
+                    if(document.querySelectorAll('.sidePanelRow').length === 0){
+                        addSidePanelRow();
+                    }
+                }else{
+                    section.style.display = "none";
+                    document.getElementById('sidePanelContainer').innerHTML = "";
+                    document.getElementById('sidePanelGrandTotal').innerText = "0.00";
+                    updateGrandTotal();
+                }
+            });
+        }
+    );
+    function addSidePanelRow(){
+        const tbody = document.getElementById('sidePanelContainer');
+        const srNo = tbody.querySelectorAll('tr').length+1;
+        const options = visibleSideCategories
+            .map(cat=>`<option value="${cat.id}">${cat.category_name}</option>`)
+            .join('');
+        const row=document.createElement('tr');
+        row.className="sidePanelRow";
+        row.innerHTML=`
+            <td class="sidePanelSr">${srNo}</td>
+            <td><input type="number" class="form-control sidePanelWidth"></td>
+            <td><input type="number" class="form-control sidePanelHeight"></td>
+            <td><input type="number" class="form-control sidePanelSqft" readonly></td>
+            <td>
+                <select class="form-control sidePanelCategory">
+                    <option value="">Select Category</option>
+                    ${options}
+                </select>
+            </td>
+            <td>
+                <select class="form-control sidePanelMaterial">
+                    <option value="">Select Material</option>
+                </select>
+            </td>
+            <td><input type="number" class="form-control sidePanelPrice" readonly></td>
+            <td><button type="button" class="delete-btn removeSidePanel">✕</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        attachSidePanelEvents();
+    }
+    function attachSidePanelEvents(){
+        document
+        .querySelectorAll('.sidePanelRow')
+        .forEach(row=>{
+            row.querySelectorAll('.sidePanelWidth,.sidePanelHeight')
+            .forEach(input=>{
+                input.oninput=()=>{
+                    calculateSidePanelRow(row);
+                };
+            });
+            row.querySelector('.sidePanelCategory')
+            .onchange=function(){
+                loadSidePanelMaterials(this.value,row);
+            };
+            row.querySelector('.sidePanelMaterial')
+            .onchange=()=>{
+                calculateSidePanelRow(row);
+            };
         });
     }
-    function loadPanelMaterials(
-        categoryId,
-        row
-    ){
-        const materialSelect = row.querySelector('.panelMaterial');
-        materialSelect.innerHTML = '<option value="">Select Material</option>';
-        shutterMaterials
-        .filter(
-            mat =>
-            mat.category_id == categoryId
-        )
-        .forEach(mat => {
-            materialSelect.innerHTML += `
+    function loadSidePanelMaterials(categoryId,row){
+        const material=row.querySelector('.sidePanelMaterial');
+        material.innerHTML='<option value="">Select Material</option>';
+        visibleSideMaterials
+        .filter(mat=>mat.category_id==categoryId)
+        .forEach(mat=>{
+            material.innerHTML+=`
                 <option value="${mat.id}" data-price="${mat.price_per_sqft}">
-                    ${mat.material_type}
+                    ${mat.material_name}
                 </option>
             `;
         });
     }
-    function calculatePanelRow(row){
-        const width = parseFloat(row.querySelector('.panelWidth').value) || 0;
-        const height = parseFloat(row.querySelector('.panelHeight').value) || 0;
-        const sqft = (width / 304.8) * (height / 304.8);
-        row.querySelector('.panelSqft').value = sqft.toFixed(2);
-        const material = row.querySelector('.panelMaterial');
-        const pricePerSqft = parseFloat(material.selectedOptions[0] ?.dataset.price) || 0;
-        const total = sqft * pricePerSqft;
-        row.querySelector('.panelPrice').value = total.toFixed(2);
-        calculatePanelsGrandTotal();
+    function calculateSidePanelRow(row){
+        const width=parseFloat(row.querySelector('.sidePanelWidth').value)||0;
+        const height=parseFloat(row.querySelector('.sidePanelHeight').value)||0;
+        const sqft=(width/304.8)*(height/304.8);
+        row.querySelector('.sidePanelSqft').value=sqft.toFixed(2);
+        const material=row.querySelector('.sidePanelMaterial');
+        const rate=parseFloat(material.selectedOptions[0]?.dataset.price)||0;
+        row.querySelector('.sidePanelPrice').value=(sqft*rate).toFixed(2);
+        calculateSidePanelGrandTotal();
         updateGrandTotal();
     }
-    function calculatePanelsGrandTotal(){
-        let total = 0;
-        document
-        .querySelectorAll('.panelPrice')
-        .forEach(input => {
-            total += parseFloat(input.value) || 0;
+    function calculateSidePanelGrandTotal(){
+        let total=0;
+        document.querySelectorAll('.sidePanelPrice')
+        .forEach(input=>{
+            total+=parseFloat(input.value)||0;
         });
-        document.getElementById('panelGrandTotal').innerText = total.toFixed(2);
+        document.getElementById('sidePanelGrandTotal').innerText=total.toFixed(2);
     }
-    
+    document.addEventListener('click',function(e){
+        if(!e.target.classList.contains('removeSidePanel')) return;
+        e.target.closest('tr').remove();
+        document.querySelectorAll('.sidePanelSr')
+        .forEach((td,index)=>{
+            td.innerText=index+1;
+        });
+        calculateSidePanelGrandTotal();
+        updateGrandTotal();
+    });
 </script>
 <?php
 $getAccessoryCategories = mysqli_query(

@@ -287,7 +287,7 @@
                             while($drawer = mysqli_fetch_assoc($drawerQuery)){
                                 echo '
                                 '.$drawerCount++.'] Qty : '.$drawer['quantity'].' | 
-                                Size (MM) : '.$drawer['category_name'].' | 
+                                Size (MM) : W '.$drawer['width_mm'].' x H '.$drawer['height_mm'].' | 
                                 Fascia Finish : '.$drawer['material_name'].'<br>
                                 ';
                             }
@@ -410,9 +410,78 @@
                 WHERE qa.quotation_id = '".$quotation['id']."'
                 "
             );
+            $standardAccessoriesQuery = mysqli_query(
+                $conn,
+                "
+                SELECT
+                    qsa.*,
+                    sam.material_name,
+                    sam.unit,
+                    sac.category_name
+                FROM quotation_standard_accessories qsa
+                LEFT JOIN standard_accessory_materials sam
+                ON qsa.standard_accessory_id = sam.id
+                LEFT JOIN standard_accessory_categories sac
+                ON sam.category_id = sac.id
+                WHERE qsa.quotation_id = '".$quotation['id']."'
+                "
+            );
+            if(
+                mysqli_num_rows($standardAccessoriesQuery) > 0
+            ){
+              $standardAccessoryRowNo = count($elevations);
+              if(mysqli_num_rows($panelQuery) > 0){
+                  $standardAccessoryRowNo++;
+              }
+              $standardAccessoryRowNo++;
+              $standardAccessoriesTotal = 0;
+              $standardTotalQuery = mysqli_query(
+                  $conn,
+                  "
+                  SELECT
+                      SUM(total_price) AS total
+                  FROM quotation_standard_accessories
+                  WHERE quotation_id = '".$quotation['id']."'
+                  "
+              );
+              if($standardTotalQuery){
+                  $standardTotalData = mysqli_fetch_assoc($standardTotalQuery);
+                  $standardAccessoriesTotal = floatval($standardTotalData['total']);
+              }
+          ?>
+          <tr>
+            <td style="text-align:center;"><?= $standardAccessoryRowNo; ?></td>
+            <td><strong>Standard Accessories</strong></td>
+            <td style="text-align:center;">940350</td>
+            <td style="text-align:center;">1</td>
+            <td style="text-align:center;">Nos.</td>
+            <td style="text-align:right;"> INR <?= number_format($standardAccessoriesTotal,2); ?></td>
+            <td style="text-align:right;"> INR <?= number_format($standardAccessoriesTotal,2); ?></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td colspan="6" style="border-left:none !important;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                    <tr>
+                        <td style="border:none;">
+                            <?php $sr = 1; while($standardAccessory = mysqli_fetch_assoc($standardAccessoriesQuery)){?>
+                              <strong><?= $sr++; ?>] </strong>
+                              <?= htmlspecialchars($standardAccessory['material_name']); ?> |
+                              Qty [Nos. / Mtr] : <?= $standardAccessory['qty']; ?> <?= $standardAccessory['unit']; ?> <br>
+                            <?php } ?>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+          </tr>
+          <?php } ?>
+          <?php
             if(mysqli_num_rows($accessoryQuery) > 0){
               $accessoryRowNo = count($elevations);
               if(mysqli_num_rows($panelQuery) > 0){
+                  $accessoryRowNo++;
+              }
+              if(mysqli_num_rows($accessoryQuery) > 0){
                   $accessoryRowNo++;
               }
               $accessoryRowNo++;
@@ -466,75 +535,6 @@
                     </tr>
                 </table>
               </td>
-          </tr>
-          <?php } ?>
-          <?php
-            $standardAccessoriesQuery = mysqli_query(
-                $conn,
-                "
-                SELECT
-                    qsa.*,
-                    sam.material_name,
-                    sam.unit,
-                    sac.category_name
-                FROM quotation_standard_accessories qsa
-                LEFT JOIN standard_accessory_materials sam
-                ON qsa.standard_accessory_id = sam.id
-                LEFT JOIN standard_accessory_categories sac
-                ON sam.category_id = sac.id
-                WHERE qsa.quotation_id = '".$quotation['id']."'
-                "
-            );
-            if(
-                mysqli_num_rows($standardAccessoriesQuery) > 0
-            ){
-              $standardAccessoryRowNo = count($elevations);
-              if(mysqli_num_rows($panelQuery) > 0){
-                  $standardAccessoryRowNo++;
-              }
-              if(mysqli_num_rows($accessoryQuery) > 0){
-                  $standardAccessoryRowNo++;
-              }
-              $standardAccessoryRowNo++;
-              $standardAccessoriesTotal = 0;
-              $standardTotalQuery = mysqli_query(
-                  $conn,
-                  "
-                  SELECT
-                      SUM(total_price) AS total
-                  FROM quotation_standard_accessories
-                  WHERE quotation_id = '".$quotation['id']."'
-                  "
-              );
-              if($standardTotalQuery){
-                  $standardTotalData = mysqli_fetch_assoc($standardTotalQuery);
-                  $standardAccessoriesTotal = floatval($standardTotalData['total']);
-              }
-          ?>
-          <tr>
-            <td style="text-align:center;"><?= $standardAccessoryRowNo; ?></td>
-            <td><strong>Standard Accessories</strong></td>
-            <td style="text-align:center;">940350</td>
-            <td style="text-align:center;">1</td>
-            <td style="text-align:center;">Nos.</td>
-            <td style="text-align:right;"> INR <?= number_format($standardAccessoriesTotal,2); ?></td>
-            <td style="text-align:right;"> INR <?= number_format($standardAccessoriesTotal,2); ?></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td colspan="6" style="border-left:none !important;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                    <tr>
-                        <td style="border:none;">
-                            <?php $sr = 1; while($standardAccessory = mysqli_fetch_assoc($standardAccessoriesQuery)){?>
-                              <strong><?= $sr++; ?>] </strong>
-                              <?= htmlspecialchars($standardAccessory['material_name']); ?> |
-                              Qty [Nos. / Mtr] : <?= $standardAccessory['qty']; ?> <?= $standardAccessory['unit']; ?> <br>
-                            <?php } ?>
-                        </td>
-                    </tr>
-                </table>
-            </td>
           </tr>
           <?php } ?>
         <?php endif; ?>

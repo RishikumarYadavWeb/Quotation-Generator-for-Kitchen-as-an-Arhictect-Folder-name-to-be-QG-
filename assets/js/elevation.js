@@ -65,8 +65,8 @@ function updateGrandTotal(){
         .forEach(field => {baseTotal += getNumber(field.value);});
     const standardAccessoriesTotal = parseFloat(document.getElementById('standardAccessoriesGrandTotal')?.innerText) || 0;
     const packingCharge = getNumber(document.getElementById('packingCharge')?.value);
-    const panelTotal = parseFloat(document.getElementById('panelGrandTotal').innerText) || 0;
-    const sidePanelTotal = parseFloat(document.getElementById('sidePanelGrandTotal').innerText) || 0;
+    const panelTotal = parseFloat(document.getElementById('panelGrandTotal')?.innerText || 0) || 0;
+    const sidePanelTotal = parseFloat(document.getElementById('sidePanelGrandTotal')?.innerText || 0) || 0;
     const installationCharge = getNumber(document.getElementById('installationCharge')?.value);
     const grandTotal = baseTotal + packingCharge + installationCharge + standardAccessoriesTotal + panelTotal + sidePanelTotal;
     const grandTotalField = document.getElementById('grandTotal');

@@ -84,63 +84,49 @@ async function updateQuotation(){
             quotationData.elevations.push(elevationData);
         });
         quotationData.accessories = [];
-
-document
-.querySelectorAll('.accessoryRow')
-.forEach(row => {
-
-    const category =
-        row.querySelector('.accessoryCategory')?.value || '';
-
-    const material =
-        row.querySelector('.accessorySelect')?.value || 0;
-
-    const otherMaterial =
-        row.querySelector('.accessoryOtherMaterial')?.value.trim() || '';
-
-    quotationData.accessories.push({
-
-        category_id:
-            category === 'other'
-                ? 0
-                : category,
-
-        accessory_id:
-            category === 'other'
-                ? 0
-                : material,
-
-        other_material:
-            category === 'other'
-                ? otherMaterial
-                : '',
-
-        qty:
-            row.querySelector('.accessoryQty')?.value || 0,
-
-        price:
-            row.querySelector('.accessoryPrice')?.value || 0,
-
-        total:
-            row.querySelector('.accessoryTotal')?.value || 0
-
-    });
-
-});
-        const panels = [];
+        document
+        .querySelectorAll('.accessoryRow')
+        .forEach(row => {
+            const category = row.querySelector('.accessoryCategory')?.value || '';
+            const material = row.querySelector('.accessorySelect')?.value || 0;
+            const otherMaterial = row.querySelector('.accessoryOtherMaterial')?.value.trim() || '';
+            quotationData.accessories.push({
+                category_id: category === 'other' ? 0 : category,
+                accessory_id: category === 'other' ? 0 : material,
+                other_material: category === 'other' ? otherMaterial : '',
+                qty: row.querySelector('.accessoryQty')?.value || 0,
+                price: row.querySelector('.accessoryPrice')?.value || 0,
+                total: row.querySelector('.accessoryTotal')?.value || 0
+            });
+        });
+        const visiblePanels = [];
         document
         .querySelectorAll('.panelRow')
         .forEach(row => {
-            panels.push({
+            visiblePanels.push({
                 width_mm: row.querySelector('.panelWidth')?.value || 0,
                 height_mm: row.querySelector('.panelHeight')?.value || 0,
                 sqft: row.querySelector('.panelSqft')?.value || 0,
-                shutter_category_id: row.querySelector('.panelCategory')?.value || 0,
-                shutter_material_id: row.querySelector('.panelMaterial')?.value || 0,
+                category_id: row.querySelector('.panelCategory')?.value || 0,
+                material_id: row.querySelector('.panelMaterial')?.value || 0,
                 panel_price: row.querySelector('.panelPrice')?.value || 0
             });
         });
-        quotationData.panels = panels;
+        quotationData.visiblePanels = visiblePanels;
+        const visibleSidePanels = [];
+        document
+        .querySelectorAll('.sidePanelRow')
+        .forEach(row => {
+            visibleSidePanels.push({
+                width_mm: row.querySelector('.sidePanelWidth')?.value || 0,
+                height_mm: row.querySelector('.sidePanelHeight')?.value || 0,
+                sqft: row.querySelector('.sidePanelSqft')?.value || 0,
+                category_id: row.querySelector('.sidePanelCategory')?.value || 0,
+                material_id: row.querySelector('.sidePanelMaterial')?.value || 0,
+                panel_price: row.querySelector('.sidePanelPrice')?.value || 0
+            });
+        });
+        quotationData.visibleSidePanels = visibleSidePanels;
         const standardAccessories = [];
         document
         .querySelectorAll('.standardAccessoryRow')
