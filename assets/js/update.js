@@ -234,6 +234,35 @@ document
                     body: imageFormData
                 }
             );
+        const projectImageFormData = new FormData();
+        PROJECT_IMAGES.render
+            .filter(file => file instanceof File)
+            .forEach(file => {
+                projectImageFormData.append("render_images[]",file);
+            });
+        PROJECT_IMAGES.floorplan
+            .filter(file => file instanceof File)
+            .forEach(file => {
+                projectImageFormData.append("floorplan_images[]",file);
+            });
+        Object.keys(PROJECT_IMAGES.elevations).forEach(index=>{
+            PROJECT_IMAGES.elevations[index].forEach(file=>{
+                if(file instanceof File){
+                    projectImageFormData.append(`elevation_images[${index}][]`,file);
+                }
+            });
+        });
+        const projectImageResponse =
+        await fetch(
+            BASE_URL+
+            "ajax/upload-project-images.php",
+            {
+                method:"POST",
+                body:projectImageFormData
+            }
+        );
+        const projectImageResult = await projectImageResponse.json();
+        quotationData.project_images = projectImageResult.images;
         const imageResult = await imageUploadResponse.json();
         quotationData.uploaded_line_images = {};
         if (
@@ -267,6 +296,7 @@ document
             });
         }
         quotationData.deleted_images = window.deletedImages || [];
+        quotationData.deleted_project_images = window.deletedProjectImages || [];
         let debugGrandTotal = 0;
         quotationData.elevations.forEach((elevation, elevationIndex) => {
             let elevationTotal = 0;
@@ -289,7 +319,6 @@ document
             debugGrandTotal += elevationTotal;
         });
         const accessoriesTotal = parseFloat(document.getElementById('accessoriesGrandTotal')?.innerText) || 0;
-        // console.log(JSON.stringify(quotationData.uploaded_line_images,null,2));
         quotationData.quotation_id = QUOTATION_ID;
         quotationData.client_id = CLIENT_ID;
         const response =

@@ -177,95 +177,28 @@ async function saveQuotation(){
                 unit.unit_total = unitTotal.toFixed(2);
             });
         });
-        // const imageFormData = new FormData();
         const imageUploadResponse = await fetch(BASE_URL + 'ajax/upload-elevation-images.php',);
-        /* ==========================================
-   PROJECT IMAGE UPLOAD
-========================================== */
-
-const projectImageFormData = new FormData();
-
-/* ---------- Render Images ---------- */
-
-PROJECT_IMAGES.render.forEach(file=>{
-
-    projectImageFormData.append(
-        "render_images[]",
-        file
-    );
-
-});
-
-/* ---------- Floor Plan Images ---------- */
-
-PROJECT_IMAGES.floorplan.forEach(file=>{
-
-    projectImageFormData.append(
-        "floorplan_images[]",
-        file
-    );
-
-});
-
-/* ---------- Elevation Images ---------- */
-
-Object.keys(PROJECT_IMAGES.elevations).forEach(index=>{
-
-    PROJECT_IMAGES.elevations[index].forEach(file=>{
-
-        projectImageFormData.append(
-            `elevation_images[${index}][]`,
-            file
+        const projectImageFormData = new FormData();
+        PROJECT_IMAGES.render.forEach(file=>{
+            projectImageFormData.append("render_images[]",file);
+        });
+        PROJECT_IMAGES.floorplan.forEach(file=>{
+            projectImageFormData.append("floorplan_images[]",file);
+        });
+        Object.keys(PROJECT_IMAGES.elevations).forEach(index=>{
+            PROJECT_IMAGES.elevations[index].forEach(file=>{
+                projectImageFormData.append(`elevation_images[${index}][]`,file);
+            });
+        });
+        const projectImageUploadResponse=await fetch(
+            BASE_URL+"ajax/upload-project-images.php",
+            {
+                method:"POST",
+                body:projectImageFormData
+            }
         );
-
-    });
-
-});
-
-const projectImageUploadResponse=await fetch(
-
-    BASE_URL+"ajax/upload-project-images.php",
-
-    {
-
-        method:"POST",
-
-        body:projectImageFormData
-
-    }
-
-);
-
-const projectImageResult=await projectImageUploadResponse.json();
-// const text = await projectImageUploadResponse.text();
-// console.log(text);
-// return;
-
-quotationData.project_images=projectImageResult.images;
-        // document
-        //     .querySelectorAll('.elevation-card')
-        //     .forEach((elevation, index) => {
-        //         const imageInput = elevation.querySelector('.line-image-input');
-        //         if (
-        //             imageInput &&
-        //             window.elevationImages.has(imageInput)
-        //         ) {
-        //             window.elevationImages
-        //                 .get(imageInput)
-        //                 .forEach(file => {imageFormData.append(`elevation_images[${index}][]`,file);});
-        //         }
-        //     });
-        // const imageUploadResponse =
-        //     await fetch(
-        //         BASE_URL + 'ajax/upload-elevation-images.php',
-        //         {
-        //             method: 'POST',
-        //             body: imageFormData
-        //         }
-        //     );
-        // const imageResult = await imageUploadResponse.json();
-        // quotationData.uploaded_line_images = imageResult.images;
-        // console.log(JSON.stringify(quotationData,null,2));
+        const projectImageResult=await projectImageUploadResponse.json();
+        quotationData.project_images=projectImageResult.images;
         const response =
             await fetch(
                 BASE_URL + 'ajax/save-quotation.php',
@@ -275,16 +208,16 @@ quotationData.project_images=projectImageResult.images;
                     body:JSON.stringify(quotationData)
                 }
             );
-        const text = await response.text();
-        console.log(text);
-        return;
-        // const result = await response.json();
-        // if(result.status){
-        //     alert('Quotation Saved Successfully');
-        //     window.location.href = 'view.php?id=' + result.quotation_id;
-        // }else{
-        //     alert(result.message || 'Failed To Save Quotation');
-        // }
+        // const text = await response.text();
+        // console.log(text);
+        // return;
+        const result = await response.json();
+        if(result.status){
+            alert('Quotation Saved Successfully');
+            window.location.href = 'view.php?id=' + result.quotation_id;
+        }else{
+            alert(result.message || 'Failed To Save Quotation');
+        }
     }catch(error){
         console.error(error);
     }

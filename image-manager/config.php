@@ -1,12 +1,67 @@
 <?php
 
-/**
- * -------------------------------------------------------
- * IMAGE MANAGER CONFIGURATION
- * -------------------------------------------------------
- */
+// return [
+
+//     "openai_api_key" => "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",
+
+//     "model" => "gpt-image-1",
+
+//     "max_file_size" => 20 * 1024 * 1024,
+
+//     "allowed_extensions" => [
+
+//         "jpg",
+//         "jpeg",
+//         "png",
+//         "webp"
+
+//     ],
+
+//     "allowed_mime_types" => [
+
+//         "image/jpeg",
+//         "image/png",
+//         "image/webp"
+
+//     ],
+
+//     "output_quality" => 90,
+
+//     "timeout" => 300,
+
+
+//     "directories" => [
+
+//         "temp" => __DIR__."/../uploads/temp/",
+
+//         "enhanced" => __DIR__."/../uploads/enhanced/",
+
+//         "logs" => __DIR__."/logs/"
+
+//     ]
+
+// ];
+
 
 return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | AI Provider
+    |--------------------------------------------------------------------------
+    */
+
+    "provider" => "gemini",
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google AI Studio
+    |--------------------------------------------------------------------------
+    */
+
+    "gemini_api_key" => "AQ.Ab8RN6KDsuTRkl_dSFAfPi0XnIrrSPmlZVaj83oo59sRWB6BlA",
+
+    "model" => "gemini-2.5-flash-image",
 
     /*
     |--------------------------------------------------------------------------
@@ -14,98 +69,48 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'upload' => [
+    "max_file_size" => 20 * 1024 * 1024,
 
-        // Maximum upload size (MB)
-        'max_size' => 30,
+    "allowed_extensions" => [
 
-        // Allowed extensions
-        'extensions' => [
-            'jpg',
-            'jpeg',
-            'png',
-            'webp'
-        ],
+        "jpg",
+        "jpeg",
+        "png",
+        "webp"
 
-        // Allowed MIME Types
-        'mime_types' => [
-            'image/jpeg',
-            'image/png',
-            'image/webp'
-        ],
-
-        // Maximum Width
-        'max_width' => 10000,
-
-        // Maximum Height
-        'max_height' => 10000,
-
-        // Temporary Upload Folder
-        'temp_path' => __DIR__ . '/../uploads/temp/',
-
-        // Permanent Upload Folder
-        'quotation_path' => __DIR__ . '/../uploads/quotations/',
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Image Types
-    |--------------------------------------------------------------------------
-    */
+    "allowed_mime_types" => [
 
-    'types' => [
-
-        'render',
-
-        'floorplan',
-
-        'elevation'
+        "image/jpeg",
+        "image/png",
+        "image/webp"
 
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | AI Enhancement
+    | Output
     |--------------------------------------------------------------------------
     */
 
-    'ai' => [
+    "output_quality" => 90,
 
-        'enabled' => true,
-
-        'provider' => 'openai',
-
-        'output_format' => 'png',
-
-        'quality' => 100,
-
-    ],
+    "timeout" => 300,
 
     /*
     |--------------------------------------------------------------------------
-    | Cleanup
+    | Directories
     |--------------------------------------------------------------------------
     */
 
-    'cleanup' => [
+    "directories" => [
 
-        // Delete temp files older than
-        // minutes
-        'temp_expiry' => 120,
+        "temp" => __DIR__."/../uploads/temp/",
 
-    ],
+        "enhanced" => __DIR__."/../uploads/enhanced/",
 
-    /*
-    |--------------------------------------------------------------------------
-    | Logging
-    |--------------------------------------------------------------------------
-    */
-
-    'logging' => [
-
-        'enabled' => true,
-
-        'path' => __DIR__ . '/logs/',
+        "logs" => __DIR__."/logs/"
 
     ]
 

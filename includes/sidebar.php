@@ -207,6 +207,13 @@
             </ul>
         </li>
         <?php } ?>
+       
+        <li>
+            <a href="/QG/settings/index.php" class="<?= isActive('/settings/', $current_uri) ?>">
+                <i class="fa-solid fa-gear" style="margin-right:10px;"></i>
+                Settings</a>
+        </li>
+        
         <!-- LOGOUT -->
         <li class="logout-item">
             <a href="/QG/auth/logout.php" onclick="return confirm('Logout from ERP?')">

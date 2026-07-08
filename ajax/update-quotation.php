@@ -10,6 +10,7 @@ header('Content-Type: application/json');
 $data = json_decode(file_get_contents('php://input'),true);
 $quotation_id = intval($data['quotation_id']);
 $uploadedLineImages = $data['uploaded_line_images'] ?? [];
+$projectImages = $data['project_images'] ?? [];
 mysqli_begin_transaction($conn);
 try{ 
     $entityId = (int)($data['entity_id'] ?? 0);
@@ -66,6 +67,66 @@ try{
     mysqli_query($conn,"DELETE FROM units WHERE elevation_id IN (SELECT id FROM elevations WHERE quotation_id = '$quotationId')");
     mysqli_query($conn,"DELETE FROM elevations WHERE quotation_id = '$quotationId'");
     mysqli_query($conn,"DELETE FROM quotation_panels WHERE quotation_id = '$quotationId'");
+    /* ==========================================================
+   VERSION 1 - DELETE ALL EXISTING PROJECT IMAGES
+========================================================== */
+/* ==========================================================
+   DELETE ONLY REMOVED PROJECT IMAGES
+========================================================== */
+
+$deletedProjectImages = $data['deleted_project_images'] ?? [];
+
+if(!is_array($deletedProjectImages)){
+    $deletedProjectImages = [];
+}
+
+foreach($deletedProjectImages as $imageId){
+
+    $imageId = (int)$imageId;
+
+    $imageResult = mysqli_query(
+        $conn,
+        "
+        SELECT image_path
+        FROM quotation_images
+        WHERE id = '$imageId'
+        LIMIT 1
+        "
+    );
+
+    if($img = mysqli_fetch_assoc($imageResult)){
+
+        $file = dirname(__DIR__) . "/uploads/" . $img['image_path'];
+
+        if(is_file($file)){
+            unlink($file);
+        }
+
+        mysqli_query(
+            $conn,
+            "
+            DELETE
+            FROM quotation_images
+            WHERE id = '$imageId'
+            "
+        );
+
+    }
+
+}
+$quotationFolder = dirname(__DIR__) . "/uploads/quotations/" . preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo);
+
+    $renderFolder = $quotationFolder . "/render";
+    $floorFolder = $quotationFolder . "/floorplan";
+
+    if(!is_dir($renderFolder)){
+        mkdir($renderFolder,0775,true);
+    }
+
+    if(!is_dir($floorFolder)){
+        mkdir($floorFolder,0775,true);
+    }
+    
     if(
         isset($data['elevations']) &&
         is_array($data['elevations'])
@@ -100,6 +161,7 @@ try{
                 )
                 "
             );
+
             $elevationId = mysqli_insert_id($conn);
             if(
                 isset($uploadedLineImages[$elevationNo])
@@ -125,6 +187,133 @@ try{
                     );
                 }
             }
+            /* ===========================
+   SAVE ELEVATION IMAGES
+=========================== */
+/* ==========================================================
+   COPY EXISTING ELEVATION IMAGES
+========================================================== */
+
+$oldImages = mysqli_query(
+    $conn,
+    "
+    SELECT *
+    FROM quotation_images
+    WHERE
+        quotation_id = '$quotationId'
+        AND image_type = 'elevation'
+        AND elevation_no = '".($index + 1)."'
+    "
+);
+
+while($old = mysqli_fetch_assoc($oldImages)){
+
+    mysqli_query(
+        $conn,
+        "
+        INSERT INTO quotation_images(
+            quotation_id,
+            elevation_id,
+            elevation_no,
+            image_type,
+            original_name,
+            stored_name,
+            image_path,
+            enhanced_path,
+            file_size,
+            mime_type,
+            image_width,
+            image_height,
+            is_enhanced
+        )
+        VALUES(
+            '$quotationId',
+            '$elevationId',
+            '".($index + 1)."',
+            'elevation',
+            '".mysqli_real_escape_string($conn,$old['original_name'])."',
+            '".mysqli_real_escape_string($conn,$old['stored_name'])."',
+            '".mysqli_real_escape_string($conn,$old['image_path'])."',
+            '".mysqli_real_escape_string($conn,$old['enhanced_path'])."',
+            '".$old['file_size']."',
+            '".mysqli_real_escape_string($conn,$old['mime_type'])."',
+            '".$old['image_width']."',
+            '".$old['image_height']."',
+            '".$old['is_enhanced']."'
+        )
+        "
+    );
+
+}
+
+/* ==========================================================
+   SAVE NEW ELEVATION IMAGES
+========================================================== */
+
+if(!empty($projectImages['elevations'][$index])){
+
+    foreach($projectImages['elevations'][$index] as $image){
+
+        $imagePath = mysqli_real_escape_string($conn,$image['image_path']);
+        $originalName = mysqli_real_escape_string($conn,$image['original_name']);
+        $storedName = mysqli_real_escape_string($conn,$image['stored_name']);
+        $fileSize = (int)$image['file_size'];
+        $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
+        $imageWidth = (int)$image['image_width'];
+        $imageHeight = (int)$image['image_height'];
+
+        $letter = chr(65 + $index);
+
+        $elevationFolder = $quotationFolder."/elevation_".$letter;
+
+        if(!is_dir($elevationFolder)){
+            mkdir($elevationFolder,0775,true);
+        }
+
+        $tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+        $newPath  = $elevationFolder."/".$storedName;
+
+        if(file_exists($tempPath)){
+            rename($tempPath,$newPath);
+        }
+
+        $imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/elevation_".$letter."/".$storedName;
+
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_images(
+                quotation_id,
+                elevation_id,
+                elevation_no,
+                image_type,
+                original_name,
+                stored_name,
+                image_path,
+                file_size,
+                mime_type,
+                image_width,
+                image_height
+            )
+            VALUES(
+                '$quotationId',
+                '$elevationId',
+                '".($index + 1)."',
+                'elevation',
+                '$originalName',
+                '$storedName',
+                '$imagePath',
+                '$fileSize',
+                '$mimeType',
+                '$imageWidth',
+                '$imageHeight'
+            )
+            "
+        );
+
+    }
+
+}
             foreach(
                 $elevation['units']
                 as $unit
@@ -395,6 +584,121 @@ try{
             );
         }
     }
+
+/* ===========================
+   SAVE RENDER IMAGES
+=========================== */
+
+if(!empty($projectImages['render'])){
+
+    foreach($projectImages['render'] as $image){
+
+        $imagePath = mysqli_real_escape_string($conn,$image['image_path']);
+        $originalName = mysqli_real_escape_string($conn,$image['original_name']);
+        $storedName = mysqli_real_escape_string($conn,$image['stored_name']);
+        $fileSize = (int)$image['file_size'];
+        $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
+        $imageWidth = (int)$image['image_width'];
+        $imageHeight = (int)$image['image_height'];
+        $tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+
+        $newPath = $renderFolder."/".$storedName;
+
+        if(file_exists($tempPath)){
+            rename($tempPath,$newPath);
+        }
+
+        $imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/render/".$storedName;
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_images(
+                quotation_id,
+                elevation_id,
+                image_type,
+                original_name,
+                stored_name,
+                image_path,
+                file_size,
+                mime_type,
+                image_width,
+                image_height
+            )
+            VALUES(
+                '$quotationId',
+                NULL,
+                'render',
+                '$originalName',
+                '$storedName',
+                '$imagePath',
+                '$fileSize',
+                '$mimeType',
+                '$imageWidth',
+                '$imageHeight'
+            )
+            "
+        );
+
+    }
+
+}
+/* ===========================
+   SAVE FLOOR PLAN IMAGES
+=========================== */
+
+if(!empty($projectImages['floorplan'])){
+
+    foreach($projectImages['floorplan'] as $image){
+
+        $imagePath = mysqli_real_escape_string($conn,$image['image_path']);
+        $originalName = mysqli_real_escape_string($conn,$image['original_name']);
+        $storedName = mysqli_real_escape_string($conn,$image['stored_name']);
+        $fileSize = (int)$image['file_size'];
+        $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
+        $imageWidth = (int)$image['image_width'];
+        $imageHeight = (int)$image['image_height'];
+        $tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+
+        $newPath = $floorFolder."/".$storedName;
+
+        if(file_exists($tempPath)){
+            rename($tempPath,$newPath);
+        }
+
+        $imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/floorplan/".$storedName;
+        mysqli_query(
+            $conn,
+            "
+            INSERT INTO quotation_images(
+                quotation_id,
+                elevation_id,
+                image_type,
+                original_name,
+                stored_name,
+                image_path,
+                file_size,
+                mime_type,
+                image_width,
+                image_height
+            )
+            VALUES(
+                '$quotationId',
+                NULL,
+                'floorplan',
+                '$originalName',
+                '$storedName',
+                '$imagePath',
+                '$fileSize',
+                '$mimeType',
+                '$imageWidth',
+                '$imageHeight'
+            )
+            "
+        );
+
+    }
+
+}
     mysqli_commit($conn); mysqli_report(
         MYSQLI_REPORT_ERROR |
         MYSQLI_REPORT_STRICT

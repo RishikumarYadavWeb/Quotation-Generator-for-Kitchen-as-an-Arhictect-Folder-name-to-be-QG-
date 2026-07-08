@@ -37,22 +37,34 @@
     $specialDiscount = (float)$quotation['special_discount'];
     $finalCustomerPrice = (float)$quotation['final_customer_price'];
     $standardAccessoriesQuery = mysqli_query(
-    $conn,
-    "
-    SELECT
-        qsa.*,
-        sam.material_name,
-        sam.unit,
-        sac.category_name
-    FROM quotation_standard_accessories qsa
-    LEFT JOIN standard_accessory_materials sam
-    ON sam.id = qsa.standard_accessory_id
-    LEFT JOIN standard_accessory_categories sac
-    ON sac.id = sam.category_id
-    WHERE qsa.quotation_id = '$id'
-    ORDER BY qsa.id ASC
-    "
-);
+        $conn,
+        "
+        SELECT
+            qsa.*,
+            sam.material_name,
+            sam.unit,
+            sac.category_name
+        FROM quotation_standard_accessories qsa
+        LEFT JOIN standard_accessory_materials sam
+        ON sam.id = qsa.standard_accessory_id
+        LEFT JOIN standard_accessory_categories sac
+        ON sac.id = sam.category_id
+        WHERE qsa.quotation_id = '$id'
+        ORDER BY qsa.id ASC
+        "
+    );
+    $projectImages = [];
+    $imageQuery = mysqli_query(
+        $conn,
+        "
+        SELECT *
+        FROM quotation_images
+        WHERE quotation_id = '$id'
+        AND image_type IN ('render','floorplan')
+        ORDER BY image_type,id
+        "
+    );
+    while($row = mysqli_fetch_assoc($imageQuery)){$projectImages[$row['image_type']][] = $row;}
 ?>
 <div class="container-fluid">
     <div class="top-header mb-0 d-flex justify-content-between">
@@ -128,6 +140,23 @@
             </div>
         </div>
     </div>
+    <div class="main-card mt-4">
+        <h3 class="mb-4 generated-title">Project Images</h3>
+        <?php foreach(['render'=>'1] 3D Render Images','floorplan'=>'2] Floor Plan Images'] as $type=>$title){ ?>
+            <?php if(!empty($projectImages[$type])){ ?>
+                <h5 class="mt-4"><?= $title; ?></h5>
+                <div class="row">
+                    <?php foreach($projectImages[$type] as $image){ ?>
+                        <div class="col-md-3 mb-3">
+                            <div class="card p-2">
+                                <img src="../uploads/<?= $image['image_path']; ?>" class="img-fluid rounded projectImage" style="height:180px;width:100%;object-fit:cover;cursor:pointer;" data-image="../uploads/<?= $image['image_path']; ?>">
+                            </div>
+                        </div>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+        <?php } ?>
+    </div>
     <?php
         $elevationsQuery =
         mysqli_query(
@@ -147,6 +176,20 @@
             SELECT *
             FROM elevation_line_images
             WHERE elevation_id = '".$elevation['id']."'
+            "
+        );
+        $projectImagesQuery = mysqli_query(
+            $conn,
+            "
+            SELECT *
+            FROM quotation_images
+            WHERE
+                quotation_id = '$id'
+            AND
+                elevation_id = '".$elevation['id']."'
+            AND
+                image_type = 'elevation'
+            ORDER BY id ASC
             "
         );
     ?>
@@ -374,14 +417,27 @@
                     </div>
                 </div>
             <?php endif; ?>
+            <?php if(mysqli_num_rows($projectImagesQuery)>0){ ?>
+                <div class="mt-4">
+                    <h5 class="mb-3">Elevation Images</h5>
+                    <div class="row">
+                        <?php while($image=mysqli_fetch_assoc($projectImagesQuery)){?>
+                            <div class="col-md-3 mb-3">
+                                <div class="card p-2">
+                                    <img src="../uploads/<?= $image['image_path']; ?>" class="img-fluid rounded projectImage" style="height:180px;width:100%;object-fit:cover;cursor:pointer;" data-image="../uploads/<?= $image['image_path']; ?>">
+                                </div>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+            <?php } ?>
         </div>
     <?php } ?>
-    
     <?php if(mysqli_num_rows($standardAccessoriesQuery) > 0){ ?>
     <div class="main-card" style="margin-top:30px;">
         <div class="page-header mb-3">
             <div>
-                <h2 class="page-title">Standard Accessories</h2>
+                <h2 class="generated-title">Standard Accessories</h2>
             </div>
         </div>
         <table class="table table-bordered">
@@ -401,9 +457,7 @@
                     $srNo = 1;
                     $grandTotal = 0;
                     while(
-                        $row = mysqli_fetch_assoc(
-                            $standardAccessoriesQuery
-                        )
+                        $row = mysqli_fetch_assoc($standardAccessoriesQuery)
                     ){
                         $grandTotal += $row['total_price'];
                 ?>

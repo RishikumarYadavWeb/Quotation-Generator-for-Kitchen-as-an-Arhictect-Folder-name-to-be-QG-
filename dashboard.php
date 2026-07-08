@@ -17,8 +17,7 @@
     $totalSqftResult = mysqli_query($conn, $totalSqftQuery);
     $totalSqft = mysqli_fetch_assoc($totalSqftResult);
     $projectQuery = "
-        SELECT
-        project_type,
+        SELECT project_type,
         COUNT(*) AS total_projects,
         SUM(total_sqft) AS total_sqft,
         SUM(final_customer_price) AS total_value
@@ -42,8 +41,7 @@
         $revenues[] = $row['revenue'];
     }
     $projectChartQuery = "
-    SELECT
-    project_type,
+    SELECT project_type,
     COUNT(*) AS total_projects,
     SUM(total_sqft) AS total_sqft
     FROM quotations
@@ -135,9 +133,7 @@
         </div>
     </div>
     <div class="project-grid">
-        <?php
-            while($project = mysqli_fetch_assoc($projectResult)){
-        ?>
+        <?php while($project = mysqli_fetch_assoc($projectResult)){?>
         <div class="project-analytics-card">
             <div class="project-card-top">
                 <div>

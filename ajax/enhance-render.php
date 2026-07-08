@@ -16,7 +16,7 @@ if(!isset($_FILES['image'])){
 
 $tempFile = $_FILES['image']['tmp_name'];
 
-$uploadDir = dirname(__DIR__) . "/uploads/enhanced/";
+$uploadDir = dirname(__DIR__) . "/uploads/temp/enhanced/";
 
 if(!is_dir($uploadDir)){
     mkdir($uploadDir,0777,true);
@@ -41,6 +41,6 @@ $outputFile = $uploadDir . $fileName;
 copy($tempFile,$outputFile);
 
 $response["status"] = true;
-$response["image"] = "uploads/enhanced/".$fileName;
+$response["image"] = "uploads/temp/enhanced/".$fileName;
 
 echo json_encode($response);

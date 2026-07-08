@@ -51,9 +51,7 @@
         WHERE quotation_id = '$quotation_id'"
     );
     $EDIT_DRAWERS = [];
-    while($row = mysqli_fetch_assoc($drawerQuery)){
-        $EDIT_DRAWERS[] = $row;
-    }
+    while($row = mysqli_fetch_assoc($drawerQuery)){$EDIT_DRAWERS[] = $row;}
     $shelves_data = [];
     $shelfQuery = mysqli_query(
         $conn,
@@ -61,53 +59,32 @@
         WHERE quotation_id = '$quotation_id'"
     );
     $EDIT_SHELVES = [];
-    while($row = mysqli_fetch_assoc($shelfQuery)){
-        $EDIT_SHELVES[] = $row;
-    }
-$accessories = [];
-
-$sql = "
-SELECT
-    qa.*,
-    a.category_id
-FROM quotation_accessories qa
-
-LEFT JOIN accessories a
-ON qa.accessory_id = a.id
-
-WHERE qa.quotation_id = '$quotation_id'
-";
-
-$result = mysqli_query($conn, $sql);
-
-while($row = mysqli_fetch_assoc($result)){
-    $accessories[] = $row;
-}
-/* ACCESSORY CATEGORY OPTIONS */
-
-$accessoryCategoryOptions = '';
-
-$categoryQuery = mysqli_query(
-    $conn,
-    "
-    SELECT *
-    FROM accessory_categories
-    WHERE status = 1
-    ORDER BY category_name ASC
-    "
-);
-
-while($category = mysqli_fetch_assoc($categoryQuery)){
-
-    $accessoryCategoryOptions .=
-        '<option value="'.$category['id'].'">'.
-        htmlspecialchars($category['category_name']).
-        '</option>';
-
-}
-
-$accessoryCategoryOptions .=
-    '<option value="other">Other</option>';
+    while($row = mysqli_fetch_assoc($shelfQuery)){$EDIT_SHELVES[] = $row;}
+    $accessories = [];
+    $sql = "
+    SELECT
+        qa.*,
+        a.category_id
+    FROM quotation_accessories qa
+    LEFT JOIN accessories a
+    ON qa.accessory_id = a.id
+    WHERE qa.quotation_id = '$quotation_id'
+    ";
+    $result = mysqli_query($conn, $sql);
+    while($row = mysqli_fetch_assoc($result)){$accessories[] = $row;}
+    $accessoryCategoryOptions = '';
+    $categoryQuery = mysqli_query(
+        $conn,
+        "
+        SELECT *
+        FROM accessory_categories
+        WHERE status = 1
+        ORDER BY category_name ASC
+        "
+    );
+    while($category = mysqli_fetch_assoc($categoryQuery)){
+    $accessoryCategoryOptions .= '<option value="'.$category['id'].'">'. htmlspecialchars($category['category_name']). '</option>';}
+    $accessoryCategoryOptions .= '<option value="other">Other</option>';
     $elevationImages = [];
     $sql = "
         SELECT
@@ -121,6 +98,29 @@ $accessoryCategoryOptions .=
     ";
     $result = mysqli_query($conn,$sql);
     while($row = mysqli_fetch_assoc($result)){$elevationImages[$row['elevation_id']][] = $row['image_path'];}
+    $projectImages = ['render' => [],'floorplan' => [],'elevations' => []];
+    $result = mysqli_query(
+        $conn,
+        "
+        SELECT *
+        FROM quotation_images
+        WHERE quotation_id = '$quotation_id'
+        ORDER BY id ASC
+        "
+    );
+    while($row = mysqli_fetch_assoc($result)){
+        switch($row['image_type']){
+            case 'render':
+                $projectImages['render'][] = $row;
+            break;
+            case 'floorplan':
+                $projectImages['floorplan'][] = $row;
+            break;
+            case 'elevation':
+                $projectImages['elevations'][$row['elevation_id']][] = $row;
+            break;
+        }
+    }
     include '../includes/header.php';
     include '../includes/sidebar.php';
     /* CARCASS MATERIALS */
@@ -476,6 +476,7 @@ $accessoryCategoryOptions .=
                 <h5>Accessories Total : ₹ <span id="accessoriesGrandTotal">0.00</span></h5>
             </div>
         </div>
+        <?php include '../components/project-images.php'; ?>
     </div>
 </form>
 <div class="main-card mt-4">
@@ -522,12 +523,35 @@ $accessoryCategoryOptions .=
     const EDIT_IMAGES = <?= json_encode($elevationImages); ?>;
     const EDIT_STANDARD_ACCESSORIES = <?= json_encode($EDIT_STANDARD_ACCESSORIES ?? []) ?>;
     const EDIT_PANELS = <?= json_encode($panels); ?>;
+    const EDIT_PROJECT_IMAGES = <?= json_encode($projectImages); ?>;
     window.oldElevationImages = {};
     window.deletedImages = [];
-    document.addEventListener(
+    window.oldProjectImages = {
+        render: [],
+        floorplan: [],
+        elevations: {}
+    };
+    window.deletedProjectImages = [];
+        document.addEventListener(
         'DOMContentLoaded',
         async function(){
             document.getElementById('elevationCount').value = EDIT_ELEVATIONS.length;
+            if(
+                EDIT_PROJECT_IMAGES.render &&
+                EDIT_PROJECT_IMAGES.render.length
+            ){
+                window.oldProjectImages.render = [...EDIT_PROJECT_IMAGES.render];
+                PROJECT_IMAGES.render = [...EDIT_PROJECT_IMAGES.render];
+            }
+            if(
+                EDIT_PROJECT_IMAGES.floorplan &&
+                EDIT_PROJECT_IMAGES.floorplan.length
+            ){
+                window.oldProjectImages.floorplan = [...EDIT_PROJECT_IMAGES.floorplan];
+                PROJECT_IMAGES.floorplan = [...EDIT_PROJECT_IMAGES.floorplan];
+            }
+            renderPreview("render","renderPreview");
+            renderPreview("floorplan","floorPreview");
             await generateElevations();
             const cards = document.querySelectorAll('.elevation-card');
             for(
@@ -575,6 +599,12 @@ $accessoryCategoryOptions .=
                             wrapper
                         );
                     });
+                }
+                if(
+                    EDIT_PROJECT_IMAGES.elevations[elevation.id]
+                ){
+                    PROJECT_IMAGES.elevations[index] = [...EDIT_PROJECT_IMAGES.elevations[elevation.id]];
+                    renderElevationPreview(index);
                 }
                 // Ceiling Height
                 card.querySelector('.ceilingHeightMM').value = elevation.ceiling_height_mm;
@@ -1021,121 +1051,49 @@ $accessoryCategoryOptions .=
                         }
                     );
                 }
-// Accessories
-console.log(EDIT_ACCESSORIES);
-if(
-    EDIT_ACCESSORIES &&
-    EDIT_ACCESSORIES.length > 0
-){
-
-    document.getElementById(
-        'accessoryCount'
-    ).value = EDIT_ACCESSORIES.length;
-
-    generateAccessories();
-
-    const rows =
-        document.querySelectorAll(
-            '.accessoryRow'
-        );
-
-    EDIT_ACCESSORIES.forEach((accessory,index)=>{
-
-        const row = rows[index];
-
-        if(!row) return;
-
-        const category =
-            row.querySelector('.accessoryCategory');
-
-        const material =
-            row.querySelector('.accessorySelect');
-
-        const otherInput =
-            row.querySelector('.accessoryOtherMaterial');
-
-        // OTHER ACCESSORY
-
-        if(accessory.other_material){
-
-            // Make sure "Other" exists in dropdown
-            if(!category.querySelector('option[value="other"]')){
-                category.insertAdjacentHTML(
-                    'beforeend',
-                    '<option value="other">Other</option>'
-                );
-            }
-
-            category.value = 'other';
-
-            loadAccessoryMaterials(category);
-
-            material.style.display = 'none';
-
-            otherInput.style.display = 'block';
-
-            otherInput.value =
-                accessory.other_material;
-
-            row.querySelector(
-                '.accessoryPrice'
-            ).removeAttribute('readonly');
-            console.log(accessory);
-console.log(accessory.other_material);
-console.log(accessoryCategoryOptions);
-
-        }
-        else{
-
-            category.value =
-                accessory.category_id;
-
-            $.ajax({
-
-                url:'/QG/ajax/get-accessory-materials.php',
-
-                type:'POST',
-
-                data:{
-                    category_id:
-                        accessory.category_id
-                },
-
-                success:function(response){
-
-                    material.innerHTML =
-                        '<option value="">Select Material</option>' +
-                        response;
-
-                    material.value =
-                        accessory.accessory_id;
-
+                // Accessories
+                if(
+                    EDIT_ACCESSORIES &&
+                    EDIT_ACCESSORIES.length > 0
+                ){
+                    document.getElementById('accessoryCount').value = EDIT_ACCESSORIES.length;
+                    generateAccessories();
+                    const rows = document.querySelectorAll('.accessoryRow');
+                    EDIT_ACCESSORIES.forEach((accessory,index)=>{
+                        const row = rows[index];
+                        if(!row) return;
+                        const category = row.querySelector('.accessoryCategory');
+                        const material = row.querySelector('.accessorySelect');
+                        const otherInput = row.querySelector('.accessoryOtherMaterial');
+                        if(accessory.other_material){
+                            if(!category.querySelector('option[value="other"]')){
+                                category.insertAdjacentHTML('beforeend','<option value="other">Other</option>');
+                            }
+                            category.value = 'other';
+                            loadAccessoryMaterials(category);
+                            material.style.display = 'none';
+                            otherInput.style.display = 'block';
+                            otherInput.value = accessory.other_material;
+                            row.querySelector('.accessoryPrice').removeAttribute('readonly');
+                        }
+                        else{
+                            category.value = accessory.category_id;
+                            $.ajax({
+                                url:'/QG/ajax/get-accessory-materials.php',
+                                type:'POST',
+                                data:{category_id:accessory.category_id},
+                                success:function(response){
+                                    material.innerHTML = '<option value="">Select Material</option>' + response;
+                                    material.value = accessory.accessory_id;
+                                }
+                            });
+                        }
+                        row.querySelector('.accessoryQty').value =accessory.qty;
+                        row.querySelector('.accessoryPrice').value =accessory.price;
+                        row.querySelector('.accessoryTotal').value =accessory.total;
+                    });
+                    calculateAccessoriesGrandTotal();
                 }
-
-            });
-
-        }
-
-        row.querySelector(
-            '.accessoryQty'
-        ).value =
-            accessory.qty;
-
-        row.querySelector(
-            '.accessoryPrice'
-        ).value =
-            accessory.price;
-
-        row.querySelector(
-            '.accessoryTotal'
-        ).value =
-            accessory.total;
-
-    });
-
-    calculateAccessoriesGrandTotal();
-
-}
                 if(
                     EDIT_STANDARD_ACCESSORIES &&
                     EDIT_STANDARD_ACCESSORIES.length > 0
@@ -1181,6 +1139,7 @@ console.log(accessoryCategoryOptions);
                     updateGrandTotal();
                 }
             }
+
         }
     );
     function waitForUnits(callback){
@@ -1254,8 +1213,7 @@ console.log(accessoryCategoryOptions);
             }
         }
     }
-const accessoryCategoryOptions =
-`<?= $accessoryCategoryOptions ?>`;
+    const accessoryCategoryOptions = `<?= $accessoryCategoryOptions ?>`;
     function generateAccessories(){
         const count = parseInt(document.getElementById('accessoryCount').value) || 0;
         const container = document.getElementById('accessoriesContainer');
@@ -1326,127 +1284,62 @@ const accessoryCategoryOptions =
         attachAccessoryEvents();
         calculateAccessoriesGrandTotal();
     }
-function loadAccessoryMaterials(category){
-
-    const row = category.closest('tr');
-
-    const materialSelect =
-        row.querySelector('.accessorySelect');
-
-    const otherInput =
-        row.querySelector('.accessoryOtherMaterial');
-
-    const priceField =
-        row.querySelector('.accessoryPrice');
-
-    // Reset fields
-    materialSelect.value = '';
-    otherInput.value = '';
-    priceField.value = '';
-    row.querySelector('.accessoryTotal').value = '';
-
-    // OTHER
-    if(category.value === 'other'){
-
-        materialSelect.style.display = 'none';
-        otherInput.style.display = 'block';
-
-        priceField.removeAttribute('readonly');
-
-        calculateAccessoryTotal(row);
-
-        return;
-    }
-
-    // NORMAL CATEGORY
-
-    materialSelect.style.display = 'block';
-    otherInput.style.display = 'none';
-
-    priceField.setAttribute('readonly', true);
-
-    $.ajax({
-
-        url:'/QG/ajax/get-accessory-materials.php',
-
-        type:'POST',
-
-        data:{
-            category_id: category.value
-        },
-
-        success:function(response){
-
-            materialSelect.innerHTML =
-                '<option value="">Select Material</option>' +
-                response;
-
+    function loadAccessoryMaterials(category){
+        const row = category.closest('tr');
+        const materialSelect = row.querySelector('.accessorySelect');
+        const otherInput = row.querySelector('.accessoryOtherMaterial');
+        const priceField = row.querySelector('.accessoryPrice');
+        materialSelect.value = '';
+        otherInput.value = '';
+        priceField.value = '';
+        row.querySelector('.accessoryTotal').value = '';
+        if(category.value === 'other'){
+            materialSelect.style.display = 'none';
+            otherInput.style.display = 'block';
+            priceField.removeAttribute('readonly');
             calculateAccessoryTotal(row);
-
+            return;
         }
-
-    });
-
-}
-     function attachAccessoryEvents(){
-
-    // Material Change
-    document
-    .querySelectorAll('.accessorySelect')
-    .forEach(select => {
-
-        select.onchange = function(){
-
-            const row = this.closest('tr');
-
-            const price =
-                parseFloat(
-                    this.options[
-                        this.selectedIndex
-                    ]?.dataset.price
-                ) || 0;
-
-            row.querySelector(
-                '.accessoryPrice'
-            ).value = price.toFixed(2);
-
-            calculateAccessoryTotal(row);
-
-        };
-
-    });
-
-    // Qty Change
-    document
-    .querySelectorAll('.accessoryQty')
-    .forEach(input => {
-
-        input.oninput = function(){
-
-            calculateAccessoryTotal(
-                this.closest('tr')
-            );
-
-        };
-
-    });
-
-    // Price Change (for Other accessories)
-    document
-    .querySelectorAll('.accessoryPrice')
-    .forEach(input => {
-
-        input.oninput = function(){
-
-            calculateAccessoryTotal(
-                this.closest('tr')
-            );
-
-        };
-
-    });
-
-}
+        materialSelect.style.display = 'block';
+        otherInput.style.display = 'none';
+        priceField.setAttribute('readonly', true);
+        $.ajax({
+            url:'/QG/ajax/get-accessory-materials.php',
+            type:'POST',
+            data:{category_id: category.value},
+            success:function(response){
+                materialSelect.innerHTML = '<option value="">Select Material</option>' + response;
+                calculateAccessoryTotal(row);
+            }
+        });
+    }
+    function attachAccessoryEvents(){
+        document
+        .querySelectorAll('.accessorySelect')
+        .forEach(select => {
+            select.onchange = function(){
+                const row = this.closest('tr');
+                const price =
+                    parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
+                row.querySelector('.accessoryPrice').value = price.toFixed(2);
+                calculateAccessoryTotal(row);
+            };
+        });
+        document
+        .querySelectorAll('.accessoryQty')
+        .forEach(input => {
+            input.oninput = function(){
+                calculateAccessoryTotal(this.closest('tr'));
+            };
+        });
+        document
+        .querySelectorAll('.accessoryPrice')
+        .forEach(input => {
+            input.oninput = function(){
+                calculateAccessoryTotal(this.closest('tr'));
+            };
+        });
+    }
     function calculateAccessoryTotal(row){
         const qty = parseFloat(row.querySelector('.accessoryQty').value) || 0;
         const price = parseFloat(row.querySelector('.accessoryPrice').value) || 0;
@@ -1739,18 +1632,9 @@ $getAccessoryCategories = mysqli_query(
     ORDER BY category_name
     "
 );
-
 $accessoryCategoryOptions='';
-
 while($cat=mysqli_fetch_assoc($getAccessoryCategories)){
-
-    $accessoryCategoryOptions .=
-    '<option value="'.$cat['id'].'">'
-    .$cat['category_name'].
-    '</option>';
-
+    $accessoryCategoryOptions .= '<option value="'.$cat['id'].'">' .$cat['category_name']. '</option>';
 }
-
-$accessoryCategoryOptions .=
-'<option value="other">Other</option>'; ?>
+$accessoryCategoryOptions .= '<option value="other">Other</option>'; ?>
 <?php include '../includes/footer.php'; ?>

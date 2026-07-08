@@ -77,14 +77,4 @@
         </div>
         <div class="loftContainer"></div>
     </div>
-    <div class="line-image-section mt-3">
-        <label class="line-image-label">
-            <i class="fas fa-drafting-compass"></i>
-            Elevation Line Drawings
-        </label>
-        <input type="file" class="form-control line-image-input" accept="image/*" multiple>
-        <!-- <small class="text-muted">Add drawings one by one from any location.</small> -->
-        <div class="line-image-preview mt-3">
-        </div>
-    </div>
 </div>

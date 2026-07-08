@@ -213,13 +213,15 @@ function refreshUnitDropdowns(master){
         .forEach(select=>{
             const selected = select.value;
             select.innerHTML = options;
-            select.value = selected;});
+            select.value = selected;
+        });
     master
         .querySelectorAll('.shelfAssignedUnit')
         .forEach(select=>{
             const selected = select.value;
             select.innerHTML = options;
-            select.value = selected;});
+            select.value = selected;
+        });
 }
 window.elevationImages = new WeakMap();
 document.addEventListener('change', function (e) {
@@ -271,384 +273,244 @@ document.querySelectorAll('.sidebar-dropdown > a')
     });
 });
 
-/* ==========================================================
-   PROJECT IMAGE MANAGER
-========================================================== */
-
-const PROJECT_IMAGES={
-    render:[],
-    floorplan:[],
-    elevations:{}
-};
-
-document.addEventListener("DOMContentLoaded",()=>{
-
-    initializeImageInput("renderImages","renderPreview","render");
-    initializeImageInput("floorImages","floorPreview","floorplan");
-
-});
-
-/* ==========================================================
-   COMMON IMAGE INPUT
-========================================================== */
-
+const PROJECT_IMAGES= {render:[],floorplan:[],elevations:{}};
 function initializeImageInput(inputId,previewId,type){
-
     const input=document.getElementById(inputId);
-
     if(!input) return;
-
     input.addEventListener("change",function(){
-
         const files=Array.from(this.files);
-
         files.forEach(file=>{
-
             const exists=PROJECT_IMAGES[type].some(existing=>
-
                 existing.name===file.name &&
                 existing.size===file.size &&
                 existing.lastModified===file.lastModified
-
             );
-
             if(!exists){
-
                 PROJECT_IMAGES[type].push(file);
-
             }
-
         });
-
         syncInputFiles(input,PROJECT_IMAGES[type]);
-
         renderPreview(type,previewId);
-
     });
-
 }
-
-/* ==========================================================
-   UPDATE INPUT FILELIST
-========================================================== */
-
-function syncInputFiles(input,files){
-
-    const dt=new DataTransfer();
-
-    files.forEach(file=>dt.items.add(file));
-
-    input.files=dt.files;
-
-}
-
-/* ==========================================================
-   COMMON PREVIEW
-========================================================== */
-
-function renderPreview(type,previewId){
-
-    const container=document.getElementById(previewId);
-
-    if(!container) return;
-
-    container.innerHTML="";
-
-    PROJECT_IMAGES[type].forEach((file,index)=>{
-
-        const reader=new FileReader();
-
-        reader.onload=function(e){
-
-            container.innerHTML+=`
-
-            <div class="image-preview-box">
-
-                <img
-                    src="${e.target.result}"
-                    class="image-thumb"
-                    onclick="openImagePreview('${e.target.result}')">
-
-                <button
-                    type="button"
-                    class="image-delete-btn"
-                    onclick="removeProjectImage('${type}',${index},'${previewId}')">
-
-                    ×
-
-                </button>
-
-            </div>
-
-            `;
-
+function syncInputFiles(input, files){
+    const dt = new DataTransfer();
+    files.forEach(file=>{
+        if(file instanceof File){
+            dt.items.add(file);
         }
-
+    });
+    input.files = dt.files;
+}
+function renderPreview(type, previewId){
+    const container = document.getElementById(previewId);
+    if(!container) return;
+    container.innerHTML = "";
+    PROJECT_IMAGES[type].forEach((file,index)=>{
+        if(file.image_path){
+            container.innerHTML += `
+                <div class="image-preview-box">
+                    <img src="/QG/uploads/${file.image_path}" class="image-thumb" onclick="openImagePreview('/QG/uploads/${file.image_path}')">
+                    <button type="button" class="image-delete-btn" onclick="removeExistingProjectImage('${type}',${index},${file.id})">×</button>
+                </div>
+            `;
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e){
+            container.innerHTML += `
+                <div class="image-preview-box">
+                    <img src="${e.target.result}" class="image-thumb" onclick="openImagePreview('${e.target.result}')">
+                    <button type="button" class="image-delete-btn" onclick="removeProjectImage('${type}',${index},'${previewId}')">×</button>
+                </div>
+            `;
+        };
         reader.readAsDataURL(file);
-
     });
-
     updateImageCounters();
-
 }
-
-/* ==========================================================
-   REMOVE IMAGE
-========================================================== */
-
 function removeProjectImage(type,index,previewId){
-
     PROJECT_IMAGES[type].splice(index,1);
-
     let input=null;
-
-    if(type==="render")
-        input=document.getElementById("renderImages");
-
-    if(type==="floorplan")
-        input=document.getElementById("floorImages");
-
-    syncInputFiles(input,PROJECT_IMAGES[type]);
-
+    if(type==="render"){input=document.getElementById("renderImages");}
+    if(type==="floorplan"){input=document.getElementById("floorImages");}
+    if(input){syncInputFiles(input,PROJECT_IMAGES[type]);}
     renderPreview(type,previewId);
-
 }
-
-/* ==========================================================
-   IMAGE COUNTERS
-========================================================== */
-
+function removeExistingProjectImage(type,index,imageId){
+    if(!window.deletedProjectImages){
+        window.deletedProjectImages = [];
+    }
+    window.deletedProjectImages.push(imageId);
+    PROJECT_IMAGES[type].splice(index,1);
+    renderPreview(type, type==="render" ? "renderPreview" : "floorPreview");
+}
 function updateImageCounters(){
-
     const renderCount=PROJECT_IMAGES.render.length;
-
     const floorCount=PROJECT_IMAGES.floorplan.length;
-
     let elevationCount=0;
-
     Object.keys(PROJECT_IMAGES.elevations).forEach(key=>{
-
         elevationCount+=PROJECT_IMAGES.elevations[key].length;
-
     });
-
     if(document.getElementById("renderImageCount"))
         document.getElementById("renderImageCount").innerText=renderCount;
-
     if(document.getElementById("floorImageCount"))
         document.getElementById("floorImageCount").innerText=floorCount;
-
     if(document.getElementById("elevationImageTotal"))
         document.getElementById("elevationImageTotal").innerText=elevationCount;
-
     if(document.getElementById("grandImageCount"))
-        document.getElementById("grandImageCount").innerText=
-            renderCount+floorCount+elevationCount;
-
+        document.getElementById("grandImageCount").innerText= renderCount+floorCount+elevationCount;
 }
-
-/* ==========================================================
-   DYNAMIC ELEVATION IMAGE MANAGER
-========================================================== */
-
 function generateElevationImageInputs(){
-
     const cards=document.querySelectorAll(".elevation-card");
-
     const tbody=document.getElementById("projectImagesTableBody");
-
     tbody.querySelectorAll(".dynamicElevationRow").forEach(row=>row.remove());
-
     PROJECT_IMAGES.elevations={};
-
     cards.forEach((card,index)=>{
-
         const letter=String.fromCharCode(65+index);
-
-        PROJECT_IMAGES.elevations[index]=[];
-
+        if(!PROJECT_IMAGES.elevations[index]){
+            PROJECT_IMAGES.elevations[index]=[];
+        }
         tbody.insertAdjacentHTML("beforeend",`
-
             <tr class="dynamicElevationRow">
-
-                <td>
-                    <strong>Elevation ${letter}</strong>
-                </td>
-
-                <td>
-
-                    <input
-                        type="file"
-                        id="elevationImageInput_${index}"
-                        class="form-control"
-                        multiple
-                        accept="image/*">
-
-                </td>
-
-                <td>
-
-                    <div
-                        id="elevationPreview_${index}"
-                        class="image-preview-container">
-
-                    </div>
-
-                </td>
-
-                <td>
-
-                    -
-
-                </td>
-
+                <td><strong>Elevation ${letter}</strong></td>
+                <td><input type="file" id="elevationImageInput_${index}" class="form-control" multiple accept="image/*"></td>
+                <td><div id="elevationPreview_${index}" class="image-preview-container"></div></td>
+                <td>-</td>
             </tr>
-
         `);
-
     });
-
     initializeElevationInputs();
-
     updateImageCounters();
-
 }
 function initializeElevationInputs(){
-
     Object.keys(PROJECT_IMAGES.elevations).forEach(index=>{
-
         const input=document.getElementById("elevationImageInput_"+index);
-
         if(!input) return;
-
         input.addEventListener("change",function(){
-
             const files=Array.from(this.files);
-
             files.forEach(file=>{
-
                 const exists=PROJECT_IMAGES.elevations[index].some(existing=>
-
                     existing.name===file.name &&
                     existing.size===file.size &&
                     existing.lastModified===file.lastModified
-
                 );
-
                 if(!exists){
-
                     PROJECT_IMAGES.elevations[index].push(file);
-
                 }
-
             });
-
-            syncInputFiles(
-
-                input,
-
-                PROJECT_IMAGES.elevations[index]
-
-            );
-
+            syncInputFiles(input,PROJECT_IMAGES.elevations[index]);
             renderElevationPreview(index);
-
         });
-
         renderElevationPreview(index);
-
     });
-
 }
 function renderElevationPreview(index){
-
-    const container=document.getElementById("elevationPreview_"+index);
-
+    const container = document.getElementById("elevationPreview_" + index);
     if(!container) return;
-
-    container.innerHTML="";
-
+    container.innerHTML = "";
     PROJECT_IMAGES.elevations[index].forEach((file,fileIndex)=>{
-
-        const reader=new FileReader();
-
-        reader.onload=function(e){
-
-            container.innerHTML+=`
-
-            <div class="image-preview-box">
-
-                <img
-                    src="${e.target.result}"
-                    class="image-thumb"
-                    onclick="openImagePreview('${e.target.result}')">
-
-                <button
-                    class="image-delete-btn"
-                    type="button"
-                    onclick="removeElevationImage(${index},${fileIndex})">
-
-                    ×
-
-                </button>
-
-            </div>
-
+        if(file.image_path){
+            container.innerHTML += `
+                <div class="image-preview-box">
+                    <img src="/QG/uploads/${file.image_path}" class="image-thumb" onclick="openImagePreview('/QG/uploads/${file.image_path}')">
+                    <button type="button" class="image-delete-btn" onclick="removeExistingElevationImage(${index},${fileIndex},${file.id})">×</button>
+                </div>
             `;
-
+            return;
         }
-
+        const reader = new FileReader();
+        reader.onload = function(e){
+            container.innerHTML += `
+                <div class="image-preview-box">
+                    <img src="${e.target.result}" class="image-thumb" onclick="openImagePreview('${e.target.result}')">
+                    <button type="button" class="image-delete-btn" onclick="removeElevationImage(${index},${fileIndex})">×</button>
+                </div>
+            `;
+        };
         reader.readAsDataURL(file);
-
     });
-
     updateImageCounters();
-
 }
 function removeElevationImage(index,fileIndex){
-
     PROJECT_IMAGES.elevations[index].splice(fileIndex,1);
-
     syncInputFiles(
-
         document.getElementById("elevationImageInput_"+index),
-
         PROJECT_IMAGES.elevations[index]
-
     );
-
     renderElevationPreview(index);
-
 }
-/* ==========================================================
-   IMAGE PREVIEW MODAL
-========================================================== */
-
+function removeExistingElevationImage(index,fileIndex,imageId){
+    if(!window.deletedProjectImages){
+        window.deletedProjectImages = [];
+    }
+    window.deletedProjectImages.push(imageId);
+    PROJECT_IMAGES.elevations[index].splice(fileIndex,1);
+    renderElevationPreview(index);
+}
 function openImagePreview(src){
-
     const modal=document.getElementById("imagePreviewModal");
-
     const img=document.getElementById("imagePreviewModalImg");
-
     img.src=src;
-
     modal.style.display="flex";
-
 }
-
 document.addEventListener("click",function(e){
-
     const modal=document.getElementById("imagePreviewModal");
-
     if(!modal) return;
-
     if(
         e.target.classList.contains("image-preview-close") ||
         e.target===modal
     ){
-
         modal.style.display="none";
-
     }
-
 });
+document.addEventListener("DOMContentLoaded",()=>{
+    initializeImageInput("renderImages","renderPreview","render");
+    initializeImageInput("floorImages","floorPreview","floorplan");
+    const enhanceBtn = document.getElementById("enhanceRenderBtn");
+    if(enhanceBtn){
+        enhanceBtn.addEventListener("click",enhanceRenderImages);
+    }
+});
+async function enhanceRenderImages(event){
+    event.preventDefault();
+    if(PROJECT_IMAGES.render.length===0){
+        alert("Please upload at least one render image.");
+        return;
+    }
+    const button=document.getElementById("enhanceRenderBtn");
+    button.disabled=true;
+    button.innerHTML="Enhancing...";
+    const enhanced=[];
+    for(const image of PROJECT_IMAGES.render){
+        if(!(image instanceof File)){
+            continue;
+        }
+        const formData=new FormData();
+        formData.append("image",image);
+        try{
+            const response=await fetch(
+                BASE_URL+
+                "image-manager/api/enhance.php",
+                {
+                    method:"POST",
+                    body:formData
+                }
+            );
+            const result=await response.json();
+            if(result.status){
+                enhanced.push(result.image);
+            }
+            else{
+                console.error(result);
+            }
+        }
+        catch(error){
+            console.error(error);
+        }
+    }
+    button.disabled=false;
+    button.innerHTML="Enhance";
+    console.log(enhanced);
+    alert("Enhancement completed.");
+}

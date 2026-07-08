@@ -10,6 +10,7 @@ header('Content-Type: application/json');
 $data = json_decode(file_get_contents('php://input'),true);
 $uploadedLineImages = $data['uploaded_line_images'] ?? [];
 $projectImages = $data['project_images'] ?? [];
+
 mysqli_begin_transaction($conn);
 try{ 
     $entityId = (int)($data['entity_id'] ?? 0);
@@ -135,6 +136,7 @@ try{
                 )
                 "
             );
+            
             $elevationId = mysqli_insert_id($conn);
             if (isset($uploadedLineImages[$index])) {
                 foreach ($uploadedLineImages[$index] as $imageName) {
@@ -507,15 +509,15 @@ if(!empty($projectImages['render'])){
         $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
         $imageWidth = (int)$image['image_width'];
         $imageHeight = (int)$image['image_height'];
-$tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+        $tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
 
-$newPath = $renderFolder."/".$storedName;
+        $newPath = $renderFolder."/".$storedName;
 
-if(file_exists($tempPath)){
-    rename($tempPath,$newPath);
-}
+        if(file_exists($tempPath)){
+            rename($tempPath,$newPath);
+        }
 
-$imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/render/".$storedName;
+        $imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/render/".$storedName;
         mysqli_query(
             $conn,
             "
@@ -564,15 +566,15 @@ if(!empty($projectImages['floorplan'])){
         $mimeType = mysqli_real_escape_string($conn,$image['mime_type']);
         $imageWidth = (int)$image['image_width'];
         $imageHeight = (int)$image['image_height'];
-$tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
+        $tempPath = dirname(__DIR__)."/uploads/temp/".$imagePath;
 
-$newPath = $floorFolder."/".$storedName;
+        $newPath = $floorFolder."/".$storedName;
 
-if(file_exists($tempPath)){
-    rename($tempPath,$newPath);
-}
+        if(file_exists($tempPath)){
+            rename($tempPath,$newPath);
+        }
 
-$imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/floorplan/".$storedName;
+        $imagePath = "quotations/".preg_replace('/[^A-Za-z0-9_-]/','_',$proformaNo)."/floorplan/".$storedName;
         mysqli_query(
             $conn,
             "

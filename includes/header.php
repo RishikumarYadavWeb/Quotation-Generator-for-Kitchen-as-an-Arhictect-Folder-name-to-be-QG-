@@ -16,5 +16,10 @@
         <!-- Custom CSS -->
         <link rel="stylesheet" href="/QG/assets/css/style.css">
         <link rel="stylesheet" href="/QG/assets/css/responsive.css">
+        <link rel="icon" href="/QG/favicon/favicon.ico">
+        <link rel="icon" type="image/svg+xml" href="/QG/favicon/favicon.svg">
+        <link rel="icon" type="image/png" sizes="96x96" href="/QG/favicon/favicon-96x96.png">
+        <link rel="apple-touch-icon" href="/QG/favicon/apple-touch-icon.png">
+        <link rel="manifest" href="/QG/favicon/site.webmanifest">
     </head>
     <body>
