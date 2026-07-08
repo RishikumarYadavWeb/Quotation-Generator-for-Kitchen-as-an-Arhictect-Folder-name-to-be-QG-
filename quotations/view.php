@@ -482,25 +482,24 @@
     </div>
     <?php } ?>
     <?php
-    $panelQuery = mysqli_query(
+    $visiblePanelQuery = mysqli_query(
         $conn,
         "
         SELECT
-            qp.*,
-            sc.category_name,
-            sm.material_type
-        FROM quotation_panels qp
-        LEFT JOIN shutter_categories sc
-        ON qp.shutter_category_id = sc.id
-        LEFT JOIN shutter_materials sm
-        ON qp.shutter_material_id = sm.id
-        WHERE qp.quotation_id = '$id'
+            qvp.*,
+            vpc.category_name,
+            vpm.material_name
+        FROM quotation_visible_panels qvp
+        LEFT JOIN visible_panel_categories vpc ON vpc.id = qvp.category_id
+        LEFT JOIN visible_panel_materials vpm ON vpm.id = qvp.material_id
+        WHERE qvp.quotation_id = '$id'
+        ORDER BY qvp.id ASC
         "
     );
+    if(mysqli_num_rows($visiblePanelQuery) > 0){
     ?>
-    <?php if(mysqli_num_rows($panelQuery) > 0){ ?>
     <div class="main-card mt-4">
-        <div class="generated-title">Visible Panels / Side Panels</div>
+        <div class="generated-title">Visible Panels</div>
         <table class="table table-bordered">
             <thead>
                 <tr>
@@ -508,34 +507,85 @@
                     <th>Width (MM)</th>
                     <th>Height (MM)</th>
                     <th>Sq Ft</th>
-                    <th>Shutter Category</th>
-                    <th>Shutter Material</th>
+                    <th>Category</th>
+                    <th>Material</th>
                     <th>Panel Price</th>
                 </tr>
             </thead>
             <tbody>
-                <?php
-                    $srNo = 1;
-                    $panelGrandTotal = 0;
-                    while(
-                        $panel =
-                        mysqli_fetch_assoc($panelQuery)
-                    ){
-                        $panelGrandTotal += $panel['panel_price'];
-                ?>
+            <?php
+            $srNo = 1;
+            $panelGrandTotal = 0;
+            while($panel = mysqli_fetch_assoc($visiblePanelQuery)){$panelGrandTotal += $panel['panel_price'];
+            ?>
                 <tr>
                     <td><?= $srNo++ ?></td>
                     <td><?= number_format($panel['width_mm'],2) ?></td>
                     <td><?= number_format($panel['height_mm'],2) ?></td>
                     <td><?= number_format($panel['sqft'],2) ?></td>
                     <td><?= htmlspecialchars($panel['category_name']) ?></td>
-                    <td><?= htmlspecialchars($panel['material_type']) ?></td>
+                    <td><?= htmlspecialchars($panel['material_name']) ?></td>
                     <td>₹ <?= number_format($panel['panel_price'],2) ?></td>
                 </tr>
-                <?php } ?>
+            <?php } ?>
                 <tr>
-                    <th colspan="6" style="text-align:center;">Panels Total</th>
+                    <th colspan="6" style="text-align:center;">Visible Panels Total</th>
                     <th>₹ <?= number_format($panelGrandTotal,2) ?></th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <?php } ?>
+    <?php
+    $visibleSidePanelQuery = mysqli_query(
+        $conn,
+        "
+        SELECT
+            qvsp.*,
+            vsc.category_name,
+            vsm.material_name
+        FROM quotation_visible_side_panels qvsp
+        LEFT JOIN visible_side_categories vsc ON vsc.id = qvsp.category_id
+        LEFT JOIN visible_side_materials vsm ON vsm.id = qvsp.material_id
+        WHERE qvsp.quotation_id = '$id'
+        ORDER BY qvsp.id ASC
+        "
+    );
+    if(mysqli_num_rows($visibleSidePanelQuery) > 0){
+    ?>
+    <div class="main-card mt-4">
+        <div class="generated-title">Visible Side Panels</div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Sr No.</th>
+                    <th>Width (MM)</th>
+                    <th>Height (MM)</th>
+                    <th>Sq Ft</th>
+                    <th>Category</th>
+                    <th>Material</th>
+                    <th>Panel Price</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+            $srNo = 1;
+            $sidePanelGrandTotal = 0;
+            while($panel = mysqli_fetch_assoc($visibleSidePanelQuery)){$sidePanelGrandTotal += $panel['panel_price'];
+            ?>
+                <tr>
+                    <td><?= $srNo++ ?></td>
+                    <td><?= number_format($panel['width_mm'],2) ?></td>
+                    <td><?= number_format($panel['height_mm'],2) ?></td>
+                    <td><?= number_format($panel['sqft'],2) ?></td>
+                    <td><?= htmlspecialchars($panel['category_name']) ?></td>
+                    <td><?= htmlspecialchars($panel['material_name']) ?></td>
+                    <td>₹ <?= number_format($panel['panel_price'],2) ?></td>
+                </tr>
+            <?php } ?>
+                <tr>
+                    <th colspan="6" style="text-align:center;">Visible Side Panels Total</th>
+                    <th>₹ <?= number_format($sidePanelGrandTotal,2) ?></th>
                 </tr>
             </tbody>
         </table>

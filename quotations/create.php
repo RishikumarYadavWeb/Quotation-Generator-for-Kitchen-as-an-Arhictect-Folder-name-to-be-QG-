@@ -434,13 +434,24 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Number Of Standard Accessories</label>
-                <input type="number" id="standardAccessoryCount" class="form-control" min="0" placeholder="Add Number of Standard Accessories">
+                <label>Standard Accessories</label>
+                <div class="panel-radio-group">
+                    <label class="panel-radio">
+                        <input type="radio" name="hasStandardAccessories" value="1" checked>
+                        <span>Yes</span>
+                    </label>
+                    <label class="panel-radio">
+                        <input type="radio" name="hasStandardAccessories" value="0">
+                        <span>No</span>
+                    </label>
+                </div>
             </div>
-            <div style="margin-top:20px;">
-                <button type="button" class="btn btn-primary" onclick="generateStandardAccessories()">Generate Standard Accessories </button>
+            <div id="standardAccessorySection">
+                <div style="margin:15px 0;">
+                    <div id="standardAccessoriesContainer"></div>
+                    <button type="button" class="btn btn-primary" onclick="addStandardAccessoryRow()">+ Add Standard Accessory</button>
+                </div>
             </div>
-            <div id="standardAccessoriesContainer" style="margin-top:25px;"></div>
             <div class="card" style="background:#f8fafc;">
                 <h5>Standard Accessories Total : ₹ <span id="standardAccessoriesGrandTotal"> 0.00</span></h5>
             </div>
@@ -452,13 +463,23 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Number Of Accessories</label>
-                <input type="number" id="accessoryCount" class="form-control" min="0" placeholder="Add Number of Additional Accessories">
+                <label>Additional Accessories</label>
+                <div class="panel-radio-group">
+                    <label class="panel-radio">
+                        <input type="radio" name="hasAccessories" value="1" checked>
+                        <span>Yes</span>
+                    </label>
+                    <label class="panel-radio">
+                        <input type="radio" name="hasAccessories" value="0">
+                        <span>No</span>
+                    </label>
+                </div>
             </div>
-            <div style="margin-top:20px;">
-                <button type="button" class="btn btn-primary" onclick="generateAccessories()">Generate Accessories</button>
-            </div>
-            <div id="accessoriesContainer" style="margin-top:25px;">
+            <div id="accessorySection">
+                <div id="accessoriesContainer"></div>
+                <div style="margin:15px 0;">
+                    <button type="button" class="btn btn-primary" onclick="addAccessoryRow()">+ Add Accessory</button>
+                </div>
             </div>
             <div class="card" style="background:#f8fafc;">
                 <h5>Additional Accessories Total : ₹ <span id="accessoriesGrandTotal">0.00</span></h5>
@@ -566,74 +587,54 @@
     // Additional Accessories
     // ----------------------
     const accessoryCategoryOptions = `<?= $accessoryCategoryOptions ?>`;
-    function generateAccessories(){
-        const count = parseInt(document.getElementById('accessoryCount').value) || 0;
+    function addAccessoryRow(){
         const container = document.getElementById('accessoriesContainer');
-        if(
-            !container.querySelector('.accessoriesTable')
-        ){
+        if(!container.querySelector('.accessoriesTable')){
             container.innerHTML = `
                 <div class="table-responsive">
-                    <table class="table table-bordered accessoriesTable">
+                    <table class="table accessoriesTable">
                         <thead>
                             <tr>
-                                <th>Sr. No.</th>
+                                <th>Sr No.</th>
                                 <th>Category</th>
                                 <th>Material</th>
                                 <th>Unit Price</th>
                                 <th>Qty</th>
                                 <th>Total</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody class="accessoriesTableBody">
-                        </tbody>
+                        <tbody class="accessoriesTableBody"></tbody>
                     </table>
                 </div>
             `;
         }
         const tbody = container.querySelector('.accessoriesTableBody');
-        const existingRows = tbody.querySelectorAll('tr');
-        if(count > existingRows.length){
-            for(
-                let i = existingRows.length;
-                i < count;
-                i++
-            ){
-                tbody.insertAdjacentHTML(
-                    'beforeend',
-                    `
-                    <tr class="accessoryRow">
-                        <td class="accessorySrNo" style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
-                        <td>
-                            <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
-                                <option value="">Select Category</option>
-                                ${accessoryCategoryOptions}
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-control accessorySelect">
-                                <option value="">Select Material</option>
-                            </select>
-                        </td>
-                        <td> <input type="number" step="1" min="0" name="accessory_price[]" class="form-control accessoryPrice" readonly></td>
-                        <td> <input type="number" name="accessory_qty[]" class="form-control accessoryQty" value="1" min="1"></td>
-                        <td> <input type="number" step="1" name="accessory_total[]" class="form-control accessoryTotal" readonly></td>
-                    </tr>
-                    `
-                );
-            }
-        }
-        else if(count < existingRows.length){
-            for(
-                let i = existingRows.length;
-                i > count;
-                i--
-            ){
-                tbody.lastElementChild.remove();
-            }
-        }
+        const srNo = tbody.querySelectorAll('tr').length + 1;
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr class="accessoryRow">
+                <td class="accessorySrNo">${srNo}</td>
+                <td>
+                    <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
+                        <option value="">Select Category</option>
+                        ${accessoryCategoryOptions}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control accessorySelect">
+                        <option value="">Select Material</option>
+                    </select>
+                </td>
+                <td><input type="number" class="form-control accessoryPrice" readonly></td>
+                <td><input type="number" class="form-control accessoryQty" value="1" min="1"></td>
+                <td><input type="number" class="form-control accessoryTotal" readonly></td>
+                <td><button type="button" class="delete-btn removeAccessory">✕</button></td>
+            </tr>
+            `
+        );
         attachAccessoryEvents();
-        calculateAccessoriesGrandTotal();
     }
     function loadAccessoryMaterials(category){
         const row = category.closest('tr');
@@ -696,20 +697,52 @@
         }
         updateGrandTotal();
     }
+    document.querySelectorAll('input[name="hasAccessories"]')
+        .forEach(radio=>{
+            radio.addEventListener('change',function(){
+                const section = document.getElementById('accessorySection');
+                if(this.value=="1"){
+                    section.style.display="block";
+                    if(document.querySelectorAll('.accessoryRow').length===0){
+                        addAccessoryRow();
+                    }
+                }else{
+                    section.style.display="none";
+                    document.getElementById('accessoriesContainer').innerHTML="";
+                    document.getElementById('accessoriesGrandTotal').innerText="0.00";
+                    updateGrandTotal();
+                }
+            });
+        }
+    );
+    document.addEventListener("click", function(e){
+        if(!e.target.classList.contains("removeAccessory")) return;
+        const row = e.target.closest("tr");
+        row.remove();
+        updateAccessorySerialNumbers();
+        calculateAccessoriesGrandTotal();
+        updateGrandTotal();
+    });
+    function updateAccessorySerialNumbers(){
+        document.querySelectorAll(".accessorySrNo")
+        .forEach((td,index)=>{td.innerText = index + 1;});
+    }
+    document.addEventListener("DOMContentLoaded", function(){
+        if(document.querySelectorAll(".accessoryRow").length === 0){
+            addAccessoryRow();
+        }
+    });
     // --------------------
     // Standard Accessories
     // --------------------
     const standardAccessoryOptions =`<?= $standardAccessoryOptions ?>`;
     const standardAccessoryCategoryOptions =`<?= $standardAccessoryCategoryOptions ?>`;
-    function generateStandardAccessories(){
-        const count = parseInt(document.getElementById('standardAccessoryCount').value) || 0;
+    function addStandardAccessoryRow(){
         const container = document.getElementById('standardAccessoriesContainer');
-        if(
-            !container.querySelector('.standardAccessoriesTable')
-        ){
+        if(!container.querySelector('.standardAccessoriesTable')){
             container.innerHTML = `
                 <div class="table-responsive">
-                    <table class=" table table-bordered standardAccessoriesTable">
+                    <table class="table table-bordered standardAccessoriesTable">
                         <thead>
                             <tr>
                                 <th>Sr No.</th>
@@ -718,70 +751,42 @@
                                 <th>Unit Price</th>
                                 <th>Qty</th>
                                 <th>Total</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody class="standardAccessoriesTableBody">
-                        </tbody>
+                        <tbody class="standardAccessoriesTableBody"></tbody>
                     </table>
                 </div>
             `;
         }
         const tbody = container.querySelector('.standardAccessoriesTableBody');
-        const existingRows = tbody.querySelectorAll('tr');
-        if(count > existingRows.length){
-            for(
-                let i = existingRows.length;
-                i < count;
-                i++
-            ){
-                tbody.insertAdjacentHTML(
-                    'beforeend',
-                    `
-                    <tr class="standardAccessoryRow">
-                        <td data-label="Accessory No:" style="display:flex;justify-content:center;align-items:center;">${i + 1}</td>
-                        <td data-label="Category:">
-                            <select class="form-control standardAccessoryCategory" onchange="loadStandardAccessoryMaterials(this)">
-                                <option value="">
-                                    Select Category
-                                </option>
-                                ${standardAccessoryCategoryOptions}
-                            </select>
-                        </td>
-                        <td data-label="Material:">
-                            <select name="standard_accessory_id[]" class=" form-control standardAccessoryMaterial">
-                                <option value="">Select Material</option>
-                            </select>
-                        </td>
-                        <td data-label="Unit Price:"><input type="number" step="1" name="standard_accessory_price[]" class=" form-control standardAccessoryPrice" readonly></td>
-                        <td data-label="Quantity:"><input type="number" name="standard_accessory_qty[]" class="form-control standardAccessoryQty" value="1" min="1"></td>
-                        <td data-label="Total:"><input type="number" step="1" name="standard_accessory_total[]" class="form-control standardAccessoryTotal" readonly></td>
-                    </tr>
-                    `
-                );
-            }
-        }else if(count < existingRows.length){
-            for(
-                let i = existingRows.length;
-                i > count;
-                i--
-            ){
-                tbody.lastElementChild.remove();
-            }
-        }
+        const srNo = tbody.querySelectorAll('tr').length + 1;
+        tbody.insertAdjacentHTML(
+            'beforeend',
+            `
+            <tr class="standardAccessoryRow">
+                <td class="standardAccessorySrNo">${srNo}</td>
+                <td>
+                    <select class="form-control standardAccessoryCategory" onchange="loadStandardAccessoryMaterials(this)">
+                        <option value="">Select Category</option>
+                        ${standardAccessoryCategoryOptions}
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control standardAccessoryMaterial">
+                        <option value="">Select Material</option>
+                    </select>
+                </td>
+                <td><input type="number" class="form-control standardAccessoryPrice" readonly></td>
+                <td><input type="number" class="form-control standardAccessoryQty" value="1" min="1"></td>
+                <td><input type="number" class="form-control standardAccessoryTotal" readonly></td>
+                <td><button type="button" class="delete-btn removeStandardAccessory">✕</button></td>
+            </tr>
+            `
+        );
         attachStandardAccessoryEvents();
-        calculateStandardAccessoriesGrandTotal();
     }
     function attachStandardAccessoryEvents(){
-        document
-        .querySelectorAll('.standardAccessorySelect')
-        .forEach(select => {
-            select.onchange = function(){
-                const row = this.closest('tr');
-                const price = parseFloat(this.options[this.selectedIndex]?.dataset.price) || 0;
-                row.querySelector('.standardAccessoryPrice').value = price.toFixed(2);
-                calculateStandardAccessoryTotal(row);
-            };
-        });
         document
         .querySelectorAll('.standardAccessoryMaterial')
         .forEach(select => {
@@ -835,6 +840,43 @@
             grandField.innerText = grand.toFixed(2);
         }
         updateGrandTotal();
+    }
+    document.querySelectorAll('input[name="hasStandardAccessories"]')
+    .forEach(radio => {
+        radio.addEventListener('change', function(){
+            const section = document.getElementById('standardAccessorySection');
+            if(this.value == "1"){
+                section.style.display = "block";
+                if(document.querySelectorAll('.standardAccessoryRow').length === 0){
+                    addStandardAccessoryRow();
+                }
+            }else{
+                section.style.display = "none";
+                document.getElementById('standardAccessoriesContainer').innerHTML = "";
+                document.getElementById('standardAccessoriesGrandTotal').innerText = "0.00";
+                updateGrandTotal();
+            }
+        });
+    });
+    document.addEventListener("DOMContentLoaded", function(){
+        if(document.querySelectorAll(".standardAccessoryRow").length === 0){
+            addStandardAccessoryRow();
+        }
+    });
+    document.addEventListener("click", function(e){
+        if(!e.target.classList.contains("removeStandardAccessory")) return;
+        const row = e.target.closest("tr");
+        row.remove();
+        updateStandardAccessorySerialNumbers();
+        calculateStandardAccessoriesGrandTotal();
+        updateGrandTotal();
+    });
+    function updateStandardAccessorySerialNumbers(){
+        document
+        .querySelectorAll(".standardAccessorySrNo")
+        .forEach((td,index)=>{
+            td.innerText = index + 1;
+        });
     }
     // -------------------------
     // Visible Panel / End Panel
@@ -895,10 +937,7 @@
             );
         });
     }
-    function loadPanelMaterials(
-        categoryId,
-        row
-    ){
+    function loadPanelMaterials(categoryId,row){
         const materialSelect = row.querySelector('.panelMaterial');
         materialSelect.innerHTML = '<option value="">Select Material</option>';
         visiblePanelMaterials
@@ -938,9 +977,8 @@
             row.querySelector(".panelSr").innerText = index + 1;
         });
     }
-    document
-    .querySelectorAll('input[name="hasPanels"]')
-    .forEach(radio => {
+    document.querySelectorAll('input[name="hasPanels"]')
+        .forEach(radio => {
         radio.addEventListener('change', function(){
             const panelSection = document.getElementById('panelSection');
             if(this.value == "1"){
@@ -967,24 +1005,24 @@
     // ------------------
     // Visible side Panel
     // ------------------
-    document
-    .querySelectorAll('input[name="hasSidePanels"]')
-    .forEach(radio => {
-        radio.addEventListener('change', function(){
-            const section = document.getElementById('sidePanelSection');
-            if(this.value == "1"){
-                section.style.display = "block";
-                if(document.querySelectorAll('.sidePanelRow').length === 0){
-                    addSidePanelRow();
+    document.querySelectorAll('input[name="hasSidePanels"]')
+        .forEach(radio => {
+            radio.addEventListener('change', function(){
+                const section = document.getElementById('sidePanelSection');
+                if(this.value == "1"){
+                    section.style.display = "block";
+                    if(document.querySelectorAll('.sidePanelRow').length === 0){
+                        addSidePanelRow();
+                    }
+                }else{
+                    section.style.display = "none";
+                    document.getElementById('sidePanelContainer').innerHTML = "";
+                    document.getElementById('sidePanelGrandTotal').innerText = "0.00";
+                    updateGrandTotal();
                 }
-            }else{
-                section.style.display = "none";
-                document.getElementById('sidePanelContainer').innerHTML = "";
-                document.getElementById('sidePanelGrandTotal').innerText = "0.00";
-                updateGrandTotal();
-            }
-        });
-    });
+            });
+        }
+    );
     function addSidePanelRow(){
         const tbody = document.getElementById('sidePanelContainer');
         const srNo = tbody.querySelectorAll('tr').length+1;
