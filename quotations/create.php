@@ -162,6 +162,54 @@
             '</option>';
     }
     // $accessoryCategoryOptions .= '<option value="other">Other</option>';
+    /* VISIBLE PANEL */
+    $visiblePanelCategories = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_panel_categories 
+            WHERE status=1
+            "
+        ),
+        MYSQLI_ASSOC
+    );
+    $visiblePanelMaterials = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_panel_materials 
+            WHERE status=1
+            "
+        ),
+        MYSQLI_ASSOC
+    );
+    /* VISIBLE SIDE PANEL */ 
+    $visibleSideCategories = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_side_categories
+            WHERE status = 1
+            ORDER BY category_name
+            "
+        ),
+        MYSQLI_ASSOC
+    );
+    $visibleSideMaterials = mysqli_fetch_all(
+        mysqli_query(
+            $conn,
+            "
+            SELECT * 
+            FROM visible_side_materials
+            WHERE status = 1
+            ORDER BY material_name
+            "
+        ),
+        MYSQLI_ASSOC
+    );
 ?>
 <form  id="quotationForm" enctype="multipart/form-data" novalidate onkeydown="preventEnterSubmit(event)">
     <div class="container-fluid">
@@ -288,30 +336,97 @@
             </div>
         </div>
         <div id="elevationContainer"></div>
-
         <div class="main-card" style="margin-top:30px;">
             <div class="page-header mb-0">
-                <div>
-                    <h2 class="page-title">Visible Panels / Side Panels</h2>
-                </div>
+                <div><h2 class="page-title">Visible Panels / End Panels</h2></div>
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label>Number Of Panels</label>
-                    <input type="number" id="panelCount" class="form-control" min="0" placeholder="Add Number of Panels">
+                    <label>Visible Panels</label>
+                    <div class="panel-radio-group">
+                        <label class="panel-radio">
+                            <input type="radio" name="hasPanels" value="1">
+                            <span>Yes</span>
+                        </label>
+                        <label class="panel-radio">
+                            <input type="radio" name="hasPanels" value="0" checked>
+                            <span>No</span>
+                        </label>
+                    </div>
+                    <style>.panel-radio-group{display:flex;gap:20px;margin-top:10px;}.panel-radio{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:500;}.panel-radio input[type="radio"]{width:16px;height:16px;margin:0;cursor:pointer;}</style>
                 </div>
             </div>
-            <div>
-                <button type="button" class="btn btn-primary" onclick="generatePanels()">
-                    Generate Panels
-                </button>
+            <div id="panelSection" style="display:none;">
+                <div class="table-responsive">
+                    <table class="table panelTable">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Width (MM)</th>
+                                <th>Height (MM)</th>
+                                <th>Sq Ft</th>
+                                <th>Category</th>
+                                <th>Material</th>
+                                <th>Panel Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="panelContainer"></tbody>
+                    </table>
+                </div>
+                <div style="margin:15px 0;">
+                    <button type="button" class="btn btn-primary" onclick="addPanelRow()">+ Add Panel</button>
+                </div>
             </div>
-            <div id="panelContainer"></div>
             <div class="card mt-4" style="background:#f8fafc;">
-                <h5>Panels Total :₹ <span id="panelGrandTotal">0.00</span></h5>
+                <h5>Panels Total : ₹ <span id="panelGrandTotal">0.00</span></h5>
             </div>
         </div>
-
+        <div class="main-card" style="margin-top:30px;">
+            <div class="page-header mb-0">
+                <h2 class="page-title">Visible Side Panels</h2>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Visible Side Panels</label>
+                    <div class="panel-radio-group">
+                        <label class="panel-radio">
+                            <input type="radio" name="hasSidePanels" value="1">
+                            <span>Yes</span>
+                        </label>
+                        <label class="panel-radio">
+                            <input type="radio" name="hasSidePanels" value="0" checked>
+                            <span>No</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div id="sidePanelSection" style="display:none;">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sr No.</th>
+                                <th>Width (MM)</th>
+                                <th>Height (MM)</th>
+                                <th>Sq Ft</th>
+                                <th>Category</th>
+                                <th>Material</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sidePanelContainer"></tbody>
+                    </table>
+                </div>
+                <div style="margin:15px 0;">
+                    <button type="button" class="btn btn-primary" onclick="addSidePanelRow()">+ Add Side Panel</button>
+                </div>
+            </div>
+            <div class="card mt-4" style="background:#f8fafc;">
+                <h5>Visible Side Total : ₹ <span id="sidePanelGrandTotal">0.00</span></h5>
+            </div>
+        </div>
         <div class="main-card" style="margin-top:30px;">
             <div class="page-header mb-0">
                 <div>
@@ -350,7 +465,6 @@
             </div>
         </div>
         <?php include '../components/project-images.php'; ?>
-        
     </div>
 </form>
 <div class="main-card mt-4">
@@ -402,6 +516,10 @@
     const shutterMaterials = <?= json_encode($shutterMaterials); ?>;
     const drawers = <?= json_encode($drawers); ?>;
     const shelves = <?= json_encode($shelves); ?>;
+    const visiblePanelCategories = <?= json_encode($visiblePanelCategories); ?>;
+    const visiblePanelMaterials = <?= json_encode($visiblePanelMaterials); ?>;
+    const visibleSideCategories = <?= json_encode($visibleSideCategories); ?>;
+    const visibleSideMaterials = <?= json_encode($visibleSideMaterials); ?>;
     function toggleOtherInput(){
         const projectType = document.getElementById('projectType');
         const otherInput = document.getElementById('otherProjectInput');
@@ -721,57 +839,36 @@
     // -------------------------
     // Visible Panel / End Panel
     // -------------------------
-    function generatePanels(){
-        const count = parseInt(document.getElementById('panelCount').value) || 0;
-        const container = document.getElementById('panelContainer');
-        const panelShutterCategoryOptions = shutterCategories
-            .filter(cat => ![4, 9].includes(parseInt(cat.id)))
+    function addPanelRow(){
+        const tbody = document.getElementById('panelContainer');
+        const srNo = tbody.querySelectorAll('tr').length + 1;
+        const panelCategoryOptions = visiblePanelCategories
             .map(cat => `<option value="${cat.id}">${cat.category_name}</option>`)
-            .join('');
-        let html = `
-        <div class="table-responsive panel-table-responsive">
-            <table class="table table-bordered panelTable">
-                <thead>
-                    <tr>
-                        <th>Sr No.</th>
-                        <th>Width (MM)</th>
-                        <th>Height (MM)</th>
-                        <th>Sq Ft</th>
-                        <th>Shutter Category</th>
-                        <th>Shutter Material</th>
-                        <th>Panel Price</th>
-                    </tr>
-                </thead>
-                <tbody>
+            .join('');;
+        const row = document.createElement('tr');
+        row.className = "panelRow";
+        row.innerHTML = `
+            <td class="panelSr">${srNo}</td>
+            <td><input type="number" min="0" step="1" class="form-control panelWidth"></td>
+            <td><input type="number" min="0" step="1" class="form-control panelHeight"></td>
+            <td><input type="number" class="form-control panelSqft" readonly></td>
+            <td>
+                <select class="form-control panelCategory">
+                    <option value="">Select Category</option>
+                    ${panelCategoryOptions}
+                </select>
+            </td>
+            <td>
+                <select class="form-control panelMaterial">
+                    <option value="">Select Material</option>
+                </select>
+            </td>
+            <td><input type="number" class="form-control panelPrice" readonly></td>
+            <td>
+                <button type="button" class="delete-btn removePanel">✕</button>
+            </td>
         `;
-        for(let i = 1; i <= count; i++){
-            html += `
-                    <tr class="panelRow">
-                        <td>${i}</td>
-                        <td><input type="number" min="0" step="1" class="form-control panelWidth"></td>
-                        <td><input type="number" min="0" step="1" class="form-control panelHeight"></td>
-                        <td><input type="number" class="form-control panelSqft" readonly></td>
-                        <td>
-                            <select class="form-control panelCategory">
-                                <option value="">Select Category</option>
-                                ${panelShutterCategoryOptions}
-                            </select>
-                        </td>
-                        <td>
-                            <select class="form-control panelMaterial">
-                                <option value="">Select Material</option>
-                            </select>
-                        </td>
-                        <td><input type="number" class="form-control panelPrice" readonly></td>
-                    </tr>
-            `;
-        }
-        html += `
-                </tbody>
-            </table>
-        </div>
-        `;
-        container.innerHTML = html;
+        tbody.appendChild(row);
         attachPanelEvents();
     }
     function attachPanelEvents(){
@@ -804,14 +901,14 @@
     ){
         const materialSelect = row.querySelector('.panelMaterial');
         materialSelect.innerHTML = '<option value="">Select Material</option>';
-        shutterMaterials
+        visiblePanelMaterials
         .filter(
             mat => mat.category_id == categoryId
         )
         .forEach(mat => {
             materialSelect.innerHTML += `
                 <option value="${mat.id}" data-price="${mat.price_per_sqft}">
-                    ${mat.material_type}
+                    ${mat.material_name}
                 </option>
             `;
         });
@@ -835,5 +932,151 @@
         .forEach(input => {total += parseFloat(input.value) || 0;});
         document.getElementById('panelGrandTotal').innerText = total.toFixed(2);
     }
+    function updatePanelSerialNumbers(){
+        document.querySelectorAll("#panelContainer .panelRow")
+        .forEach((row,index)=>{
+            row.querySelector(".panelSr").innerText = index + 1;
+        });
+    }
+    document
+    .querySelectorAll('input[name="hasPanels"]')
+    .forEach(radio => {
+        radio.addEventListener('change', function(){
+            const panelSection = document.getElementById('panelSection');
+            if(this.value == "1"){
+                panelSection.style.display = "block";
+                if(document.querySelectorAll('.panelRow').length === 0){
+                    addPanelRow();
+                }
+            }else{
+                panelSection.style.display = "none";
+                document.getElementById('panelContainer').innerHTML = "";
+                document.getElementById('panelGrandTotal').innerText = "0.00";
+                updateGrandTotal();
+            }
+        });
+    });
+    document.addEventListener("click", function(e){
+        if(!e.target.classList.contains("removePanel")) return;
+        const row = e.target.closest("tr");
+        row.remove();
+        updatePanelSerialNumbers();
+        calculatePanelsGrandTotal();
+        updateGrandTotal();
+    });
+    // ------------------
+    // Visible side Panel
+    // ------------------
+    document
+    .querySelectorAll('input[name="hasSidePanels"]')
+    .forEach(radio => {
+        radio.addEventListener('change', function(){
+            const section = document.getElementById('sidePanelSection');
+            if(this.value == "1"){
+                section.style.display = "block";
+                if(document.querySelectorAll('.sidePanelRow').length === 0){
+                    addSidePanelRow();
+                }
+            }else{
+                section.style.display = "none";
+                document.getElementById('sidePanelContainer').innerHTML = "";
+                document.getElementById('sidePanelGrandTotal').innerText = "0.00";
+                updateGrandTotal();
+            }
+        });
+    });
+    function addSidePanelRow(){
+        const tbody = document.getElementById('sidePanelContainer');
+        const srNo = tbody.querySelectorAll('tr').length+1;
+        const options = visibleSideCategories
+            .map(cat=>`<option value="${cat.id}">${cat.category_name}</option>`)
+            .join('');
+        const row=document.createElement('tr');
+        row.className="sidePanelRow";
+        row.innerHTML=`
+            <td class="sidePanelSr">${srNo}</td>
+            <td><input type="number" class="form-control sidePanelWidth"></td>
+            <td><input type="number" class="form-control sidePanelHeight"></td>
+            <td><input type="number" class="form-control sidePanelSqft" readonly></td>
+            <td>
+                <select class="form-control sidePanelCategory">
+                    <option value="">Select Category</option>
+                    ${options}
+                </select>
+            </td>
+            <td>
+                <select class="form-control sidePanelMaterial">
+                    <option value="">Select Material</option>
+                </select>
+            </td>
+            <td><input type="number" class="form-control sidePanelPrice" readonly></td>
+            <td><button type="button" class="delete-btn removeSidePanel">✕</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+        attachSidePanelEvents();
+    }
+    function attachSidePanelEvents(){
+        document
+        .querySelectorAll('.sidePanelRow')
+        .forEach(row=>{
+            row.querySelectorAll('.sidePanelWidth,.sidePanelHeight')
+            .forEach(input=>{
+                input.oninput=()=>{
+                    calculateSidePanelRow(row);
+                };
+            });
+            row.querySelector('.sidePanelCategory')
+            .onchange=function(){
+                loadSidePanelMaterials(this.value,row);
+            };
+            row.querySelector('.sidePanelMaterial')
+            .onchange=()=>{
+                calculateSidePanelRow(row);
+            };
+        });
+    }
+    function loadSidePanelMaterials(categoryId,row){
+        const material=row.querySelector('.sidePanelMaterial');
+        material.innerHTML='<option value="">Select Material</option>';
+        visibleSideMaterials
+        .filter(mat=>mat.category_id==categoryId)
+        .forEach(mat=>{
+            material.innerHTML+=`
+                <option value="${mat.id}" data-price="${mat.price_per_sqft}">
+                    ${mat.material_name}
+                </option>
+            `;
+        });
+    }
+    function calculateSidePanelRow(row){
+        const width=parseFloat(row.querySelector('.sidePanelWidth').value)||0;
+        const height=parseFloat(row.querySelector('.sidePanelHeight').value)||0;
+        const sqft=(width/304.8)*(height/304.8);
+        row.querySelector('.sidePanelSqft').value=sqft.toFixed(2);
+        const material=row.querySelector('.sidePanelMaterial');
+        const rate=parseFloat(material.selectedOptions[0]?.dataset.price)||0;
+        row.querySelector('.sidePanelPrice').value=(sqft*rate).toFixed(2);
+        calculateSidePanelGrandTotal();
+        updateGrandTotal();
+    }
+    function calculateSidePanelGrandTotal(){
+        let total=0;
+        document.querySelectorAll('.sidePanelPrice')
+        .forEach(input=>{
+            total+=parseFloat(input.value)||0;
+        });
+        document.getElementById('sidePanelGrandTotal').innerText=total.toFixed(2);
+    }
+    document.addEventListener('click',function(e){
+        if(!e.target.classList.contains('removeSidePanel')) return;
+        e.target.closest('tr').remove();
+        document.querySelectorAll('.sidePanelSr')
+        .forEach((td,index)=>{
+            td.innerText=index+1;
+        });
+        calculateSidePanelGrandTotal();
+        updateGrandTotal();
+    });
 </script>
 <?php include '../includes/footer.php'; ?>

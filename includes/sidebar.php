@@ -129,12 +129,14 @@
                 );
             }  
         ?>
+        <!-- Masters -->
         <?php
         if( 
             can('drawers_view') || can('shelves_view') || can('materials_view')
         ){
             echo '<li class="menu-title">Masters</li>';
         }
+        /* CARCASS */
         if(can('carcass_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
@@ -147,6 +149,7 @@
             </ul>
         </li>
         <?php } ?>
+        <!-- SHUTTER -->
         <?php if(can('shutter_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
@@ -159,6 +162,7 @@
             </ul>
         </li>
         <?php } ?>
+        <!-- DRAWER -->
         <?php if(can('drawers_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
@@ -171,6 +175,7 @@
             </ul>
         </li>
         <?php } ?>
+        <!-- SHELVES -->
         <?php if(can('shelves_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
@@ -183,7 +188,8 @@
             </ul>
         </li>
         <?php } ?>
-        <?php if(can('accessories_view')){ ?>
+        <!-- VISIBLE PANEL VIEW -->
+        <?php if(can('visible_panel_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
                 <span><i class="fa-solid fa-screwdriver-wrench" style="margin-right:10px;"></i>Visible Panel / End Panel</span>
@@ -195,7 +201,8 @@
             </ul>
         </li>
         <?php } ?>
-        <?php if(can('accessories_view')){ ?>
+        <!-- VISIBLE SIDE PANEL -->
+        <?php if(can('visible_side_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
                 <span><i class="fa-solid fa-screwdriver-wrench" style="margin-right:10px;"></i>Visible Side Panel</span>
@@ -207,6 +214,7 @@
             </ul>
         </li>
         <?php } ?>
+        <!-- STANDARD ACCESSORIES -->
         <?php if(can('accessories_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
@@ -219,6 +227,7 @@
             </ul>
         </li>
         <?php } ?>
+        <!-- ADDITIONAL ACCESSORIES -->
         <?php if(can('accessories_view')){ ?>
         <li class="sidebar-dropdown">
             <a href="#">
@@ -231,13 +240,12 @@
             </ul>
         </li>
         <?php } ?>
-       
+        <!-- SETTINGS -->
         <li>
             <a href="/QG/settings/index.php" class="<?= isActive('/settings/', $current_uri) ?>">
                 <i class="fa-solid fa-gear" style="margin-right:10px;"></i>
                 Settings</a>
         </li>
-        
         <!-- LOGOUT -->
         <li class="logout-item">
             <a href="/QG/auth/logout.php" onclick="return confirm('Logout from ERP?')">
@@ -247,6 +255,5 @@
         </li>
     </ul>
 </div>
-<!-- MAIN CONTENT -->
 <main>
     <div class="main-content">

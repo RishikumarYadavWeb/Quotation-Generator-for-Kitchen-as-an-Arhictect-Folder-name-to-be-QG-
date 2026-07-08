@@ -78,20 +78,32 @@ async function saveQuotation(){
             });
             quotationData.elevations.push(elevationData);
         });
-        const panels = [];
-        document
-        .querySelectorAll('.panelRow')
+        const visiblePanels = [];
+        document.querySelectorAll('.panelRow')
         .forEach(row => {
-            panels.push({
+            visiblePanels.push({
                 width_mm: row.querySelector('.panelWidth')?.value || 0,
                 height_mm: row.querySelector('.panelHeight')?.value || 0,
                 sqft: row.querySelector('.panelSqft')?.value || 0,
-                shutter_category_id: row.querySelector('.panelCategory')?.value || 0,
-                shutter_material_id: row.querySelector('.panelMaterial')?.value || 0,
+                category_id: row.querySelector('.panelCategory')?.value || 0,
+                material_id: row.querySelector('.panelMaterial')?.value || 0,
                 panel_price: row.querySelector('.panelPrice')?.value || 0
             });
         });
-        quotationData.panels = panels;
+        quotationData.visiblePanels = visiblePanels;
+        const visibleSidePanels = [];
+        document.querySelectorAll('.sidePanelRow')
+        .forEach(row => {
+            visibleSidePanels.push({
+                width_mm: row.querySelector('.sidePanelWidth')?.value || 0,
+                height_mm: row.querySelector('.sidePanelHeight')?.value || 0,
+                sqft: row.querySelector('.sidePanelSqft')?.value || 0,
+                category_id: row.querySelector('.sidePanelCategory')?.value || 0,
+                material_id: row.querySelector('.sidePanelMaterial')?.value || 0,
+                panel_price: row.querySelector('.sidePanelPrice')?.value || 0
+            });
+        });
+        quotationData.visibleSidePanels = visibleSidePanels;
         quotationData.accessories = [];
         document
         .querySelectorAll('.accessoryRow')
