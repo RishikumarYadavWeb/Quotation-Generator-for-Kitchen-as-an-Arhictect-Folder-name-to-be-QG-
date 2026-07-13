@@ -84,21 +84,28 @@ async function updateQuotation(){
             quotationData.elevations.push(elevationData);
         });
         quotationData.accessories = [];
-        document
-        .querySelectorAll('.accessoryRow')
-        .forEach(row => {
-            const category = row.querySelector('.accessoryCategory')?.value || '';
-            const material = row.querySelector('.accessorySelect')?.value || 0;
-            const otherMaterial = row.querySelector('.accessoryOtherMaterial')?.value.trim() || '';
-            quotationData.accessories.push({
-                category_id: category === 'other' ? 0 : category,
-                accessory_id: category === 'other' ? 0 : material,
-                other_material: category === 'other' ? otherMaterial : '',
-                qty: row.querySelector('.accessoryQty')?.value || 0,
-                price: row.querySelector('.accessoryPrice')?.value || 0,
-                total: row.querySelector('.accessoryTotal')?.value || 0
-            });
-        });
+
+document
+.querySelectorAll('.accessoryRow')
+.forEach(row => {
+
+    quotationData.accessories.push({
+
+        category_id: row.querySelector('.accessoryCategory')?.value || 0,
+
+        make_id: row.querySelector('.accessoryMake')?.value || 0,
+
+        accessory_id: row.querySelector('.accessorySelect')?.value || 0,
+
+        qty: row.querySelector('.accessoryQty')?.value || 0,
+
+        price: row.querySelector('.accessoryPrice')?.value || 0,
+
+        total: row.querySelector('.accessoryTotal')?.value || 0
+
+    });
+
+});
         const visiblePanels = [];
         document
         .querySelectorAll('.panelRow')

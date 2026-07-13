@@ -86,23 +86,19 @@
     while($row = mysqli_fetch_assoc($shelfResult)){
         $shelves[] = $row;
     }
-    /* ADDITIONAL ACCESSORIES */
-    $getAccessories = mysqli_query($conn, "
-            SELECT
-                id,
-                accessory_name,
-                price
-            FROM accessories
-            WHERE status='active'
-            ORDER BY accessory_name ASC
-        ");
-    $accessoryOptions = '';
-    while($acc = mysqli_fetch_assoc($getAccessories)){
-        $accessoryOptions .= '
-            <option value=\"'.$acc['id'].'\" data-price=\"'.$acc['price'].'\">
-                '.$acc['accessory_name'].'
-            </option>
-        ';
+    /* ACCESSORY CATEGORIES */
+    $categoryQuery = mysqli_query(
+        $conn,
+        "
+        SELECT id,category_name
+        FROM accessory_categories
+        WHERE status = 1
+        ORDER BY category_name
+        "
+    );
+    $accessoryCategoryOptions = '';
+    while($row = mysqli_fetch_assoc($categoryQuery)){
+        $accessoryCategoryOptions .='<option value="'.$row['id'].'">'.htmlspecialchars($row['category_name']).'</option>';
     }
     /* STANDARD ACCESSORIES */
     $standardAccessoryOptions = '';
@@ -145,23 +141,6 @@
         $row['category_name'].
         '</option>';
     }
-    $categoryQuery = mysqli_query(
-        $conn,
-        "
-        SELECT *
-        FROM accessory_categories
-        WHERE status = 1
-        ORDER BY category_name
-        "
-    );
-    $accessoryCategoryOptions = '';
-    while($row = mysqli_fetch_assoc($categoryQuery)){
-        $accessoryCategoryOptions .=
-            '<option value="'.$row['id'].'">'.
-            htmlspecialchars($row['category_name']).
-            '</option>';
-    }
-    // $accessoryCategoryOptions .= '<option value="other">Other</option>';
     /* VISIBLE PANEL */
     $visiblePanelCategories = mysqli_fetch_all(
         mysqli_query(
@@ -590,41 +569,47 @@
     function addAccessoryRow(){
         const container = document.getElementById('accessoriesContainer');
         if(!container.querySelector('.accessoriesTable')){
-            container.innerHTML = `
-                <div class="table-responsive">
-                    <table class="table accessoriesTable">
-                        <thead>
-                            <tr>
-                                <th>Sr No.</th>
-                                <th>Category</th>
-                                <th>Material</th>
-                                <th>Unit Price</th>
-                                <th>Qty</th>
-                                <th>Total</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="accessoriesTableBody"></tbody>
-                    </table>
-                </div>
+            container.innerHTML=`
+            <div class="table-scroll">
+                <table class="table accessoriesTable">
+                    <thead>
+                        <tr>
+                            <th>Sr No.</th>
+                            <th>Category</th>
+                            <th>Make</th>
+                            <th>Accessory</th>
+                            <th>Accessory Price</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="accessoriesTableBody"></tbody>
+                </table>
+            </div>
             `;
         }
-        const tbody = container.querySelector('.accessoriesTableBody');
-        const srNo = tbody.querySelectorAll('tr').length + 1;
+        const tbody = container.querySelector(".accessoriesTableBody");
+        const srNo = tbody.querySelectorAll("tr").length+1;
         tbody.insertAdjacentHTML(
-            'beforeend',
+            "beforeend",
             `
             <tr class="accessoryRow">
                 <td class="accessorySrNo">${srNo}</td>
                 <td>
-                    <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
+                    <select class="form-control accessoryCategory">
                         <option value="">Select Category</option>
                         ${accessoryCategoryOptions}
                     </select>
                 </td>
                 <td>
+                    <select class="form-control accessoryMake">
+                        <option value="">Select Make</option>
+                    </select>
+                </td>
+                <td>
                     <select class="form-control accessorySelect">
-                        <option value="">Select Material</option>
+                        <option value="">Select Accessory</option>
                     </select>
                 </td>
                 <td><input type="number" class="form-control accessoryPrice" readonly></td>
@@ -636,45 +621,64 @@
         );
         attachAccessoryEvents();
     }
-    function loadAccessoryMaterials(category){
-        const row = category.closest('tr');
-        const materialSelect = row.querySelector('.accessorySelect');
-        const priceField = row.querySelector('.accessoryPrice');
-        materialSelect.innerHTML = '<option value="">Select Material</option>';
-        priceField.value = '';
-        $.ajax({
-            url:'/QG/ajax/get-accessory-materials.php',
-            type:'POST',
-            data:{category_id: category.value},
-            success:function(response){
-                materialSelect.innerHTML = '<option value="">Select Material</option>' + response;
+    function loadAccessoryMakes(category){
+        const row = category.closest("tr");
+        $.post(
+            "/QG/ajax/get-accessory-makes.php",
+            {
+                category_id: category.value
+            },
+            function(res){
+                row.querySelector(".accessoryMake").innerHTML = '<option value="">Select Make</option>'+res;
+                row.querySelector(".accessorySelect").innerHTML = '<option value="">Select Accessory</option>';
+                row.querySelector(".accessoryPrice").value='';
             }
-        });
+        );
+    }
+    function loadAccessories(make){
+        const row = make.closest("tr");
+        $.post(
+            "/QG/ajax/get-accessories.php",
+            {
+                category_id: row.querySelector(".accessoryCategory").value,
+                make_id: make.value
+            },
+            function(res){
+                row.querySelector(".accessorySelect").innerHTML = '<option value="">Select Accessory</option>'+res;
+            }
+        );
     }
     function attachAccessoryEvents(){
         document
-        .querySelectorAll('.accessorySelect')
+        .querySelectorAll(".accessoryCategory")
         .forEach(select=>{
-            select.onchange = function(){
-                const row = this.closest('tr');
-                const option = this.options[this.selectedIndex];
-                const price = parseFloat(option.dataset.price) || 0;
-                row.querySelector('.accessoryPrice').value = price.toFixed(2);
+            select.onchange=function(){
+                loadAccessoryMakes(this);
+            };
+        });
+        document
+        .querySelectorAll(".accessoryMake")
+        .forEach(select=>{
+            select.onchange=function(){
+                loadAccessories(this);
+            };
+        });
+        document
+        .querySelectorAll(".accessorySelect")
+        .forEach(select=>{
+            select.onchange=function(){
+                const row=this.closest("tr");
+                const option=this.options[this.selectedIndex];
+                const price=parseFloat(option.dataset.price)||0;
+                row.querySelector(".accessoryPrice").value=price.toFixed(2);
                 calculateAccessoryTotal(row);
             };
         });
         document
-        .querySelectorAll('.accessoryQty')
+        .querySelectorAll(".accessoryQty")
         .forEach(input=>{
             input.oninput=function(){
-                calculateAccessoryTotal(this.closest('tr'));
-            };
-        });
-        document
-        .querySelectorAll('.accessoryPrice')
-        .forEach(input=>{
-            input.oninput=function(){
-                calculateAccessoryTotal(this.closest('tr'));
+                calculateAccessoryTotal(this.closest("tr"));
             };
         });
     }

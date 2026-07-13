@@ -1,4 +1,5 @@
 <?php
+include '../includes/auth.php';
 if(!can('shelves_delete')){
     die('Access Denied');
 }

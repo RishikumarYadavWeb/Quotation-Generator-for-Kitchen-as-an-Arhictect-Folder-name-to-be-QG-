@@ -4498,3 +4498,34 @@ body{
 .sidebar-dropdown.open .dropdown-arrow{
     transform:rotate(180deg);
 }
+
+.table-scroll{
+    width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+}
+
+.table-scroll table{
+    min-width:1400px; /* Adjust as needed */
+    border-collapse:collapse;
+}
+
+.table-scroll::-webkit-scrollbar{
+    height:8px;
+}
+
+.table-scroll::-webkit-scrollbar-track{
+    background:#ececec;
+    border-radius:10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb{
+    background:#b8b8b8;
+    border-radius:10px;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover{
+    background:#8a8a8a;
+}

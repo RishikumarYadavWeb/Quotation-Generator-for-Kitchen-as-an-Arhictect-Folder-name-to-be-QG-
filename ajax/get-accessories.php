@@ -21,7 +21,7 @@ $query = mysqli_query(
     "
 );
 
-while($row = mysqli_fetch_assoc($query)){
+while ($row = mysqli_fetch_assoc($query)) {
 
     echo '
         <option
@@ -32,5 +32,4 @@ while($row = mysqli_fetch_assoc($query)){
 
         </option>
     ';
-
 }

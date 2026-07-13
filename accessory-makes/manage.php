@@ -2,7 +2,7 @@
 include '../includes/auth.php';
 include '../db.php';
 
-if (!can('accessories_category_view')) {
+if (!can('accessories_view')) {
     die('Access Denied');
 }
 
@@ -19,7 +19,7 @@ $totalQuery = mysqli_query(
     $conn,
     "
     SELECT COUNT(*) AS total
-    FROM accessory_categories
+    FROM accessory_makes
     "
 );
 
@@ -29,9 +29,13 @@ $totalPages = ceil($totalRecords / $limit);
 $query = mysqli_query(
     $conn,
     "
-    SELECT *
-    FROM accessory_categories
-    ORDER BY id ASC
+    SELECT
+        m.*,
+        c.category_name
+    FROM accessory_makes m
+    INNER JOIN accessory_categories c
+        ON c.id = m.category_id
+    ORDER BY c.category_name ASC, m.make_name ASC
     LIMIT $limit OFFSET $offset
     "
 );
@@ -42,12 +46,13 @@ $query = mysqli_query(
     <div class="page-header">
 
         <div>
-            <h1>Accessory Categories</h1>
+            <h1>Accessory Makes</h1>
         </div>
 
-        <?php if (can('accessories_category_create')) { ?>
+        <?php if (can('accessories_create')) { ?>
             <a href="create.php" class="theme-btn">
-                <i class="fa-solid fa-plus"></i> Add Category
+                <i class="fa-solid fa-plus"></i>
+                Add Make
             </a>
         <?php } ?>
 
@@ -59,6 +64,7 @@ $query = mysqli_query(
             <tr>
                 <th>Sr No</th>
                 <th>Category</th>
+                <th>Make</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
@@ -84,19 +90,19 @@ $query = mysqli_query(
                         <?= htmlspecialchars($row['category_name']) ?>
                     </td>
 
+                    <td data-label="Make">
+                        <?= htmlspecialchars($row['make_name']) ?>
+                    </td>
+
                     <td data-label="Status">
 
                         <?php if ($row['status'] == 1) { ?>
 
-                            <span class="status-active">
-                                Active
-                            </span>
+                            <span class="status-active">Active</span>
 
                         <?php } else { ?>
 
-                            <span class="status-inactive">
-                                Inactive
-                            </span>
+                            <span class="status-inactive">Inactive</span>
 
                         <?php } ?>
 
@@ -106,7 +112,7 @@ $query = mysqli_query(
 
                         <div class="action-btns">
 
-                            <?php if (can('accessories_category_edit')) { ?>
+                            <?php if (can('accessories_edit')) { ?>
                                 <a
                                     href="edit.php?id=<?= $row['id'] ?>"
                                     class="edit-btn">
@@ -114,11 +120,11 @@ $query = mysqli_query(
                                 </a>
                             <?php } ?>
 
-                            <?php if (can('accessories_category_delete')) { ?>
+                            <?php if (can('accessories_delete')) { ?>
                                 <a
                                     href="delete.php?id=<?= $row['id'] ?>"
                                     class="delete-btn"
-                                    onclick="return confirm('Delete this category?')">
+                                    onclick="return confirm('Delete Make?')">
                                     Delete
                                 </a>
                             <?php } ?>
@@ -136,8 +142,8 @@ $query = mysqli_query(
             ?>
 
                 <tr>
-                    <td colspan="4" style="text-align:center;">
-                        No Categories Found
+                    <td colspan="5" style="text-align:center;">
+                        No Accessory Makes Found
                     </td>
                 </tr>
 
@@ -155,17 +161,38 @@ $query = mysqli_query(
                 <a href="?page=<?= $page - 1 ?>">&laquo; Prev</a>
             <?php } ?>
 
+            <?php if ($page > 3) { ?>
+                <a href="?page=1">1</a>
+                <?php if ($page > 4) { ?>
+                    <span class="pagination-dots">...</span>
+                <?php } ?>
+            <?php } ?>
+
             <?php
             $start = max(1, $page - 2);
             $end = min($totalPages, $page + 2);
 
             for ($i = $start; $i <= $end; $i++) {
             ?>
+
                 <a
                     href="?page=<?= $i ?>"
                     class="<?= ($i == $page) ? 'active' : '' ?>">
                     <?= $i ?>
                 </a>
+
+            <?php } ?>
+
+            <?php if ($page < $totalPages - 2) { ?>
+
+                <?php if ($page < $totalPages - 3) { ?>
+                    <span class="pagination-dots">...</span>
+                <?php } ?>
+
+                <a href="?page=<?= $totalPages ?>">
+                    <?= $totalPages ?>
+                </a>
+
             <?php } ?>
 
             <?php if ($page < $totalPages) { ?>

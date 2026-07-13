@@ -588,70 +588,121 @@
         </table>
     </div>
     <?php } ?>
-    <?php 
-        $accessoryQuery = mysqli_query(
-            $conn,
-            "
-            SELECT
-                qa.*,
-                a.accessory_name,
-                ac.category_name
-            FROM quotation_accessories qa
-            LEFT JOIN accessories a
-            ON qa.accessory_id = a.id
-            LEFT JOIN accessory_categories ac
-            ON qa.category_id = ac.id
-            WHERE qa.quotation_id = '$id'
-            "
-        );
-        if(mysqli_num_rows($accessoryQuery) > 0){
-    ?>
-    <div class="main-card mt-4">
-        <div class="generated-title">Additional Accessories</div>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Sr No.</th>
-                    <th>Accessory</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                    $srNo = 1;
-                    $accessoryGrandTotal = 0;
-                    while($accessory = mysqli_fetch_assoc($accessoryQuery)
-                    ){$accessoryGrandTotal += $accessory['total'];
-                ?>
-                    <tr>
-                        <td><?= $srNo++ ?></td>
-                        <td>
-                            <?php
-                                if(
-                                    !empty($accessory['other_material'])
-                                ){
-                                    echo '<strong>Other</strong> - ' . htmlspecialchars($accessory['other_material']);
-                                }else{
-                                    echo htmlspecialchars($accessory['category_name']);
-                                    echo ' - ';
-                                    echo htmlspecialchars($accessory['accessory_name']);}
-                            ?>
-                        </td>
-                        <td> ₹ <?= number_format( $accessory['price'], 2 ); ?></td>
-                        <td><?= $accessory['qty']; ?></td>
-                        <td> ₹ <?= number_format( $accessory['total'], ); ?></td>
-                    </tr>
-                <?php } ?>
-                <tr>
-                    <th colspan="4" style="text-align: center;">Accessories Total</th>
-                    <th>₹ <?= number_format($accessoryGrandTotal, 2 ); ?></th>
-                </tr>
-            </tbody>
-        </table>
+    <?php
+$accessoryQuery = mysqli_query(
+    $conn,
+    "
+    SELECT
+        qa.*,
+        a.material_name,
+        c.category_name,
+        m.make_name
+    FROM quotation_accessories qa
+
+    LEFT JOIN accessories a
+        ON qa.accessory_id = a.id
+
+    LEFT JOIN accessory_categories c
+        ON qa.category_id = c.id
+
+    LEFT JOIN accessory_makes m
+        ON qa.make_id = m.id
+
+    WHERE qa.quotation_id = '$id'
+    "
+);
+
+if (mysqli_num_rows($accessoryQuery) > 0) {
+?>
+
+<div class="main-card mt-4">
+
+    <div class="generated-title">
+        Additional Accessories
     </div>
-    <?php } ?>
+
+    <table class="table table-bordered">
+
+        <thead>
+
+            <tr>
+
+                <th>Sr No.</th>
+                <th>Category</th>
+                <th>Make</th>
+                <th>Accessory</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Total</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            <?php
+
+            $srNo = 1;
+            $accessoryGrandTotal = 0;
+
+            while ($accessory = mysqli_fetch_assoc($accessoryQuery)) {
+
+                $accessoryGrandTotal += $accessory['total'];
+
+            ?>
+
+            <tr>
+
+                <td><?= $srNo++ ?></td>
+
+                <td>
+                    <?= htmlspecialchars($accessory['category_name']) ?>
+                </td>
+
+                <td>
+                    <?= htmlspecialchars($accessory['make_name']) ?>
+                </td>
+
+                <td>
+                    <?= htmlspecialchars($accessory['material_name']) ?>
+                </td>
+
+                <td>
+                    ₹ <?= number_format($accessory['price'], 2) ?>
+                </td>
+
+                <td>
+                    <?= $accessory['qty'] ?>
+                </td>
+
+                <td>
+                    ₹ <?= number_format($accessory['total'], 2) ?>
+                </td>
+
+            </tr>
+
+            <?php } ?>
+
+            <tr>
+
+                <th colspan="6" style="text-align:center;">
+                    Accessories Total
+                </th>
+
+                <th>
+                    ₹ <?= number_format($accessoryGrandTotal, 2) ?>
+                </th>
+
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<?php } ?>
     <div class="main-card mt-4">
         <div class="generated-title">Commercial Summary</div>
         <div class="">

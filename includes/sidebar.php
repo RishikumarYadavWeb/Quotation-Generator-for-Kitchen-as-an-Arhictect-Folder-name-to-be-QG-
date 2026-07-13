@@ -236,6 +236,7 @@
             </a>
             <ul class="submenu">
                 <li><a href="/QG/accessory-categories/manage.php" class="<?= isActive('/accessory-categories/', $current_uri) ?>">Categories</a></li>
+                <li><a href="/QG/accessory-makes/manage.php" class="<?= isActive('/accessory-makes/', $current_uri) ?>">Make</a></li>
                 <li><a href="/QG/accessories/manage.php" class="<?= isActive('/accessories/', $current_uri) ?>">Materials</a></li>
             </ul>
         </li>

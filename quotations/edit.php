@@ -65,18 +65,21 @@
     $EDIT_SHELVES = [];
     while($row = mysqli_fetch_assoc($shelfQuery)){$EDIT_SHELVES[] = $row;}
     // ACCESSORIES
-    $accessories = [];
-    $sql = "
+$accessories = [];
+
+$accessoryQuery = mysqli_query(
+    $conn,
+    "
     SELECT
-        qa.*,
-        a.category_id
+        qa.*
     FROM quotation_accessories qa
-    LEFT JOIN accessories a
-    ON qa.accessory_id = a.id
     WHERE qa.quotation_id = '$quotation_id'
-    ";
-    $result = mysqli_query($conn, $sql);
-    while($row = mysqli_fetch_assoc($result)){$accessories[] = $row;}
+    "
+);
+
+while($row = mysqli_fetch_assoc($accessoryQuery)){
+    $accessories[] = $row;
+}
     $accessoryCategoryOptions = '';
     $categoryQuery = mysqli_query(
         $conn,
@@ -211,17 +214,8 @@
         $shelves[] = $row;
     }
     /* ACCESSORIES */
-    $getAccessories = mysqli_query($conn, "
-            SELECT
-                id,
-                accessory_name,
-                price
-            FROM accessories
-            WHERE status='active'
-            ORDER BY accessory_name ASC
-        ");
     $accessoryOptions = '';
-    while($acc = mysqli_fetch_assoc($getAccessories)){
+    while($acc = mysqli_fetch_assoc($accessoryQuery)){
         $accessoryOptions .= '<option value=\"'.$acc['id'].'\" data-price=\"'.$acc['price'].'\">'.$acc['accessory_name'].'</option>';
     }
     // STANDARD ACCESSORIES
@@ -1264,29 +1258,122 @@
                     }
                     calculateAccessoriesGrandTotal();
                 }
-                if(
-                    EDIT_STANDARD_ACCESSORIES &&
-                    EDIT_STANDARD_ACCESSORIES.length > 0
-                ){
-                    document.querySelector('input[name="hasStandardAccessories"][value="1"]').checked = true;
-                    document.getElementById("standardAccessorySection").style.display = "block";
-                    document.getElementById("standardAccessoriesContainer").innerHTML = "";
-                    for(const accessory of EDIT_STANDARD_ACCESSORIES){
-                        addStandardAccessoryRow();
-                        const rows = document.querySelectorAll(".standardAccessoryRow");
-                        const row = rows[rows.length - 1];
-                        const category = row.querySelector(".standardAccessoryCategory");
-                        category.value = accessory.category_id;
-                        await loadStandardAccessoryMaterials(category);
-                        const material = row.querySelector(".standardAccessoryMaterial");
-                        material.value = accessory.standard_accessory_id;
-                        material.dispatchEvent(new Event("change"));
-                        row.querySelector(".standardAccessoryQty").value = accessory.qty;
-                        row.querySelector(".standardAccessoryPrice").value = accessory.unit_price;
-                        calculateStandardAccessoryTotal(row);
-                    }
-                    calculateStandardAccessoriesGrandTotal();
-                }
+                if (
+    EDIT_ACCESSORIES &&
+    EDIT_ACCESSORIES.length > 0
+) {
+
+    document.querySelector(
+        'input[name="hasAccessories"][value="1"]'
+    ).checked = true;
+
+    document.getElementById("accessorySection").style.display = "block";
+
+    document.getElementById("accessoriesContainer").innerHTML = "";
+
+    for (const accessory of EDIT_ACCESSORIES) {
+
+        addAccessoryRow();
+
+        const rows = document.querySelectorAll(".accessoryRow");
+
+        const row = rows[rows.length - 1];
+
+        const category = row.querySelector(".accessoryCategory");
+        const make = row.querySelector(".accessoryMake");
+        const accessorySelect = row.querySelector(".accessorySelect");
+
+        /* Category */
+
+        category.value = accessory.category_id;
+
+        await new Promise((resolve, reject) => {
+
+            $.ajax({
+
+                url: BASE_URL + "ajax/get-accessory-makes.php",
+
+                type: "POST",
+
+                data: {
+
+                    category_id: accessory.category_id
+
+                },
+
+                success: function (response) {
+
+                    make.innerHTML =
+                        '<option value="">Select Make</option>' +
+                        response;
+
+                    resolve();
+
+                },
+
+                error: reject
+
+            });
+
+        });
+
+        /* Make */
+
+        make.value = accessory.make_id;
+
+        await new Promise((resolve, reject) => {
+
+            $.ajax({
+
+                url: BASE_URL + "ajax/get-accessory-materials.php",
+
+                type: "POST",
+
+                data: {
+
+                    category_id: accessory.category_id,
+
+                    make_id: accessory.make_id
+
+                },
+
+                success: function (response) {
+
+                    accessorySelect.innerHTML =
+                        '<option value="">Select Accessory</option>' +
+                        response;
+
+                    resolve();
+
+                },
+
+                error: reject
+
+            });
+
+        });
+
+        /* Accessory */
+
+        accessorySelect.value = accessory.accessory_id;
+
+        accessorySelect.dispatchEvent(
+            new Event("change")
+        );
+
+        row.querySelector(".accessoryQty").value =
+            accessory.qty;
+
+        row.querySelector(".accessoryPrice").value =
+            accessory.price;
+
+        calculateAccessoryTotal(row);
+
+    }
+
+    calculateAccessoriesGrandTotal();
+
+}
                 for(
                     let index = 0;
                     index < EDIT_ELEVATIONS.length;
@@ -1661,96 +1748,288 @@
     // Additional Accessories
     const accessoryCategoryOptions = `<?= $accessoryCategoryOptions ?>`;
     function addAccessoryRow(){
-        const container = document.getElementById('accessoriesContainer');
-        if(!container.querySelector('.accessoriesTable')){
-            container.innerHTML = `
-                <div class="table-responsive">
-                    <table class="table accessoriesTable">
-                        <thead>
-                            <tr>
-                                <th>Sr No.</th>
-                                <th>Category</th>
-                                <th>Material</th>
-                                <th>Unit Price</th>
-                                <th>Qty</th>
-                                <th>Total</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="accessoriesTableBody"></tbody>
-                    </table>
-                </div>
-            `;
-        }
-        const tbody = container.querySelector('.accessoriesTableBody');
-        const srNo = tbody.querySelectorAll('tr').length + 1;
-        tbody.insertAdjacentHTML(
-            'beforeend',
-            `
-            <tr class="accessoryRow">
-                <td class="accessorySrNo">${srNo}</td>
-                <td>
-                    <select class="form-control accessoryCategory" onchange="loadAccessoryMaterials(this)">
-                        <option value="">Select Category</option>
-                        ${accessoryCategoryOptions}
-                    </select>
-                </td>
-                <td>
-                    <select class="form-control accessorySelect">
-                        <option value="">Select Material</option>
-                    </select>
-                </td>
-                <td><input type="number" class="form-control accessoryPrice" readonly></td>
-                <td><input type="number" class="form-control accessoryQty" value="1" min="1"></td>
-                <td><input type="number" class="form-control accessoryTotal" readonly></td>
-                <td><button type="button" class="delete-btn removeAccessory">✕</button></td>
-            </tr>
-            `
-        );
-        attachAccessoryEvents();
+
+    const container = document.getElementById("accessoriesContainer");
+
+    if(!container.querySelector(".accessoriesTable")){
+
+        container.innerHTML = `
+            <div class="table-scroll">
+
+                <table class="table accessoriesTable">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Sr No.</th>
+                            <th>Category</th>
+                            <th>Make</th>
+                            <th>Accessory</th>
+                            <th>Unit Price</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody class="accessoriesTableBody"></tbody>
+
+                </table>
+
+            </div>
+        `;
+
     }
-    function loadAccessoryMaterials(category){
-        const row = category.closest('tr');
-        const materialSelect = row.querySelector('.accessorySelect');
-        const priceField = row.querySelector('.accessoryPrice');
-        materialSelect.innerHTML = '<option value="">Select Material</option>';
-        priceField.value = '';
+
+    const tbody = container.querySelector(".accessoriesTableBody");
+
+    const srNo = tbody.querySelectorAll("tr").length + 1;
+
+    tbody.insertAdjacentHTML(
+        "beforeend",
+        `
+        <tr class="accessoryRow">
+
+            <td class="accessorySrNo">${srNo}</td>
+
+            <td>
+
+                <select
+                    class="form-control accessoryCategory">
+
+                    <option value="">
+                        Select Category
+                    </option>
+
+                    ${accessoryCategoryOptions}
+
+                </select>
+
+            </td>
+
+            <td>
+
+                <select
+                    class="form-control accessoryMake">
+
+                    <option value="">
+                        Select Make
+                    </option>
+
+                </select>
+
+            </td>
+
+            <td>
+
+                <select
+                    class="form-control accessorySelect">
+
+                    <option value="">
+                        Select Accessory
+                    </option>
+
+                </select>
+
+            </td>
+
+            <td>
+
+                <input
+                    type="number"
+                    class="form-control accessoryPrice"
+                    readonly>
+
+            </td>
+
+            <td>
+
+                <input
+                    type="number"
+                    class="form-control accessoryQty"
+                    value="1"
+                    min="1">
+
+            </td>
+
+            <td>
+
+                <input
+                    type="number"
+                    class="form-control accessoryTotal"
+                    readonly>
+
+            </td>
+
+            <td>
+
+                <button
+                    type="button"
+                    class="delete-btn removeAccessory">
+
+                    ✕
+
+                </button>
+
+            </td>
+
+        </tr>
+        `
+    );
+
+    attachAccessoryEvents();
+
+}
+    function loadAccessoryMakes(category){
+
+        const row = category.closest("tr");
+
+        const makeSelect = row.querySelector(".accessoryMake");
+        const accessorySelect = row.querySelector(".accessorySelect");
+
+        row.querySelector(".accessoryPrice").value = "";
+        row.querySelector(".accessoryTotal").value = "";
+
+        makeSelect.innerHTML =
+            '<option value="">Select Make</option>';
+
+        accessorySelect.innerHTML =
+            '<option value="">Select Accessory</option>';
+
         $.ajax({
-            url:'/QG/ajax/get-accessory-materials.php',
-            type:'POST',
-            data:{category_id: category.value},
+
+            url: BASE_URL + 'ajax/get-accessory-makes.php',
+
+            type: 'POST',
+
+            data: {
+
+                category_id: category.value
+
+            },
+
             success:function(response){
-                materialSelect.innerHTML = '<option value="">Select Material</option>' + response;
+
+                makeSelect.innerHTML =
+                    '<option value="">Select Make</option>' +
+                    response;
+
             }
+
         });
+
     }
+    function loadAccessories(make){
+
+    const row = make.closest("tr");
+
+    const accessorySelect = row.querySelector(".accessorySelect");
+
+    row.querySelector(".accessoryPrice").value = "";
+    row.querySelector(".accessoryTotal").value = "";
+
+    accessorySelect.innerHTML =
+        '<option value="">Select Accessory</option>';
+
+    $.ajax({
+
+        url: BASE_URL + 'ajax/get-accessory-materials.php',
+
+        type: 'POST',
+
+        data: {
+
+            category_id: row.querySelector(".accessoryCategory").value,
+
+            make_id: make.value
+
+        },
+
+        success:function(response){
+
+            accessorySelect.innerHTML =
+                '<option value="">Select Accessory</option>' +
+                response;
+
+        }
+
+    });
+
+}
     function attachAccessoryEvents(){
-        document
-        .querySelectorAll('.accessorySelect')
-        .forEach(select=>{
-            select.onchange = function(){
-                const row = this.closest('tr');
-                const option = this.options[this.selectedIndex];
-                const price = parseFloat(option.dataset.price) || 0;
-                row.querySelector('.accessoryPrice').value = price.toFixed(2);
-                calculateAccessoryTotal(row);
-            };
-        });
-        document
-        .querySelectorAll('.accessoryQty')
-        .forEach(input=>{
-            input.oninput=function(){
-                calculateAccessoryTotal(this.closest('tr'));
-            };
-        });
-        document
-        .querySelectorAll('.accessoryPrice')
-        .forEach(input=>{
-            input.oninput=function(){
-                calculateAccessoryTotal(this.closest('tr'));
-            };
-        });
-    }
+
+    /* Category */
+
+    document
+    .querySelectorAll(".accessoryCategory")
+    .forEach(select=>{
+
+        select.onchange=function(){
+
+            loadAccessoryMakes(this);
+
+        };
+
+    });
+
+    /* Make */
+
+    document
+    .querySelectorAll(".accessoryMake")
+    .forEach(select=>{
+
+        select.onchange=function(){
+
+            loadAccessories(this);
+
+        };
+
+    });
+
+    /* Accessory */
+
+    document
+    .querySelectorAll(".accessorySelect")
+    .forEach(select=>{
+
+        select.onchange=function(){
+
+           const option = this.options[this.selectedIndex];
+
+if (!option) {
+    return;
+}
+
+const price = parseFloat(option.dataset.price || 0);
+
+const row = this.closest("tr");
+
+row.querySelector(".accessoryPrice").value = price.toFixed(2);
+
+calculateAccessoryTotal(row);
+
+        };
+
+    });
+
+    /* Qty */
+
+    document
+    .querySelectorAll(".accessoryQty")
+    .forEach(input=>{
+
+        input.oninput=function(){
+
+            calculateAccessoryTotal(this.closest("tr"));
+
+        };
+
+    });
+
+}
     function calculateAccessoryTotal(row){
         const qty = parseFloat(row.querySelector('.accessoryQty').value) || 0;
         const price = parseFloat(row.querySelector('.accessoryPrice').value) || 0;

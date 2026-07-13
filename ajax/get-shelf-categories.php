@@ -18,7 +18,7 @@
             $sql .= " AND category_name LIKE 'Base%'";
             break;
         case 'Loft':
-            $sql .= " AND category_name LIKE 'Wall%'";
+            $sql .= " AND category_name LIKE 'Loft%'";
             break;
     }
     $sql .= " ORDER BY category_name ASC";
