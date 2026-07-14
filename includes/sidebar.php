@@ -241,6 +241,15 @@
             </ul>
         </li>
         <?php } ?>
+        <!-- APPLIANCES -->
+        <?php if(can('appliances_view')){ ?>
+        <li>
+            <a href="/QG/appliances/manage.php" class="<?= isActive('/settings/', $current_uri) ?>">
+                <i class="fa-solid fa-kitchen-set" style="margin-right:10px;"></i>
+                Appliances
+            </a>
+        </li>
+        <?php } ?>
         <!-- SETTINGS -->
         <li>
             <a href="/QG/settings/index.php" class="<?= isActive('/settings/', $current_uri) ?>">
