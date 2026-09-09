@@ -16,16 +16,16 @@ function getMailer(){
 
     $mail->SMTPAuth = true;
 
-    $mail->Username = 'itsrishi8687@gmail.com';
+    $mail->Username = 'abc@gmail.com';
 
-    $mail->Password = 'chng hcdg yxyx rmir';
+    $mail->Password = 'app password';
 
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 
     $mail->Port = 587;
 
     $mail->setFrom(
-        'itsrishi8687@gmail.com',
+        'abc@gmail.com',
         'QG ERP'
     );
 
