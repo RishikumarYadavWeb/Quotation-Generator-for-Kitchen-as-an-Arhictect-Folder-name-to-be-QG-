@@ -1,4 +1,4 @@
-# Crafted ERP — Quotation Generator (QG)
+# ERP — Quotation Generator (QG)
 
 A scalable ERP-style quotation management system built for furniture and interior workflow automation.
 
